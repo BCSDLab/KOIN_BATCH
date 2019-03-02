@@ -5,6 +5,7 @@ from urllib.parse import urlparse, parse_qs
 import pymysql
 import datetime
 import time
+import json
 
 connection = pymysql.connect(host="localhost", user="root", passwd="qpqp1010", db="koin", charset='utf8')
 
@@ -36,12 +37,15 @@ def getMenus(currentDate):
 
     print(url)
     html = requests.get(url)
-    soup = BeautifulSoup(html.text, "html.parser")
+    html.encoding = 'CP-949'
+    # html.encoding = 'UTF-8'
+    
+    # soup = BeautifulSoup(html.text, "html.parser")
+    soup = BeautifulSoup(html.content.decode('euc-kr','replace'))
 
     table = soup.select('table')[1]
     trs = table.select('tr')
     trs = trs[3:6]
-    print(len(trs))
 
     for tr in trs:
         tds = tr.select('td')
@@ -49,7 +53,6 @@ def getMenus(currentDate):
         dtype = str(tds[0].text).strip()
     
         tds = tds[1:]
-        print(len(tds))
 
         index = 0
         for td in tds:
@@ -59,10 +62,10 @@ def getMenus(currentDate):
                 continue
             
             span2 = str(span.text).split('/')
-        
-            payCard = span2[0]
-            payCash = span2[1]
 
+            payCard = re.split('원', span2[0])[0].replace(',', '')
+            payCash = re.split('원', span2[1])[0].replace(',', '')
+            
             content = td.text
             content = content.split()
             cols = []
@@ -71,9 +74,9 @@ def getMenus(currentDate):
             for row in range(0,  cnt - 1):
                 cols.append(content[row])
             
-            kcal = re.split('kcal', content[cnt - 1])
+            kcal = re.split('kcal', content[cnt - 1])[0]
             
-            menu = Menu(currentDate, dtype, places[index], payCard, payCash, kcal, cols)
+            menu = Menu(currentDate, dtype, places[index], payCard, payCash, kcal, json.dumps(cols))
             menus.append(menu)
             index += 1
 
@@ -107,26 +110,9 @@ def crawling(startDate=None, endDate=None):
         print("%s Found" % str(len(menus)))
 
         updateDB(menus)
-        
         currentDate += datetime.timedelta(days=1)
         pass
     pass
-
-def updateDB(menus):
-    cur = connection.cursor()
-
-    for menu in menus:
-        try:
-            sql = "INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu) \
-                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s') \
-                ON DUPLICATE KEY UPDATE date = '%s', type = '%s', place = '%s'"
-
-            cur.execute(sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
-            
-            connection.commit()
-        except Exception as error:
-            connection.rollback()
-            print(error)
 
 class Menu:
     def __init__(self, date, dtype, place, price_card, price_cash, kcal, menu):
@@ -140,6 +126,31 @@ class Menu:
 
         pass
 
+def updateDB(menus):
+    cur = connection.cursor()
+
+    for menu in menus:
+        print("updating to DB.. %s %s %s" % (menu.date, menu.type, menu.place))
+        try:
+            sql = "INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu) \
+                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s') \
+                ON DUPLICATE KEY UPDATE date = '%s', type = '%s', place = '%s'"
+            
+            print( sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
+            
+            print(menu.kcal)
+            print(menu.menu)
+            print(menu.price_card)
+            print(menu.price_cash)
+            cur.execute(sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
+
+            connection.commit()
+        except Exception as error:
+            connection.rollback()
+            print(error)
+
 crawling()
 
 connection.close();
+
+
