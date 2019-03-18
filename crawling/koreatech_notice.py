@@ -4,8 +4,14 @@ import re
 from urllib.parse import urlparse, parse_qs
 import pymysql
 import json
+import config
 
-connection = pymysql.connect(host="localhost", user="root", passwd="qpqp1010", db="koin", charset='utf8')
+def connect_db():
+    conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
+                           user=config.DATABASE_CONFIG['user'],
+                           password=config.DATABASE_CONFIG['password'],
+                           db=config.DATABASE_CONFIG['db'])
+    return conn
 
 noticeIds = {
     "14":"NA001",
@@ -22,7 +28,7 @@ tags = {
     "NA005": "코인공지"
 }
 
-def crawing(noticeId, ls=10):
+def crawling(noticeId, ls=10):
     nas = []
     tag = noticeIds[noticeId]
     boardId = getBoardId(tag)
@@ -157,7 +163,9 @@ class NoticeArticle:
         pass
 
 
-for noticeId in noticeIds.keys():
-    crawing(noticeId)
-    
-connection.close()
+if __name__ == "__main__":
+    # execute only if run as a script
+    connection = connect_db()
+    for noticeId in noticeIds.keys():
+        crawling(noticeId)
+    connection.close()

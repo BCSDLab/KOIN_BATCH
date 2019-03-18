@@ -6,8 +6,14 @@ import pymysql
 import datetime
 import time
 import json
+import config
 
-connection = pymysql.connect(host="localhost", user="root", passwd="qpqp1010", db="koin", charset='utf8')
+def connect_db():
+    conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
+                           user=config.DATABASE_CONFIG['user'],
+                           password=config.DATABASE_CONFIG['password'],
+                           db=config.DATABASE_CONFIG['db'])
+    return conn
 
 places = [
     "한식",
@@ -50,7 +56,7 @@ def getMenus(currentDate):
     for tr in trs:
         tds = tr.select('td')
         
-        dtype = str(tds[0].text).strip()
+        dtype = str(tds[0].text).strip().upper()
     
         tds = tds[1:]
 
@@ -149,8 +155,10 @@ def updateDB(menus):
             connection.rollback()
             print(error)
 
-crawling()
-
-connection.close();
+if __name__ == "__main__":
+    # execute only if run as a script
+    connection = connect_db()
+    crawling()
+    connection.close()
 
 

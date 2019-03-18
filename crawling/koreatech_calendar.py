@@ -3,10 +3,16 @@ from bs4 import BeautifulSoup
 import re
 from urllib.parse import urlparse, parse_qs
 import pymysql
+import config
 
-connection = pymysql.connect(host="localhost", user="root", passwd="qpqp1010", db="koin", charset='utf8')
+def connect_db():
+    conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
+                           user=config.DATABASE_CONFIG['user'],
+                           password=config.DATABASE_CONFIG['password'],
+                           db=config.DATABASE_CONFIG['db'])
+    return conn
 
-def crawing():
+def crawling():
     cs = []
 
     url = "https://www.koreatech.ac.kr/prog/schedule/kor/sub04_01_01_01/1/haksa.do"
@@ -94,6 +100,8 @@ class Calendar:
         self.seq = seq
         self.is_continued = isContinued
 
-crawing()
-
-connection.close()
+if __name__ == "__main__":
+    # execute only if run as a script
+    connection = connect_db()
+    crawling()
+    connection.close()

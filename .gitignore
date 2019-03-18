@@ -1,0 +1,4 @@
+.vscode
+crawling/__pycache__
+crawling/config.py
+myenv
