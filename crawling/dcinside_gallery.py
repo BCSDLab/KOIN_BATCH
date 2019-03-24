@@ -14,18 +14,11 @@ def connect_db():
     return conn
 
 noticeIds = {
-    "14":"NA001",
-    "15":"NA002",
-    "16":"NA003",
-    "17":"NA004"
+    "18":"CA001"
 }
 
 tags = {
-    "NA001": "일반공지",
-    "NA002": "장학공지",
-    "NA003": "학사공지",
-    "NA004": "취업공지",
-    "NA005": "코인공지"
+    "CA001": "디씨크롤링"
 }
 
 def crawling(noticeId, ls=10):
@@ -33,54 +26,31 @@ def crawling(noticeId, ls=10):
     tag = noticeIds[noticeId]
     boardId = getBoardId(tag)
 
-    if(noticeId == "17"):
-        # 취업공지
-        host = "https://job.koreatech.ac.kr"
-        
-        url = host + "/jobs/notice/jobNoticeList.aspx?page=1"
-        html = requests.get(url)
-        soup = BeautifulSoup(html.text, "html.parser")
-
-        trs = soup.select('table > tbody > tr')
-
-        for tr in trs:
-            td = tr.select('td')
-            author = td[2].text
-            title = td[3].text
-            permalink = host + td[3].find('a').get('href')
-            
-            parsed_url = urlparse(permalink)
-            qs = parse_qs(parsed_url.query)
-            articleNum = qs.get('idx')[0]
-
-            na = NoticeArticle(boardId, title, author, articleNum, permalink)
-            setContentJob(na)
-
-            nas.append(na)        
-
-            print('updating... %s %s' % (tag, str(articleNum)))
-    else:
-        host = "https://portal.koreatech.ac.kr"    
-             
-        url = host + "/ctt/bb/bulletin?b=" + str(noticeId)
-        html = requests.get(url)
-        soup = BeautifulSoup(html.text, "html.parser")
-
-        trs = soup.select('table > tbody > tr')
+    host = "https://gall.dcinside.com"
     
-        for tr in trs:
-            permalink = host + tr.get('data-url')
-            
-            td = tr.select('td')
-            articleNum = td[0].text.strip()
-            title = td[1].text.strip()
-            author = td[3].text.strip()
-            
-            na = NoticeArticle(boardId, title, author, articleNum, permalink)
-            setContent(na)
+    url = host + "/mgallery/board/lists/?id=koreatech&page=1"
+    html = requests.get(url)
+    soup = BeautifulSoup(html.text, "html.parser")
+    trs = soup.select('#container > section.left_content > article:nth-child(3) > div.gall_listwrap.list > table > tbody > tr')
 
-            nas.append(na)
-            print('updating... %s %s' % (tag, str(articleNum)))
+    for tr in trs:
+        td = tr.select('td')
+        # author
+        author = td[2].text.split('(')[0].lstrip('\n')
+        # title
+        title = td[1].text.split('\n')[1]
+        # permalink
+        permalink = host+td[1].find('a').get('href')
+        parsed_url = urlparse(permalink)
+        qs = parse_qs(parsed_url.query)
+        articleNum = qs.get('no')[0]
+
+        na = DcArticle(boardId, title, author, articleNum, permalink)
+        setContent(na)
+
+        nas.append(na)
+
+        print('updating... %s %s' % (tag, str(articleNum)))
 
     updateDB(nas)
     
@@ -90,27 +60,13 @@ def setContent(na):
     html = requests.get(na.permalink)
     soup = BeautifulSoup(html.text, "html.parser")
     
-    content = soup.find('div', class_= "bc-s-post-ctnt-area")
-    registered_at = soup.find('table', class_= "kut-board-title-table").select('tbody > tr > td')[1].text.strip()
-    content = str(content).replace('src="/ctt/', 'src="https://portal.koreatech.ac.kr/ctt/')
+    content = soup.find('div', {'style':'overflow:hidden;'})
+    content = str(content).replace('src="//', 'src="https://')
+    content = str(content).replace('href="//', 'href="https://')
+    content = re.sub("(<!--.*?-->)", "", str(content))
     content = str(content).replace("'", '"')
 
-    na.content = re.sub("(<!--.*?-->)", "", str(content))
-    na.registered_at = registered_at
-    pass
-
-def setContentJob(na):
-    html = requests.get(na.permalink)
-    soup = BeautifulSoup(html.text, "html.parser")
-    
-    content = soup.find('tr', class_= "content")
-    content = str(content).replace('src="/ctt/', 'src="https://portal.koreatech.ac.kr/ctt/')
-    content = str(content).replace('src="/cheditors/', 'src="https://job.koreatech.ac.kr/cheditors/')
-    content = re.sub("(<!--.*?-->)", "", str(content))
-    
-    registered_at = soup.findAll('tr', class_= "head")[1].find('td').text
-    registered_at = str(registered_at)
-    registered_at = registered_at[0:8] + registered_at[11:]
+    registered_at = soup.find('span', {'class':'gall_date'}).get('title')
     
     na.content = content
     na.registered_at = registered_at
@@ -149,7 +105,7 @@ def updateDB(nas):
             connection.rollback()
             print(error)
 
-class NoticeArticle:
+class DcArticle:
     def __init__(self, boardId, title, author, articleNum, permalink):
         self.board_id = boardId
         self.title = title
@@ -157,9 +113,9 @@ class NoticeArticle:
         self.author = author
         self.hit = 0
         self.is_deleted = 0
+        self.has_notice = 0
         self.article_num = articleNum
         self.permalink = permalink
-        self.has_notice = 0
         self.registered_at = None
         pass
 
