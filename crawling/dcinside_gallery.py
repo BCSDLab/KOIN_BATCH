@@ -10,7 +10,8 @@ def connect_db():
     conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
                            user=config.DATABASE_CONFIG['user'],
                            password=config.DATABASE_CONFIG['password'],
-                           db=config.DATABASE_CONFIG['db'])
+                           db=config.DATABASE_CONFIG['db'],
+                           charset='utf8')
     return conn
 
 noticeIds = {
@@ -64,7 +65,6 @@ def setContent(na):
     content = str(content).replace('src="//', 'src="https://')
     content = str(content).replace('href="//', 'href="https://')
     content = re.sub("(<!--.*?-->)", "", str(content))
-    content = str(content).replace("'", '"')
 
     registered_at = soup.find('span', {'class':'gall_date'}).get('title')
     
@@ -82,23 +82,25 @@ def getBoardId(tag):
 def updateDB(nas):
     cur = connection.cursor()
 
+    #추후 디씨 크롤링 등록시 sql문 테이블 변경 필요
     for na in nas:
+        na.content = na.content.replace("'","""''""") #sql문에서 작은따옴표 이스케이프 처리
         try:
             sql = "INSERT INTO koin.notice_articles(board_id, title, content, author, hit, is_deleted, article_num, permalink, has_notice, registered_at) \
-                VALUES (%s, '%s', '%s', '%s', %s, %s, %s, '%s', %s, '%s') \
-                ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id), board_id = %s, article_num = %s"
+                VALUES (%d, '%s', '%s', '%s', %d, %d, %d, '%s', %d, '%s') \
+                ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id), board_id = %d, article_num = %d"
 
-            cur.execute(sql % (na.board_id, na.title, na.content, na.author, na.hit, na.is_deleted, na.article_num, na.permalink, na.has_notice, na.registered_at, na.board_id, na.article_num))
+            cur.execute(sql % (na.board_id, na.title, na.content, na.author, na.hit, na.is_deleted, int(na.article_num), na.permalink, na.has_notice, na.registered_at, na.board_id, int(na.article_num)))
 
             newNoticeId = cur.lastrowid
            
             meta = json.dumps({"registered_at": na.registered_at, "permalink": na.permalink})
           
             sql = "INSERT INTO koin.articles(board_id, title, nickname, content, user_id, ip, meta, is_notice, created_at, notice_article_id) \
-                VALUES (%s, '%s', '%s', '%s', %s, '%s', '%s', %s, '%s', %s) \
-                ON DUPLICATE KEY UPDATE board_id = %s, notice_article_id = %s"
+                VALUES (%d, '%s', '%s', '%s', %d, '%s', '%s', %d, '%s', %d) \
+                ON DUPLICATE KEY UPDATE board_id = %d, notice_article_id = %d"
 
-            cur.execute(sql % (na.board_id, na.title, na.author, na.content, 0, '127.0.0.1', meta, 1, na.registered_at, newNoticeId, na.board_id, newNoticeId))
+            cur.execute(sql % (na.board_id, na.title, na.author, na.content, 0, "127.0.0.1", meta, 1, na.registered_at, newNoticeId, na.board_id, newNoticeId))
             connection.commit()
 
         except Exception as error:
