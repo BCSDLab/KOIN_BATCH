@@ -1,12 +1,14 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import urllib3
 from urllib.parse import urlparse, parse_qs
 import pymysql
 import json
 import config
 
 def connect_db():
+    urllib3.disable_warnings()
     conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
                            user=config.DATABASE_CONFIG['user'],
                            password=config.DATABASE_CONFIG['password'],
@@ -39,7 +41,7 @@ def crawling(noticeId, ls=10):
         host = "https://job.koreatech.ac.kr"
         
         url = host + "/jobs/notice/jobNoticeList.aspx?page=1"
-        html = requests.get(url)
+        html = requests.get(url, verify=False)
         soup = BeautifulSoup(html.text, "html.parser")
 
         trs = soup.select('table > tbody > tr')
@@ -64,7 +66,7 @@ def crawling(noticeId, ls=10):
         host = "https://portal.koreatech.ac.kr"    
              
         url = host + "/ctt/bb/bulletin?b=" + str(noticeId)
-        html = requests.get(url)
+        html = requests.get(url, verify=False)
         soup = BeautifulSoup(html.text, "html.parser")
 
         trs = soup.select('table > tbody > tr')
@@ -88,7 +90,7 @@ def crawling(noticeId, ls=10):
     pass
 
 def setContent(na):
-    html = requests.get(na.permalink)
+    html = requests.get(na.permalink, verify=False)
     soup = BeautifulSoup(html.text, "html.parser")
     
     content = soup.find('div', class_= "bc-s-post-ctnt-area")
@@ -100,7 +102,7 @@ def setContent(na):
     pass
 
 def setContentJob(na):
-    html = requests.get(na.permalink)
+    html = requests.get(na.permalink, verify=False)
     soup = BeautifulSoup(html.text, "html.parser")
     
     content = soup.find('tr', class_= "content")
