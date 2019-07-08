@@ -16,8 +16,8 @@ def crawling():
     cs = []
 
     url = "https://www.koreatech.ac.kr/prog/schedule/kor/sub04_01_01_01/1/haksa.do"
-        
-    html = requests.get(url)
+    
+    html = requests.get(url, verify=False)
     soup = BeautifulSoup(html.text, "html.parser")
     
     table = soup.find('div', class_= 'schedule_table_web')
