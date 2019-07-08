@@ -12,7 +12,8 @@ def connect_db():
     conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
                            user=config.DATABASE_CONFIG['user'],
                            password=config.DATABASE_CONFIG['password'],
-                           db=config.DATABASE_CONFIG['db'])
+                           db=config.DATABASE_CONFIG['db'],
+                           charset='utf8')
     return conn
 
 places = [
@@ -43,8 +44,8 @@ def getMenus(currentDate):
 
     print(url)
     html = requests.get(url)
-    html.encoding = 'CP-949'
-    # html.encoding = 'UTF-8'
+    # html.encoding = 'CP-949'
+    html.encoding = 'UTF-8'
     
     # soup = BeautifulSoup(html.text, "html.parser")
     soup = BeautifulSoup(html.content.decode('euc-kr','replace'))
@@ -148,6 +149,7 @@ def updateDB(menus):
             print(menu.menu)
             print(menu.price_card)
             print(menu.price_cash)
+            menu.menu = menu.menu.replace("\\","\\\\")
             cur.execute(sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
 
             connection.commit()
