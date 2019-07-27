@@ -53,6 +53,8 @@ def crawling():
         regular_number = ws['%s%d' % (regular_number_col, row)].value
         department = ws['%s%d' % (department_col, row)].value
         target = ws['%s%d' % (target_col, row)].value
+        if target:  # None이 아니라면 target의 여백들 지워준다.
+            target = target.strip()
         professor = ws['%s%d' % (professor_col, row)].value
         is_english = ws['%s%d' % (is_english_col, row)].value
         design_score = ws['%s%d' % (design_score_col, row)].value
