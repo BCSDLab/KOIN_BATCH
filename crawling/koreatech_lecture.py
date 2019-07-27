@@ -6,22 +6,22 @@ import config
 
 ### static field ###
 # 정규 수강신청 엑셀파일
-filename = 'lecture.xlsx'  # 읽어들일 엑셀파일명
-start_row = 6  # 데이터가 시작하는 row
+filename = 'lecture3.xlsx'  # 읽어들일 엑셀파일명
+start_row = 7  # 데이터가 시작하는 row
 year_col = 'A'  # 학년도 column
 semester_col = 'B'  # 학기 column
 code_col = 'C'  # 교과목코드 column
 name_col = 'D'  # 교과목명 column
-grades_col = 'G'  # 학점 column
-class_number_col = 'AF'  # 분반 column
-regular_number_col = 'AG'  # 수정정원 column
-department_col = 'AZ'  # 개설학과 column
-target_col = 'AH'  # 대상학과 학년 전공 column
-professor_col = 'AY'  # 교수 column
-is_english_col = 'BA'  # 영어강의여부 column
-design_score_col = 'BB'  # 설계학점 column
-is_elearning_col = 'BC'  # 이러닝여부 column
-class_time_col = 'AI'  # 시간 column
+grades_col = 'F'  # 학점 column
+class_number_col = 'I'  # 분반 column
+regular_number_col = 'J'  # 수정정원 column
+department_col = 'L'  # 개설학과 column
+target_col = 'M'  # 대상학과 학년 전공 column
+professor_col = 'BB'  # 교수 column
+is_english_col = 'BJ'  # 영어강의여부 column
+design_score_col = 'BO'  # 설계학점 column
+is_elearning_col = 'BM'  # 이러닝여부 column
+class_time_col = 'AP'  # 시간 column
 
 day_to_index = {'월': '0', '화': '1', '수': '2', '목': '3', '금': '4', '토': '5', '일': '6'}
 
@@ -73,9 +73,9 @@ def crawling():
 def convert_classtime(ws, row):
     start_index = column_index_from_string(class_time_col)
     class_time = []
-    for column in range(start_index, start_index + 16):
+    for column in range(start_index, start_index + 12):
         detail_time = ws.cell(row=row, column=column).value
-        if not detail_time.strip():  # 빈 시간 제외
+        if not detail_time or not detail_time.strip():  # 빈 시간 제외
             continue
         day = detail_time.split('/')[0]
         time = detail_time.split('/')[1]
