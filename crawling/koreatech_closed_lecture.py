@@ -2,6 +2,7 @@ import pymysql
 import urllib3
 import openpyxl
 import config
+import time
 
 ### static field ###
 # 폐강된 강좌 엑셀파일
@@ -50,26 +51,26 @@ def crawling():
 
         # print(semester_date, code, name, grades, class_number, department, professor, is_english)
 
-    updateDB(lectures)
+    updateDB(lectures, semester_date)
     pass
 
 
-def updateDB(lectures):
+def updateDB(lectures, semester_date):
     cur = connection.cursor()
+    try:
+        for lecture in lectures:
+                sql = "DELETE FROM koin.lectures WHERE semester_date='%s' and code='%s' and name='%s' and grades='%s' and class='%s' and department='%s' and professor='%s' and is_english='%s'"
 
-    for lecture in lectures:
-        try:
-            sql = "DELETE FROM koin.lectures WHERE semester_date='%s' and code='%s' and name='%s' and grades='%s' and class='%s' and department='%s' and professor='%s' and is_english='%s'"
+                cur.execute(sql % (
+                    lecture.semester_date, lecture.code, lecture.name, lecture.grades, lecture.class_number,
+                    lecture.department, lecture.professor, lecture.is_english))
 
-            cur.execute(sql % (
-                lecture.semester_date, lecture.code, lecture.name, lecture.grades, lecture.class_number,
-                lecture.department, lecture.professor, lecture.is_english))
+                cur.execute("UPDATE koin.versions SET version = '%s_%d' WHERE type = 'timetable'" % (semester_date, int(time.time())))
+                connection.commit()
 
-            connection.commit()
-
-        except Exception as error:
-            connection.rollback()
-            print(error)
+    except Exception as error:
+        connection.rollback()
+        print(error)
 
 
 class Lecture:

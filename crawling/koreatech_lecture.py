@@ -3,10 +3,11 @@ import urllib3
 import openpyxl
 from openpyxl.utils.cell import column_index_from_string
 import config
+import time
 
 ### static field ###
 # 정규 수강신청 엑셀파일
-filename = 'lecture3.xlsx'  # 읽어들일 엑셀파일명
+filename = 'lecture.xlsx'  # 읽어들일 엑셀파일명
 start_row = 7  # 데이터가 시작하는 row
 year_col = 'A'  # 학년도 column
 semester_col = 'B'  # 학기 column
@@ -91,22 +92,24 @@ def convert_classtime(ws, row):
 
 def updateDB(lectures, semester_date):
     cur = connection.cursor()
-    cur.execute("DELETE FROM koin.lectures WHERE SEMESTER_DATE='%s'" % semester_date)
+    try:
+        cur.execute("DELETE FROM koin.lectures WHERE SEMESTER_DATE='%s'" % semester_date)
 
-    for lecture in lectures:
-        try:
-            sql = "INSERT INTO koin.lectures(semester_date, code, name, grades, class, regular_number, department, target, professor, is_english, design_score, is_elearning, class_time) \
-                VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')"
+        for lecture in lectures:
+                sql = "INSERT INTO koin.lectures(semester_date, code, name, grades, class, regular_number, department, target, professor, is_english, design_score, is_elearning, class_time) \
+                    VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')"
 
-            cur.execute(sql % (
-                lecture.semester_date, lecture.code, lecture.name, lecture.grades, lecture.class_number,
-                lecture.regular_number, lecture.department, lecture.target, lecture.professor,
-                lecture.is_english, lecture.design_score, lecture.is_elearning, lecture.class_time))
-            connection.commit()
+                cur.execute(sql % (
+                    lecture.semester_date, lecture.code, lecture.name, lecture.grades, lecture.class_number,
+                    lecture.regular_number, lecture.department, lecture.target, lecture.professor,
+                    lecture.is_english, lecture.design_score, lecture.is_elearning, lecture.class_time))
 
-        except Exception as error:
-            connection.rollback()
-            print(error)
+        cur.execute("UPDATE koin.versions SET version = '%s_%d' WHERE type = 'timetable'" % (semester_date, int(time.time())))
+        connection.commit()
+
+    except Exception as error:
+        connection.rollback()
+        print(error)
 
 
 class Lecture:
