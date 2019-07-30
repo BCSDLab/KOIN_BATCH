@@ -9,6 +9,7 @@ import time
 # 정규 수강신청 엑셀파일
 filename = 'lecture.xlsx'  # 읽어들일 엑셀파일명
 start_row = 7  # 데이터가 시작하는 row
+end_row = 755  # 데이터가 끝나는 row
 year_col = 'A'  # 학년도 column
 semester_col = 'B'  # 학기 column
 code_col = 'C'  # 교과목코드 column
@@ -45,7 +46,7 @@ def crawling():
     semester = ws['%s%d' % (semester_col, start_row)].value
     semester_date = '%s%s' % (year, semester.split('학기')[0])
 
-    for row in range(start_row, ws.max_row + 1):
+    for row in range(start_row, end_row + 1):
         code = ws['%s%d' % (code_col, row)].value
         name = ws['%s%d' % (name_col, row)].value
         grades = ws['%s%d' % (grades_col, row)].value
