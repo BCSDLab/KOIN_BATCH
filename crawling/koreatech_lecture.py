@@ -52,11 +52,19 @@ def crawling():
         grades = ws['%s%d' % (grades_col, row)].value
         class_number = ws['%s%d' % (class_number_col, row)].value
         regular_number = ws['%s%d' % (regular_number_col, row)].value
+        if not regular_number:
+            regular_number = ''
         department = ws['%s%d' % (department_col, row)].value
+        if not department:
+            department = ''
         target = ws['%s%d' % (target_col, row)].value
         if target:  # None이 아니라면 target의 여백들 지워준다.
-            target = target.strip()
+            target = str(target).strip()
+        else:
+            target = ''
         professor = ws['%s%d' % (professor_col, row)].value
+        if not professor:
+            professor = ''
         is_english = ws['%s%d' % (is_english_col, row)].value
         design_score = ws['%s%d' % (design_score_col, row)].value
         is_elearning = ws['%s%d' % (is_elearning_col, row)].value
@@ -96,11 +104,15 @@ def convert_classtime(ws, row):
 def updateDB(lectures, semester_date):
     cur = connection.cursor()
     try:
+        cur.execute("INSERT INTO koin.semester (SEMESTER) \
+                        SELECT '%s' FROM DUAL \
+                            WHERE NOT EXISTS (SELECT SEMESTER FROM koin.semester WHERE SEMESTER='%s')" % (semester_date, semester_date))
+
         cur.execute("DELETE FROM koin.lectures WHERE SEMESTER_DATE='%s'" % semester_date)
 
         for lecture in lectures:
                 sql = "INSERT INTO koin.lectures(semester_date, code, name, grades, class, regular_number, department, target, professor, is_english, design_score, is_elearning, class_time) \
-                    VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')"
+                        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')"
 
                 cur.execute(sql % (
                     lecture.semester_date, lecture.code, lecture.name, lecture.grades, lecture.class_number,
