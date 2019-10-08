@@ -140,7 +140,7 @@ def updateDB(searchArticles):
     try:
         sql = """
         INSERT INTO koin.search_articles (table_id, article_id, title, content, user_id, nickname, is_deleted)
-        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')
+        VALUES ('%s', '%s', '%s', '%s', %s, '%s', '%s')
         ON DUPLICATE KEY UPDATE table_id = '%s', article_id = '%s'
         """
 
