@@ -70,7 +70,7 @@ def tempArticlesMigration():
         table_id = ServiceType.ANONYMOUS.value
         article_id = row['id']
         title = str(row['title'])
-        content = str(row['id'])
+        content = str(row['content'])
         nickname = str(row['nickname'])
         is_deleted = row['is_deleted']
         created_at = row['created_at']
@@ -94,7 +94,7 @@ def lostItemsMigration():
         table_id = ServiceType.LOST.value
         article_id = row['id']
         title = str(row['title'])
-        content = str(row['id'])
+        content = str(row['content'])
         user_id = row['user_id']
         nickname = str(row['nickname'])
         is_deleted = row['is_deleted']
@@ -119,7 +119,7 @@ def itemsMigration():
         table_id = ServiceType.MARKET.value
         article_id = row['id']
         title = str(row['title'])
-        content = str(row['id'])
+        content = str(row['content'])
         user_id = row['user_id']
         nickname = str(row['nickname'])
         is_deleted = row['is_deleted']
