@@ -36,8 +36,9 @@ def getMenus(currentDate):
     month = int(currentDate[5:7])
     day = int(currentDate[8:10])
 
-    sday = datetime.datetime(year, month, day).strftime("%s")
-    
+    # sday = datetime.datetime(year, month, day).strftime("%f")
+    sday = int(time.mktime(datetime.datetime(year, month, day).timetuple()))
+
     host = "http://coop.koreatech.ac.kr/dining/menu.php"
              
     url = host + "?sday=" + str(sday)
@@ -48,7 +49,7 @@ def getMenus(currentDate):
     html.encoding = 'UTF-8'
     
     # soup = BeautifulSoup(html.text, "html.parser")
-    soup = BeautifulSoup(html.content.decode('euc-kr','replace'))
+    soup = BeautifulSoup(html.content.decode('euc-kr', 'replace'), features="html.parser")
 
     table = soup.select('table')[1]
     trs = table.select('tr')
