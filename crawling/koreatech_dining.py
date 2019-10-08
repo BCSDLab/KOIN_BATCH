@@ -163,7 +163,7 @@ def updateDB(menus):
             print(menu.menu.encode('utf-8').decode('unicode_escape'))
             print(menu.price_card)
             print(menu.price_cash)
-            menu.menu = menu.menu.replace("\\", "\\\\")
+            menu.menu = menu.menu.replace("\\", "\\\\").replace("'", "\\'")
             cur.execute(sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
 
             connection.commit()
