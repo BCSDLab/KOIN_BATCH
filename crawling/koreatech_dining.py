@@ -49,7 +49,7 @@ def getMenus(currentDate):
     html.encoding = 'UTF-8'
     
     # soup = BeautifulSoup(html.text, "html.parser")
-    soup = BeautifulSoup(html.content.decode('euc-kr', 'replace'), features="html.parser")
+    soup = BeautifulSoup(html.content, features="html.parser")
 
     table = soup.select('table')[1]
     trs = table.select('tr')
@@ -65,26 +65,37 @@ def getMenus(currentDate):
         index = 0
         for td in tds:
             span = td.find('span')
-            if(span == None):
+            if span is None:
                 index += 1
                 continue
-            
-            span2 = str(span.text).split('/')
 
-            payCard = re.split('원', span2[0])[0].replace(',', '')
-            payCash = re.split('원', span2[1])[0].replace(',', '')
+            spanSplitted = str(span.text).split('/')
+            # 에러나면 모두 null
+            try:
+                payCard = int(re.split('원', spanSplitted[0])[0].replace(',', ''))
+            except ValueError:
+                payCard = None
 
-            content = list(td.stripped_strings)
-            # content = td.text
-            # content = content.split()
+            try:
+                payCash = int(re.split('원', spanSplitted[1])[0].replace(',', ''))
+            except ValueError:
+                payCash = None
+
+            span.decompose()  # 가격은 위에서 파싱했으니 지우자
+            content = list(td.stripped_strings)  # 공백 제거한 텍스트 반환
             cols = []
 
-            cnt = len(content)
-            for row in range(0,  cnt - 1):
-                cols.append(content[row])
+            contentIndex = 0
+            hasKcal = False
+            for row in content:
+                if re.compile(r'^(\d*)kcal$').search(row):  # ~~kcal 형식이 발견되면
+                    hasKcal = True
+                    break
+                cols.append(row)
+                contentIndex += 1
             
-            kcal = re.split('kcal', content[cnt - 2])[0]
-            
+            kcal = re.split('kcal', content[contentIndex])[0] if hasKcal else None
+
             menu = Menu(currentDate, dtype, places[index], payCard, payCash, kcal, json.dumps(cols))
             menus.append(menu)
             index += 1
@@ -128,11 +139,10 @@ class Menu:
         self.date = date
         self.type = dtype
         self.place = place
-        self.price_card = price_card
-        self.price_cash = price_cash
-        self.kcal = kcal
+        self.price_card = price_card if price_card is not None else 'NULL'
+        self.price_cash = price_cash if price_cash is not None else 'NULL'
+        self.kcal = kcal if kcal is not None else 'NULL'
         self.menu = menu
-
         pass
 
 def updateDB(menus):
@@ -141,17 +151,19 @@ def updateDB(menus):
     for menu in menus:
         print("updating to DB.. %s %s %s" % (menu.date, menu.type, menu.place))
         try:
-            sql = "INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu) \
-                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s') \
-                ON DUPLICATE KEY UPDATE date = '%s', type = '%s', place = '%s'"
+            sql = """
+            INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu)
+            VALUES ('%s', '%s', '%s', %s, %s, %s, '%s')
+            ON DUPLICATE KEY UPDATE date = '%s', type = '%s', place = '%s'
+            """
             
-            print( sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
+            print(sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
             
             print(menu.kcal)
-            print(menu.menu)
+            print(menu.menu.encode('utf-8').decode('unicode_escape'))
             print(menu.price_card)
             print(menu.price_cash)
-            menu.menu = menu.menu.replace("\\","\\\\")
+            menu.menu = menu.menu.replace("\\", "\\\\")
             cur.execute(sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
 
             connection.commit()
