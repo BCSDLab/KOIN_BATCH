@@ -38,9 +38,10 @@ def articlesMigration():
 
     rows = cur.fetchall()
     for row in rows:
-        table_id = articleBoard[row['board_id']]
-        if not table_id:  # 레거시 게시판이면 스킵
+        table_id = row['board_id']
+        if table_id not in articleBoard:  # 레거시 게시판이면 스킵
             continue
+        table_id = articleBoard[table_id]
         article_id = row['id']
         title = str(row['title'])
         content = row['content']
