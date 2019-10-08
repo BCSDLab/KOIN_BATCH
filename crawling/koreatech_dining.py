@@ -73,16 +73,17 @@ def getMenus(currentDate):
 
             payCard = re.split('원', span2[0])[0].replace(',', '')
             payCash = re.split('원', span2[1])[0].replace(',', '')
-            
-            content = td.text
-            content = content.split()
+
+            content = list(td.stripped_strings)
+            # content = td.text
+            # content = content.split()
             cols = []
 
             cnt = len(content)
             for row in range(0,  cnt - 1):
                 cols.append(content[row])
             
-            kcal = re.split('kcal', content[cnt - 1])[0]
+            kcal = re.split('kcal', content[cnt - 2])[0]
             
             menu = Menu(currentDate, dtype, places[index], payCard, payCash, kcal, json.dumps(cols))
             menus.append(menu)
