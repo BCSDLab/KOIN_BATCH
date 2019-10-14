@@ -45,8 +45,8 @@ def crawling():
         for item in items:
             name = item.datename.text
             date = item.locdate.text
-            print(name, date)
-            # updateDB(name, date)
+            # print(name, date)
+            updateDB(name, date)
     pass
 
 
