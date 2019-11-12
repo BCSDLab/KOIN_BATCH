@@ -139,25 +139,29 @@ def updateDB(searchArticles):
     cur = connection.cursor()
     try:
         sql = """
-        INSERT INTO koin.search_articles (table_id, article_id, title, content, user_id, nickname, is_deleted)
-        VALUES ('%s', '%s', '%s', '%s', %s, '%s', '%s')
+        INSERT INTO koin.search_articles (table_id, article_id, title, content, user_id, nickname, is_deleted, created_at, updated_at)
+        VALUES ('%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s')
         ON DUPLICATE KEY UPDATE table_id = '%s', article_id = '%s'
         """
 
         searchArticles.title = searchArticles.title.replace("\\", "\\\\").replace("'", "\\'")
         searchArticles.content = searchArticles.content.replace("\\", "\\\\").replace("'", "\\'")
+        # print(sql % (
+        #     searchArticles.table_id, searchArticles.article_id, searchArticles.title, searchArticles.content,
+        #     searchArticles.user_id, searchArticles.nickname, searchArticles.is_deleted, searchArticles.table_id,
+        #     searchArticles.article_id))
 
         cur.execute(sql % (
             searchArticles.table_id, searchArticles.article_id, searchArticles.title, searchArticles.content,
-            searchArticles.user_id, searchArticles.nickname, searchArticles.is_deleted, searchArticles.table_id,
-            searchArticles.article_id))
+            searchArticles.user_id, searchArticles.nickname, searchArticles.is_deleted, searchArticles.created_at,
+            searchArticles.updated_at, searchArticles.table_id, searchArticles.article_id))
 
         connection.commit()
 
     except Exception as error:
         connection.rollback()
         print(error)
-        print(searchArticles.__str__())
+        print(searchArticles)
 
 
 class SearchArticlesMinified:
