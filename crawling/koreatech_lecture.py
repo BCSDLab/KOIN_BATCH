@@ -40,7 +40,7 @@ def connect_db():
 
 
 def crawling():
-    wb = openpyxl.load_workbook(filename=filename)
+    wb = openpyxl.load_workbook(filename=filename, read_only=True)
     ws = wb.active
     lectures = []
     semester = ws['%s%d' % (semester_col, start_row)].value
