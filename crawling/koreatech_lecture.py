@@ -10,8 +10,8 @@ from datetime import date
 # 정규 수강신청 엑셀파일
 year = date.today().year  # 오늘 연도
 filename = 'lecture.xlsx'  # 읽어들일 엑셀파일명
-start_row = 5  # 데이터가 시작하는 row
-end_row = 870  # 데이터가 끝나는 row
+start_row = 6  # 데이터가 시작하는 row
+end_row = 871  # 데이터가 끝나는 row
 semester_col = 'C'  # 학기 column
 code_col = 'D'  # 교과목코드 column
 name_col = 'E'  # 교과목명 column
@@ -40,7 +40,7 @@ def connect_db():
 
 
 def crawling():
-    wb = openpyxl.load_workbook(filename=filename, read_only=True)
+    wb = openpyxl.load_workbook(filename=filename)
     ws = wb.active
     lectures = []
     semester = ws['%s%d' % (semester_col, start_row)].value
@@ -75,8 +75,7 @@ def crawling():
                           is_elearning=is_elearning, class_time=class_time)
         lectures.append(lecture)
 
-        # print(semester_date, code, name, grades, class_number, regular_number, department, target, professor,
-        #       is_english, design_score, is_elearning, class_time)
+        print(semester_date, code, name, grades, class_number, regular_number, department, target, professor, is_english, design_score, is_elearning, class_time)
 
     updateDB(lectures=lectures, semester_date=semester_date)
     pass
@@ -84,8 +83,6 @@ def crawling():
 
 def convert_classtime(class_time):  # 강의 시간 변환 신버전
     classList = []
-    if class_time == '0':
-        return []
     try:
         for time in class_time.split(','):  # ,를 기준으로 파싱
             periodFlag = False
