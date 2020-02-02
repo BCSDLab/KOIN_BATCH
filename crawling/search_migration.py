@@ -20,6 +20,7 @@ class ServiceType(enum.Enum):
     ANONYMOUS = 7
     LOST = 9
     MARKET = 10
+    EVENT = 11
 
 
 def connect_db():
@@ -135,6 +136,31 @@ def itemsMigration():
     pass
 
 
+def eventArticlesMigration():
+    cur = connection.cursor()
+    cur.execute("SELECT * FROM koin.event_articles")
+
+    rows = cur.fetchall()
+    for row in rows:
+        table_id = ServiceType.EVENT.value
+        article_id = row['id']
+        title = str(row['title'])
+        content = str(row['content'])
+        user_id = row['user_id']
+        nickname = str(row['nickname'])
+        is_deleted = row['is_deleted']
+        created_at = row['created_at']
+        updated_at = row['updated_at']
+
+        soup = bs4.BeautifulSoup(content if content is not None else "", features="html.parser")
+        content = soup.text.strip()
+        searchArticles = SearchArticlesMinified(table_id=table_id, article_id=article_id, title=title, content=content,
+                                                user_id=user_id, nickname=nickname, is_deleted=is_deleted,
+                                                created_at=created_at, updated_at=updated_at)
+        updateDB(searchArticles)
+    pass
+
+
 def updateDB(searchArticles):
     cur = connection.cursor()
     try:
@@ -197,4 +223,5 @@ if __name__ == "__main__":
     tempArticlesMigration()
     lostItemsMigration()
     itemsMigration()
+    eventArticlesMigration()
     connection.close()
