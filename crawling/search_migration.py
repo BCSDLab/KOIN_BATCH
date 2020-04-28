@@ -137,22 +137,30 @@ def makeSearchArticle(schemaType, row):
 # @Date : 2020.04.28
 # @Desc : 스키마에 있는 모든 컬럼을 가져와 search_articles로 이전한다.
 def migrate(schemaType):
-    # Row를 얻어 온다.
-    rows = []
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM koin.{}".format(schemaType))
-        rows = cursor.fetchall()
-        print("[Log] Total row : {}".format(len(rows)))
+    COUNT = 5000
 
-    # search_articles에 넣는다.
-    count = 0
-    for row in rows:
-        searchArticle = makeSearchArticle(schemaType, row)
-        if not searchArticle:
-            continue
-        updateDB(searchArticle)
-        count += 1
-        print("[Log] Current row : {}".format(count), end = "\r")
+    # Row를 얻어 온다.
+    id = 0
+    while True:
+        rows = []
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM koin.{} LIMIT {}, {}".format(schemaType, id, COUNT))
+            rows = cursor.fetchall()
+            size = len(rows)
+            if size == 0:
+                break
+            print("[Log] Selected Row From {} to {} : {}".format(id, id + size, size))
+            id += size
+
+        # search_articles에 넣는다.
+        count = 0
+        for row in rows:
+            searchArticle = makeSearchArticle(schemaType, row)
+            if not searchArticle:
+                continue
+            updateDB(searchArticle)
+            count += 1
+            print("[Log] Current row : {}".format(count), end = "\r")
     print("\n[Log] Done")        
 
 # @Author : 정종우
@@ -163,7 +171,7 @@ def updateDB(searchArticle):
         with connection.cursor() as cursor:
             # SQL문 생성
             sql = """
-            INSERT INTO koin.search_articles_temp (table_id, article_id, title, content, user_id, nickname, is_deleted, created_at, updated_at) VALUES ('%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE table_id = '%s', article_id = '%s'
+            INSERT INTO koin.search_articles (table_id, article_id, title, content, user_id, nickname, is_deleted, created_at, updated_at) VALUES ('%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE table_id = '%s', article_id = '%s'
             """
 
             # SQL 검증
