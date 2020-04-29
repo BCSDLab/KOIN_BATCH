@@ -1,4 +1,6 @@
 # NOTE : 추후 Python 3.6 이상을 쓰면 문자열 모두 f-string으로 변경할 것
+# @Author : 정종우
+# @Modified : 최선문 / 2020.04.29
 
 import pymysql
 import urllib3
@@ -17,8 +19,6 @@ articleBoard = {
     10: 8
 }
 
-# @Author : 정종우
-# @Modified : 최선문 / 2020.04.28
 # @Desc : 서비스 타입을 나타내는 열거형으로 koin table_id 값을 따른다.
 class EServiceType(Enum):
     Anonymous = 7
@@ -26,8 +26,6 @@ class EServiceType(Enum):
     Market = 10
     Event = 11
 
-# @Author : 정종우
-# @Modified : 최선문 / 2020.04.28
 # @Desc : 이전할 스키마 타입이다. 각 값은 서비스 타입을 따른다.
 class ESchemaType(Enum):
     # articles는 board_id를 이용해 값을 할당한다.
@@ -37,18 +35,15 @@ class ESchemaType(Enum):
     items = EServiceType.Market.value
     event_articles = EServiceType.Event.value
 
-# @Author : 정종우
-# @Modified : 최선문 / 2020.04.28
-# @Desc
-# 검색용 아티클
+# @Desc : 검색용 아티클
 class SearchArticle:
     def __init__(self, schemaType):
         self.schemaType = ESchemaType[schemaType]
         self.table_id = self.schemaType.value
         self.article_id = 0
         self.user_id = "NULL"
-        self.title = ""
-        self.content = ""
+        self.__title = ""
+        self.__content = ""
         self.nickname = "NULL"
         self.is_deleted = 0
         self.created_at = ""
@@ -88,8 +83,6 @@ class SearchArticle:
         # HACK : DB에 제대로 저장되려면 아래와 같이 바꿔줘야 한다.
         return source.replace("\\", "\\\\").replace("'", "\\'")
        
-    
-# @Author : 정종우
 # @Desc : DB와 연결한다.
 def getConnectionToDB():
     # HACK : 혹시나 URL로 접속한다면 HTTPS 접속 때문에 오류가 생길 수 있다.
@@ -106,7 +99,10 @@ def getConnectionToDB():
     return conn
 
 # @Author : 최선문
-# @Date : 2020.04.28
+# @Return : SearchArticle
+# @Param
+# schemaType : ESchemaType에 들어있는 열거형 값의 name이다.
+# row : DictCursor로 조회한 레코드다.
 # @Desc : 스키마 타입과 행을 이용해서 SearchArticle 객체를 생성한다.
 def makeSearchArticle(schemaType, row):
     searchArticle = SearchArticle(schemaType)
@@ -135,6 +131,8 @@ def makeSearchArticle(schemaType, row):
 
 # @Author : 최선문
 # @Date : 2020.04.28
+# @Param
+# schemaType : ESchemaType에 들어있는 열거형의 name이다. 
 # @Desc : 스키마에 있는 모든 컬럼을 가져와 search_articles로 이전한다.
 def migrate(schemaType):
     COUNT = 5000
@@ -147,8 +145,11 @@ def migrate(schemaType):
             cursor.execute("SELECT * FROM koin.{} LIMIT {}, {}".format(schemaType, id, COUNT))
             rows = cursor.fetchall()
             size = len(rows)
+            
+            # 더 가져올 행이 없다면 다음 스키마를 조회한다.
             if size == 0:
                 break
+
             print("[Log] Selected Row From {} to {} : {}".format(id, id + size, size))
             id += size
 
@@ -163,22 +164,24 @@ def migrate(schemaType):
             print("[Log] Current row : {}".format(count), end = "\r")
     print("\n[Log] Done")        
 
-# @Author : 정종우
-# @Modified : 최선문 / 2020.04.28
+# @Param
+# searchArticle : makeSearchArticle로 생성한 객체다.
 # @Desc : search_articles로 해당 row를 insert 한다.
 def updateDB(searchArticle):
     try:
         with connection.cursor() as cursor:
             # SQL문 생성
             sql = """
-            INSERT INTO koin.search_articles (table_id, article_id, title, content, user_id, nickname, is_deleted, created_at, updated_at) VALUES ('%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE table_id = '%s', article_id = '%s'
+            INSERT INTO koin.search_articles (table_id, article_id, title, content, user_id, nickname, is_deleted, created_at, updated_at) VALUES ('%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE title = '%s', content = '%s', user_id = %s, nickname = '%s', is_deleted = '%s'
             """
 
+            completedSQL = sql % (searchArticle.table_id, searchArticle.article_id, searchArticle.title, searchArticle.content, searchArticle.user_id, searchArticle.nickname, searchArticle.is_deleted, searchArticle.created_at, searchArticle.updated_at, searchArticle.title, searchArticle.content, searchArticle.user_id, searchArticle.nickname, searchArticle.is_deleted)
+
             # SQL 검증
-            # print(sql % (searchArticle.table_id, searchArticle.article_id, searchArticle.title, searchArticle.content, searchArticle.user_id, searchArticle.nickname, searchArticle.is_deleted, searchArticle.created_at, searchArticle.updated_at, searchArticle.table_id, searchArticle.article_id))
+            # print(completedSQL)
 
             # 질의 실행
-            cursor.execute(sql % (searchArticle.table_id, searchArticle.article_id, searchArticle.title, searchArticle.content, searchArticle.user_id, searchArticle.nickname, searchArticle.is_deleted, searchArticle.created_at, searchArticle.updated_at, searchArticle.table_id, searchArticle.article_id))
+            cursor.execute(completedSQL)
 
             # 커밋
             connection.commit()
