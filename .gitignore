@@ -5,3 +5,4 @@ myenv
 *.iml
 *.xml
 *.xlsx
+.idea

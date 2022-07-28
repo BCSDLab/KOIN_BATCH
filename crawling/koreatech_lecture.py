@@ -75,7 +75,8 @@ def crawling():
                           is_elearning=is_elearning, class_time=class_time)
         lectures.append(lecture)
 
-        print(semester_date, code, name, grades, class_number, regular_number, department, target, professor, is_english, design_score, is_elearning, class_time)
+        print(semester_date, code, name, grades, class_number, regular_number, department, target, professor,
+              is_english, design_score, is_elearning, class_time)
 
     updateDB(lectures=lectures, semester_date=semester_date)
     pass
@@ -83,11 +84,13 @@ def crawling():
 
 def convert_classtime(class_time):  # 강의 시간 변환 신버전
     classList = []
+    day = ''
     try:
         for time in class_time.split(','):  # ,를 기준으로 파싱
+            if time[0].isalpha():
+                day = time[0]  # 요일
+                time = time[1:]  # 요일을 제외한 강의 시간
             periodFlag = False
-            day = time[0]  # 요일
-            time = time[1:]  # 요일을 제외한 강의 시간
             period = time.split('~')  # ~를 기준으로 파싱
             timeTo = timeFrom = 0
             for p in period:
@@ -134,7 +137,8 @@ def updateDB(lectures, semester_date):
     try:
         cur.execute("INSERT INTO koin.semester (SEMESTER) \
                         SELECT '%s' FROM DUAL \
-                            WHERE NOT EXISTS (SELECT SEMESTER FROM koin.semester WHERE SEMESTER='%s')" % (semester_date, semester_date))
+                            WHERE NOT EXISTS (SELECT SEMESTER FROM koin.semester WHERE SEMESTER='%s')" % (
+            semester_date, semester_date))
 
         cur.execute("DELETE FROM koin.lectures WHERE SEMESTER_DATE='%s'" % semester_date)
 
@@ -147,7 +151,8 @@ def updateDB(lectures, semester_date):
                 lecture.regular_number, lecture.department, lecture.target, lecture.professor,
                 lecture.is_english, lecture.design_score, lecture.is_elearning, lecture.class_time))
 
-        cur.execute("UPDATE koin.versions SET version = '%s_%d' WHERE type = 'timetable'" % (semester_date, int(time.time())))
+        cur.execute(
+            "UPDATE koin.versions SET version = '%s_%d' WHERE type = 'timetable'" % (semester_date, int(time.time())))
         connection.commit()
 
     except Exception as error:
