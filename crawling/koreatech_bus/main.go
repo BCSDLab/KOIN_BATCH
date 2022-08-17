@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -93,7 +94,8 @@ func main() {
 		DB:       0,
 	})
 
-	pwd, _ := os.Getwd()
+	_, filename, _, _ := runtime.Caller(0)
+	pwd := filepath.Dir(filename)
 	// 고속버스
 	expressBus := new(ExpressBus)
 	if err := getBusSchedule(filepath.Join(pwd, "express_bus.yaml"), expressBus); err != nil {
