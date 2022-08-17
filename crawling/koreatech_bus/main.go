@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -18,6 +19,17 @@ type BusInfo struct {
 	region  string
 	busType string
 }
+
+/*
+INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('천안', 'commuting');
+INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('천안', 'shuttle');
+INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('세종', 'commuting');
+INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('대전', 'commuting');
+INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('서울', 'commuting');
+INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('청주', 'shuttle');
+INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('청주', 'commuting');
+
+*/
 
 var fileMapper = map[string]BusInfo{
 	"cheonan_commuting.yaml":  {region: "천안", busType: "commuting"},
@@ -81,29 +93,36 @@ func main() {
 		DB:       0,
 	})
 
+	pwd, _ := os.Getwd()
 	// 고속버스
 	expressBus := new(ExpressBus)
-	if err := getBusSchedule("express_bus.yaml", expressBus); err != nil {
+	if err := getBusSchedule(filepath.Join(pwd, "express_bus.yaml"), expressBus); err != nil {
 		log.Fatalf("%v\n", err)
 	}
 	jsonData, err := json.Marshal(expressBus)
 	if err != nil {
 		log.Fatalf("error on marshaling json: %v\n", err)
 	}
-	rdb.Set(context.TODO(), fmt.Sprintf(RedisKey, "express", ""), jsonData, time.Duration(0))
-	log.Printf("%s 저장완료\n", fmt.Sprintf(RedisKey, "express", ""))
+	if rdb.Set(context.TODO(), fmt.Sprintf(RedisKey, "express", ""), jsonData, time.Duration(0)).Err() == nil {
+		log.Printf("%s 저장완료\n", fmt.Sprintf(RedisKey, "express", ""))
+	} else {
+		log.Printf("%s 저장실패\n", fmt.Sprintf(RedisKey, "express", ""))
+	}
 
 	// 통학버스
 	for key, value := range fileMapper {
 		shuttleBus := new(SchoolBus)
-		if err := getBusSchedule(key, shuttleBus); err != nil {
+		if err := getBusSchedule(filepath.Join(pwd, key), shuttleBus); err != nil {
 			log.Fatal(err)
 		}
 		jsonData, err := json.Marshal(shuttleBus)
 		if err != nil {
 			log.Fatalf("error on marshaling json: %v", err)
 		}
-		rdb.Set(context.TODO(), fmt.Sprintf(RedisKey, value.busType, value.region), jsonData, time.Duration(24)*time.Hour)
-		log.Printf("%s 저장완료\n", fmt.Sprintf(RedisKey, value.busType, value.region))
+		if rdb.Set(context.TODO(), fmt.Sprintf(RedisKey, value.busType, value.region), jsonData, time.Duration(24)*time.Hour).Err() == nil {
+			log.Printf("%s 저장완료\n", fmt.Sprintf(RedisKey, value.busType, value.region))
+		} else {
+			log.Printf("%s 저장실패\n", fmt.Sprintf(RedisKey, value.busType, value.region))
+		}
 	}
 }
