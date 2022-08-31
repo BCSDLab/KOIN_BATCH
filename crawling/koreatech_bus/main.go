@@ -29,7 +29,6 @@ INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('대전', 'commuting
 INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('서울', 'commuting');
 INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('청주', 'shuttle');
 INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('청주', 'commuting');
-
 */
 
 var fileMapper = map[string]BusInfo{
@@ -59,6 +58,7 @@ type SchoolBus struct {
 
 type Course struct {
 	RouteName   string        `yaml:"route_name" json:"route_name"`
+	RunningDays []int         `yaml:"running_days" json:"running_days"`
 	ArrivalInfo []ArrivalInfo `yaml:"arrival_info" json:"arrival_info"`
 }
 
