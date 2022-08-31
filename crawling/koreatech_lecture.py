@@ -1,3 +1,4 @@
+import sys
 import pymysql
 import urllib3
 import openpyxl
@@ -5,6 +6,8 @@ import openpyxl
 import config
 import time
 from datetime import date
+sys.path.append("/home/ubuntu/myvenv/lib/python3.5/site-packages")
+
 
 ### static field ###
 # 정규 수강신청 엑셀파일

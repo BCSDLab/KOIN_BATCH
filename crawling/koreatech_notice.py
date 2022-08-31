@@ -186,5 +186,5 @@ if __name__ == "__main__":
     for noticeId in noticeIds.keys():
         nas = crawling(noticeId)
         print(nas)
-        # updateDB(nas)
+        updateDB(nas)
     connection.close()
