@@ -1,12 +1,14 @@
+import datetime
+import json
+import re
+import time
+
+import pymysql
 import requests
 from bs4 import BeautifulSoup
-import re
-from urllib.parse import urlparse, parse_qs
-import pymysql
-import datetime
-import time
-import json
+
 import config
+
 
 def connect_db():
     conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
@@ -16,57 +18,93 @@ def connect_db():
                            charset='utf8')
     return conn
 
-places = [
-    "한식",
-    "일품식",
-    "특식",
-    "양식",
-    "능수관",
-    "수박여",
-    "2캠퍼스",
-    "2캠퍼스-2"
-]
 
-def getMenus(currentDate):
-    menus = []
+# places = [
+#     "A코너",
+#     "B코너,"
+#     "C코너"
+#     "능수관",
+#     "수박여",
+#     "2캠퍼스",
+#     "2캠퍼스-2"
+# ]
 
-    currentDate = currentDate.strftime("%Y-%m-%d")
-    
-    year = int(currentDate[0:4])
-    month = int(currentDate[5:7])
-    day = int(currentDate[8:10])
 
-    # sday = datetime.datetime(year, month, day).strftime("%f")
-    sday = int(time.mktime(datetime.datetime(year, month, day).timetuple()))
+class Coop:
+    def __init__(self):
+        self.__host = "http://coop.koreatech.ac.kr/dining/menu.php"
+        self.__categories = []
+        self.__set_categories()
 
-    host = "http://coop.koreatech.ac.kr/dining/menu.php"
-             
-    url = host + "?sday=" + str(sday)
+    @property
+    def host(self):
+        return self.__host
 
-    print(url)
+    @property
+    def categories(self):
+        return self.__categories
+
+    def __set_categories(self):
+        html = requests.get(self.__host)
+        html.encoding = 'UTF-8'
+
+        soup = BeautifulSoup(html.content, features="html.parser")
+        category = soup.find_all('td', 'menu-top')
+        for i in category:
+            if i.has_attr('colspan') or not i.text.strip():
+                continue
+
+            text = i.text if not i.select_one('td > strong > span') else \
+                i.select_one('td > strong > span').text.replace('(', '').replace(')', '')
+            self.__categories.append(text.strip())
+
+
+class MenuEntity:
+    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu):
+        self.date = date
+        self.dining_time = dining_time
+        self.place = place
+        self.price_card = price_card if price_card is not None else 'NULL'
+        self.price_cash = price_cash if price_cash is not None else 'NULL'
+        self.kcal = kcal if kcal is not None else 'NULL'
+        self.menu = menu
+
+    def __str__(self):
+        return '%s, %s, %s, %s, %s, %s' % (
+            self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu
+        )
+
+
+coop = Coop()
+
+
+def getMenus(target_date: datetime):
+    year, month, day = target_date.year, target_date.month, target_date.day
+    chrono_time = int(time.mktime(datetime.datetime(year, month, day).timetuple()))
+
+    url = f'{coop.host}?sday={str(chrono_time)}'
     html = requests.get(url)
-    # html.encoding = 'CP-949'
     html.encoding = 'UTF-8'
-    
-    # soup = BeautifulSoup(html.text, "html.parser")
+
     soup = BeautifulSoup(html.content, features="html.parser")
 
     table = soup.select('table')[1]
     trs = table.select('tr')
     trs = trs[3:6]
 
+    menus = []
     for tr in trs:
         tds = tr.select('td')
-        
-        dtype = str(tds[0].text).strip().upper()
-    
+        dining_time = str(tds[0].text).strip().upper()
+
         tds = tds[1:]
 
-        index = 0
-        for td in tds:
+        for i, td in enumerate(tds):
+            if i >= len(coop.categories):
+                break
+
             span = td.find('span')
             if span is None:
-                index += 1
                 continue
 
             spanSplitted = str(span.text).split('/')
@@ -93,88 +131,62 @@ def getMenus(currentDate):
                     break
                 cols.append(row)
                 contentIndex += 1
-            
+
             kcal = re.split('kcal', content[contentIndex])[0] if hasKcal else None
 
-            menu = Menu(currentDate, dtype, places[index], payCard, payCash, kcal, json.dumps(cols))
+            menu = MenuEntity(target_date, dining_time, coop.categories[i],
+                              payCard, payCash, kcal, json.dumps(cols, ensure_ascii=False))
             menus.append(menu)
-            index += 1
 
     return menus
 
-def crawling(startDate=None, endDate=None):
-    if(startDate == None):
-        startDate = datetime.datetime.today()
-    else:
-        year = int(startDate[0:4])
-        month = int(startDate[5:7])
-        day = int(startDate[8:10])
 
-        startDate = datetime.datetime(year, month, day)
+def crawling(start_date: datetime = None, end_date: datetime = None):
+    start_date = datetime.datetime.now() if start_date is None else start_date
+    end_date = start_date + datetime.timedelta(days=7) if end_date is None or end_date < start_date else end_date
 
-    if(endDate == None):
-        endDate = startDate + datetime.timedelta(days=7)
-    else:
-        year = int(endDate[0:4])
-        month = int(endDate[5:7])
-        day = int(endDate[8:10])
-
-        endDate = datetime.datetime(year, month, day)
-
-    currentDate = startDate
-    
-    while(currentDate <= endDate):
+    currentDate = start_date
+    while currentDate <= end_date:
         print(currentDate)
         menus = getMenus(currentDate)
-        
+
         print("%s Found" % str(len(menus)))
+        for menu in menus:
+            print(menu)
 
         updateDB(menus)
         currentDate += datetime.timedelta(days=1)
-        pass
-    pass
 
-class Menu:
-    def __init__(self, date, dtype, place, price_card, price_cash, kcal, menu):
-        self.date = date
-        self.type = dtype
-        self.place = place
-        self.price_card = price_card if price_card is not None else 'NULL'
-        self.price_cash = price_cash if price_cash is not None else 'NULL'
-        self.kcal = kcal if kcal is not None else 'NULL'
-        self.menu = menu
-        pass
 
 def updateDB(menus):
     cur = connection.cursor()
 
     for menu in menus:
-        print("updating to DB.. %s %s %s" % (menu.date, menu.type, menu.place))
+        print("updating to DB..\n%s %s %s" % (menu.date, menu.dining_time, menu.place))
         try:
             sql = """
             INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu)
             VALUES ('%s', '%s', '%s', %s, %s, %s, '%s')
             ON DUPLICATE KEY UPDATE date = '%s', type = '%s', place = '%s'
             """
-            
-            print(sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
-            
-            print(menu.kcal)
-            print(menu.menu.encode('utf-8').decode('unicode_escape'))
-            print(menu.price_card)
-            print(menu.price_cash)
+
+            print(sql % (
+                menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
+                menu.date, menu.dining_time, menu.place))
+
             menu.menu = menu.menu.replace("\\", "\\\\").replace("'", "\\'")
-            cur.execute(sql % (menu.date, menu.type, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, menu.date, menu.type, menu.place))
+            cur.execute(sql % (
+                menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
+                menu.date, menu.dining_time, menu.place))
 
             connection.commit()
         except Exception as error:
             connection.rollback()
             print(error)
 
+
+# execute only if run as a script
 if __name__ == "__main__":
-    # execute only if run as a script
     connection = connect_db()
     crawling()
     connection.close()
-
-
