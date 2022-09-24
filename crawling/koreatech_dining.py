@@ -19,15 +19,9 @@ def connect_db():
     return conn
 
 
-# places = [
-#     "A코너",
-#     "B코너,"
-#     "C코너"
-#     "능수관",
-#     "수박여",
-#     "2캠퍼스",
-#     "2캠퍼스-2"
-# ]
+extra_places = [
+    "2캠퍼스",
+]
 
 
 class Coop:
@@ -35,6 +29,7 @@ class Coop:
         self.__host = "http://coop.koreatech.ac.kr/dining/menu.php"
         self.__categories = []
         self.__set_categories()
+        self.__categories.extend(extra_places)
 
     @property
     def host(self):
