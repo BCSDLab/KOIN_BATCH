@@ -2,34 +2,23 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/yaml.v3"
 )
-
-const RedisKey = "Tago@busTimetable.%s.%s"
 
 type BusInfo struct {
 	region  string
 	busType string
 }
-
-/*
-INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('천안', 'commuting');
-INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('천안', 'shuttle');
-INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('세종', 'commuting');
-INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('대전', 'commuting');
-INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('서울', 'commuting');
-INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('청주', 'shuttle');
-INSERT INTO `koin`.`courses` (`region`, `bus_type`) VALUES ('청주', 'commuting');
-*/
 
 var fileMapper = map[string]BusInfo{
 	"cheonan_commuting.yaml":  {region: "천안", busType: "commuting"},
@@ -41,35 +30,32 @@ var fileMapper = map[string]BusInfo{
 	"cheongju_commuting.yaml": {region: "청주", busType: "commuting"},
 }
 
-type ExpressBus struct {
-	TerminalToKoreatech []ExpressBusTime `yaml:"terminal_to_koreatech" json:"terminal_to_koreatech"`
-	KoreatechToTerminal []ExpressBusTime `yaml:"koreatech_to_terminal" json:"koreatech_to_terminal"`
-}
-
-type ExpressBusTime struct {
-	Departure string `yaml:"departure" json:"departure"`
-	Arrival   string `yaml:"arrival" json:"arrival"`
+type Timetable struct {
+	ToSchool   []Course `yaml:"to_school" json:"to_school" bson:"to_school"`
+	FromSchool []Course `yaml:"from_school" json:"from_school" bson:"from_school"`
 }
 
 type SchoolBus struct {
-	ToSchool   []Course `yaml:"to_school" json:"to_school"`
-	FromSchool []Course `yaml:"from_school" json:"from_school"`
+	Region    string   `yaml:"region" json:"region" bson:"region"`
+	BusType   string   `yaml:"bus_type" json:"bus_type" bson:"bus_type"`
+	Direction string   `yaml:"direction" json:"direction" bson:"direction"`
+	Courses   []Course `yaml:"courses" json:"courses" bson:"courses"`
 }
 
 type Course struct {
-	RouteName   string        `yaml:"route_name" json:"route_name"`
-	RunningDays []int         `yaml:"running_days" json:"running_days"`
-	ArrivalInfo []ArrivalInfo `yaml:"arrival_info" json:"arrival_info"`
+	RouteName   string        `yaml:"route_name" json:"route_name" bson:"route_name"`
+	RunningDays []string      `yaml:"running_days" json:"running_days" bson:"running_days"`
+	ArrivalInfo []ArrivalInfo `yaml:"arrival_info" json:"arrival_info" bson:"arrival_info"`
 }
 
 type ArrivalInfo struct {
-	NodeName    string `yaml:"node_name" json:"node_name"`
-	ArrivalTime string `yaml:"arrival_time" json:"arrival_time"`
+	NodeName    string `yaml:"node_name" json:"node_name" bson:"node_name"`
+	ArrivalTime string `yaml:"arrival_time" json:"arrival_time" bson:"arrival_time"`
 }
 
 func bindingData(data []byte, class interface{}) error {
 	switch class.(type) {
-	case *ExpressBus, *SchoolBus:
+	case *Timetable:
 		err := yaml.Unmarshal(data, class)
 		if err != nil {
 			return fmt.Errorf("error on binding: %w", err)
@@ -86,45 +72,59 @@ func getBusSchedule(fileName string, class interface{}) error {
 	return bindingData(data, class)
 }
 
+func ConnectDB() (client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
+	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+	clientOptions := options.Client().ApplyURI("mongodb://" + "localhost:27017")
+	client, _ = mongo.Connect(ctx, clientOptions)
+	return client, ctx, cancel
+}
+
 func main() {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Username: "",
-		Password: "",
-		DB:       0,
-	})
+	client, ctx, _ := ConnectDB()
+	col := client.Database("koin").Collection("bus_timetables")
+	findAndReplaceOptions := options.FindOneAndReplaceOptions{}
+	findAndReplaceOptions.SetUpsert(true)
 
 	_, filename, _, _ := runtime.Caller(0)
 	pwd := filepath.Dir(filename)
-	// 고속버스
-	expressBus := new(ExpressBus)
-	if err := getBusSchedule(filepath.Join(pwd, "express_bus.yaml"), expressBus); err != nil {
-		log.Fatalf("%v\n", err)
-	}
-	jsonData, err := json.Marshal(expressBus)
-	if err != nil {
-		log.Fatalf("error on marshaling json: %v\n", err)
-	}
-	if rdb.Set(context.TODO(), fmt.Sprintf(RedisKey, "express", ""), jsonData, time.Duration(0)).Err() == nil {
-		log.Printf("%s 저장완료\n", fmt.Sprintf(RedisKey, "express", ""))
-	} else {
-		log.Printf("%s 저장실패\n", fmt.Sprintf(RedisKey, "express", ""))
-	}
 
 	// 통학버스
 	for key, value := range fileMapper {
-		shuttleBus := new(SchoolBus)
-		if err := getBusSchedule(filepath.Join(pwd, key), shuttleBus); err != nil {
+		schoolBus := new(Timetable)
+		if err := getBusSchedule(filepath.Join(pwd, key), schoolBus); err != nil {
 			log.Fatal(err)
 		}
-		jsonData, err := json.Marshal(shuttleBus)
-		if err != nil {
-			log.Fatalf("error on marshaling json: %v", err)
+
+		schoolBusTo, schoolBusFrom := &SchoolBus{
+			Region:    value.region,
+			BusType:   value.busType,
+			Direction: "to",
+			Courses:   schoolBus.ToSchool,
+		}, &SchoolBus{
+			Region:    value.region,
+			BusType:   value.busType,
+			Direction: "from",
+			Courses:   schoolBus.FromSchool,
 		}
-		if rdb.Set(context.TODO(), fmt.Sprintf(RedisKey, value.busType, value.region), jsonData, time.Duration(24)*time.Hour).Err() == nil {
-			log.Printf("%s 저장완료\n", fmt.Sprintf(RedisKey, value.busType, value.region))
+
+		if err := col.FindOneAndReplace(ctx, bson.D{
+			{"region", schoolBusTo.Region},
+			{"bus_type", schoolBusTo.BusType},
+			{"direction", schoolBusTo.Direction},
+		}, schoolBusTo, &findAndReplaceOptions); err.Err() != nil {
+			log.Printf("%s-%s-%s 저장 완료\n", schoolBusTo.BusType, schoolBusTo.Region, schoolBusTo.Direction)
 		} else {
-			log.Printf("%s 저장실패\n", fmt.Sprintf(RedisKey, value.busType, value.region))
+			log.Printf("%s-%s-%s 업데이트 완료\n", schoolBusTo.BusType, schoolBusTo.Region, schoolBusTo.Direction)
+		}
+
+		if err := col.FindOneAndReplace(ctx, bson.D{
+			{"region", schoolBusFrom.Region},
+			{"bus_type", schoolBusFrom.BusType},
+			{"direction", schoolBusFrom.Direction},
+		}, schoolBusFrom, &findAndReplaceOptions); err.Err() != nil {
+			log.Printf("%s-%s-%s 저장 완료\n", schoolBusFrom.BusType, schoolBusFrom.Region, schoolBusFrom.Direction)
+		} else {
+			log.Printf("%s-%s-%s 업데이트 완료\n", schoolBusFrom.BusType, schoolBusFrom.Region, schoolBusFrom.Direction)
 		}
 	}
 }
