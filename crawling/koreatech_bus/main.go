@@ -31,18 +31,18 @@ var fileMapper = map[string]BusInfo{
 }
 
 type Timetable struct {
-	ToSchool   []Course `yaml:"to_school" json:"to_school" bson:"to_school"`
-	FromSchool []Course `yaml:"from_school" json:"from_school" bson:"from_school"`
+	ToSchool   []Route `yaml:"to_school" json:"to_school" bson:"to_school"`
+	FromSchool []Route `yaml:"from_school" json:"from_school" bson:"from_school"`
 }
 
 type SchoolBus struct {
-	Region    string   `yaml:"region" json:"region" bson:"region"`
-	BusType   string   `yaml:"bus_type" json:"bus_type" bson:"bus_type"`
-	Direction string   `yaml:"direction" json:"direction" bson:"direction"`
-	Courses   []Course `yaml:"courses" json:"courses" bson:"courses"`
+	Region    string  `yaml:"region" json:"region" bson:"region"`
+	BusType   string  `yaml:"bus_type" json:"bus_type" bson:"bus_type"`
+	Direction string  `yaml:"direction" json:"direction" bson:"direction"`
+	Routes    []Route `yaml:"routes" json:"routes" bson:"routes"`
 }
 
-type Course struct {
+type Route struct {
 	RouteName   string        `yaml:"route_name" json:"route_name" bson:"route_name"`
 	RunningDays []string      `yaml:"running_days" json:"running_days" bson:"running_days"`
 	ArrivalInfo []ArrivalInfo `yaml:"arrival_info" json:"arrival_info" bson:"arrival_info"`
@@ -99,12 +99,12 @@ func main() {
 			Region:    value.region,
 			BusType:   value.busType,
 			Direction: "to",
-			Courses:   schoolBus.ToSchool,
+			Routes:    schoolBus.ToSchool,
 		}, &SchoolBus{
 			Region:    value.region,
 			BusType:   value.busType,
 			Direction: "from",
-			Courses:   schoolBus.FromSchool,
+			Routes:    schoolBus.FromSchool,
 		}
 
 		if err := col.FindOneAndReplace(ctx, bson.D{
