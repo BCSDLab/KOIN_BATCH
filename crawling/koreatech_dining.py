@@ -77,7 +77,7 @@ def getMenus(target_date: datetime):
     year, month, day = target_date.year, target_date.month, target_date.day
     chrono_time = int(time.mktime(datetime.datetime(year, month, day).timetuple()))
 
-    url = f'{coop.host}?sday={str(chrono_time)}'
+    url = '%s?sday=%s' % (coop.host, str(chrono_time))
     html = requests.get(url)
     html.encoding = 'UTF-8'
 
