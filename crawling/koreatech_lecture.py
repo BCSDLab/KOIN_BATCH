@@ -13,21 +13,21 @@ sys.path.append("/home/ubuntu/myvenv/lib/python3.5/site-packages")
 # 정규 수강신청 엑셀파일
 year = date.today().year  # 오늘 연도
 filename = 'lecture.xlsx'  # 읽어들일 엑셀파일명
-start_row = 6  # 데이터가 시작하는 row
-end_row = 871  # 데이터가 끝나는 row
-semester_col = 'C'  # 학기 column
-code_col = 'D'  # 교과목코드 column
-name_col = 'E'  # 교과목명 column
-grades_col = 'K'  # 학점 column
-class_number_col = 'F'  # 분반 column
-regular_number_col = 'X'  # 수정정원 column
-department_col = 'P'  # 개설학과 column
-target_col = 'H'  # 대상학과 학년 전공 column
-professor_col = 'R'  # 교수 column
-is_english_col = 'AE'  # 영어강의여부 column
-design_score_col = 'N'  # 설계학점 column
-is_elearning_col = 'AC'  # 이러닝여부 column
-class_time_col = 'I'  # 시간 column
+start_row = 5  # 데이터가 시작하는 row
+end_row = 781  # 데이터가 끝나는 row
+semester_col = 'D'  # 학기 column
+code_col = 'E'  # 교과목코드 column
+name_col = 'F'  # 교과목명 column
+grades_col = 'J'  # 학점 column
+class_number_col = 'G'  # 분반 column
+regular_number_col = 'V'  # 수정정원 column
+department_col = 'O'  # 개설학과 column
+target_col = 'Q'  # 대상학과 학년 전공 column
+professor_col = 'S'  # 교수 column
+is_english_col = 'AI'  # 영어강의여부 column
+design_score_col = 'M'  # 설계학점 column
+is_elearning_col = 'AF'  # 이러닝여부 column
+class_time_col = 'R'  # 시간 column
 
 day_to_index = {'월': '0', '화': '1', '수': '2', '목': '3', '금': '4', '토': '5', '일': '6'}
 
