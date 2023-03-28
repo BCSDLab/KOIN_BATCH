@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"runtime"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/yaml.v3"
@@ -80,10 +82,18 @@ func ConnectDB() (client *mongo.Client, ctx context.Context, cancel context.Canc
 }
 
 func main() {
-	client, ctx, _ := ConnectDB()
-	col := client.Database("koin").Collection("bus_timetables")
+	// MongoDB
+	mongodb, ctx, _ := ConnectDB()
+	col := mongodb.Database("koin").Collection("bus_timetables")
 	findAndReplaceOptions := options.FindOneAndReplaceOptions{}
 	findAndReplaceOptions.SetUpsert(true)
+
+	// MySQL
+	mysql, err := sql.Open("mysql", "root:1234@tcp(127.0.0.1:3306)/koin")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer mysql.Close()
 
 	_, filename, _, _ := runtime.Caller(0)
 	pwd := filepath.Dir(filename)
@@ -112,9 +122,9 @@ func main() {
 			{"bus_type", schoolBusTo.BusType},
 			{"direction", schoolBusTo.Direction},
 		}, schoolBusTo, &findAndReplaceOptions); err.Err() != nil {
-			log.Printf("%s-%s-%s 저장 완료\n", schoolBusTo.BusType, schoolBusTo.Region, schoolBusTo.Direction)
+			log.Printf("%s-%s-%s 저장 완료\r\n", schoolBusTo.BusType, schoolBusTo.Region, schoolBusTo.Direction)
 		} else {
-			log.Printf("%s-%s-%s 업데이트 완료\n", schoolBusTo.BusType, schoolBusTo.Region, schoolBusTo.Direction)
+			log.Printf("%s-%s-%s 업데이트 완료\r\n", schoolBusTo.BusType, schoolBusTo.Region, schoolBusTo.Direction)
 		}
 
 		if err := col.FindOneAndReplace(ctx, bson.D{
@@ -122,9 +132,26 @@ func main() {
 			{"bus_type", schoolBusFrom.BusType},
 			{"direction", schoolBusFrom.Direction},
 		}, schoolBusFrom, &findAndReplaceOptions); err.Err() != nil {
-			log.Printf("%s-%s-%s 저장 완료\n", schoolBusFrom.BusType, schoolBusFrom.Region, schoolBusFrom.Direction)
+			log.Printf("%s-%s-%s 저장 완료\r\n", schoolBusFrom.BusType, schoolBusFrom.Region, schoolBusFrom.Direction)
 		} else {
-			log.Printf("%s-%s-%s 업데이트 완료\n", schoolBusFrom.BusType, schoolBusFrom.Region, schoolBusFrom.Direction)
+			log.Printf("%s-%s-%s 업데이트 완료\r\n", schoolBusFrom.BusType, schoolBusFrom.Region, schoolBusFrom.Direction)
 		}
+	}
+
+	updateVersion(mysql)
+}
+
+func updateVersion(mysql *sql.DB) {
+	now := time.Now()
+	version := fmt.Sprintf("%d_%d", now.Year(), now.UnixMilli())
+	if _, err := mysql.Query(
+		"INSERT INTO versions (version, type) VALUES (?, ?) ON DUPLICATE KEY UPDATE version = ?;",
+		version,
+		"bus_timetable",
+		version,
+	); err == nil {
+		log.Printf("%s 버전 업데이트 완료\r\n", version)
+	} else {
+		log.Fatal("버전 업데이트 실패\r\n", err)
 	}
 }
