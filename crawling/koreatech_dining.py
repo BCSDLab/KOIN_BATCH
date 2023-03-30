@@ -72,6 +72,15 @@ class MenuEntity:
 
 coop = Coop()
 
+def filter_emoji(row):
+    emoji_pattern = re.compile("["u"\U0001F600-\U0001F64F"  # emoticons
+                               u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                               u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                               u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                               "]+", flags=re.UNICODE)
+
+    return emoji_pattern.sub(r'', row)
+
 
 def getMenus(target_date: datetime):
     year, month, day = target_date.year, target_date.month, target_date.day
@@ -124,6 +133,7 @@ def getMenus(target_date: datetime):
                 if re.compile(r'^(\d*)kcal$').search(row):  # ~~kcal 형식이 발견되면
                     hasKcal = True
                     break
+                row = filter_emoji(row)
                 cols.append(row)
                 contentIndex += 1
 
