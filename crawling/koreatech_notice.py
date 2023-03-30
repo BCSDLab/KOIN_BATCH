@@ -138,7 +138,7 @@ def updateDB(nas):
 
     for na in nas:
         na.content = na.content.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
-        na.title = na.content.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
+        na.title = na.title.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
         try:
             sql = "INSERT INTO koin.notice_articles(board_id, title, content, author, hit, is_deleted, article_num, permalink, has_notice, registered_at) \
                 VALUES (%d, '%s', '%s', '%s', %d, %d, %d, '%s', %d, '%s') \
