@@ -1,7 +1,7 @@
 # env
 python 3
 
-# package install (23.03.20)
+# package install
 ```
 pip3 install pymysql
 pip3 install requests
