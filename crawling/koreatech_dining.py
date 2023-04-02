@@ -80,6 +80,7 @@ class MenuEntity:
 
 coop = Coop()
 
+
 def filter_emoji(row):
     emoji_pattern = re.compile("["u"\U0001F600-\U0001F64F"  # emoticons
                                u"\U0001F300-\U0001F5FF"  # symbols & pictographs
@@ -177,20 +178,20 @@ def updateDB(menus):
     for menu in menus:
         print("updating to DB..\n%s %s %s" % (menu.date, menu.dining_time, menu.place))
         try:
+            # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
             sql = """
             INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu)
             VALUES ('%s', '%s', '%s', %s, %s, %s, '%s')
-            ON DUPLICATE KEY UPDATE date = '%s', type = '%s', place = '%s'
+            ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s'
             """
 
-            print(sql % (
+            values = (
                 menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
-                menu.date, menu.dining_time, menu.place))
+                menu.price_card, menu.price_cash, menu.kcal, menu.menu
+            )
 
-            menu.menu = menu.menu.replace("\\", "\\\\").replace("'", "\\'")
-            cur.execute(sql % (
-                menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
-                menu.date, menu.dining_time, menu.place))
+            print(sql % values)
+            cur.execute(sql % values)
 
             connection.commit()
         except Exception as error:
