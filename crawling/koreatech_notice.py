@@ -64,7 +64,7 @@ def crawling(noticeId, ls=10):
 
             nas.append(na)
 
-            print('updating... %s %s' % (tag, str(articleNum)))
+            print('find... %s %s' % (tag, str(articleNum)))
     else:
         host = "https://portal.koreatech.ac.kr"
 
@@ -91,7 +91,7 @@ def crawling(noticeId, ls=10):
             setContent(na)
 
             nas.append(na)
-            print('updating... %s %s' % (tag, str(articleNum)))
+            print('find... %s %s' % (tag, str(articleNum)))
 
     return nas
 
