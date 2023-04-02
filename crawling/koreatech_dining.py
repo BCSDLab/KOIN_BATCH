@@ -54,15 +54,23 @@ class Coop:
             self.__categories.append(text.strip())
 
 
+def replace_escape_character(menu):
+    return menu.replace("\\", "\\\\").replace("'", "\\'")
+
+
+def datetime_to_YYYYMMDD(date):
+    return date.strftime('%Y%m%d')
+
+
 class MenuEntity:
     def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu):
-        self.date = date
+        self.date = datetime_to_YYYYMMDD(date)
         self.dining_time = dining_time
         self.place = place
         self.price_card = price_card if price_card is not None else 'NULL'
         self.price_cash = price_cash if price_cash is not None else 'NULL'
         self.kcal = kcal if kcal is not None else 'NULL'
-        self.menu = menu
+        self.menu = replace_escape_character(menu)
 
     def __str__(self):
         return '%s, %s, %s, %s, %s, %s' % (
@@ -71,6 +79,7 @@ class MenuEntity:
 
 
 coop = Coop()
+
 
 def filter_emoji(row):
     emoji_pattern = re.compile("["u"\U0001F600-\U0001F64F"  # emoticons
@@ -169,20 +178,20 @@ def updateDB(menus):
     for menu in menus:
         print("updating to DB..\n%s %s %s" % (menu.date, menu.dining_time, menu.place))
         try:
+            # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
             sql = """
             INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu)
             VALUES ('%s', '%s', '%s', %s, %s, %s, '%s')
-            ON DUPLICATE KEY UPDATE date = '%s', type = '%s', place = '%s'
+            ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', updated_at = '%s'
             """
 
-            print(sql % (
+            values = (
                 menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
-                menu.date, menu.dining_time, menu.place))
+                menu.price_card, menu.price_cash, menu.kcal, menu.menu, datetime.datetime.now()
+            )
 
-            menu.menu = menu.menu.replace("\\", "\\\\").replace("'", "\\'")
-            cur.execute(sql % (
-                menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
-                menu.date, menu.dining_time, menu.place))
+            print(sql % values)
+            cur.execute(sql % values)
 
             connection.commit()
         except Exception as error:
