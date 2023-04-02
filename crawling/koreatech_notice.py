@@ -1,6 +1,4 @@
 import datetime
-from datetime import date
-
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -150,7 +148,7 @@ def updateDB(nas):
             notice_query = notice_sql % (
                 na.board_id, na.title, na.content, na.author, na.hit, na.is_deleted, int(na.article_num), na.permalink,
                 na.has_notice, na.registered_at,
-                na.title, na.content, na.author,  datetime.datetime.now()
+                na.title, na.content, na.author, datetime.datetime.now()
             )
 
             cur.execute(notice_query)
