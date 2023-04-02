@@ -54,15 +54,23 @@ class Coop:
             self.__categories.append(text.strip())
 
 
+def replace_escape_character(menu):
+    return menu.replace("\\", "\\\\").replace("'", "\\'")
+
+
+def datetime_to_YYYYMMDD(date):
+    return date.strftime('%Y%m%d')
+
+
 class MenuEntity:
     def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu):
-        self.date = date
+        self.date = datetime_to_YYYYMMDD(date)
         self.dining_time = dining_time
         self.place = place
         self.price_card = price_card if price_card is not None else 'NULL'
         self.price_cash = price_cash if price_cash is not None else 'NULL'
         self.kcal = kcal if kcal is not None else 'NULL'
-        self.menu = menu
+        self.menu = replace_escape_character(menu)
 
     def __str__(self):
         return '%s, %s, %s, %s, %s, %s' % (
