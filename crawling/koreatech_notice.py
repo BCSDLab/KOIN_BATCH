@@ -137,28 +137,38 @@ def updateDB(nas):
     cur = connection.cursor()
 
     for na in nas:
-        na.content = na.content.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
-        na.title = na.title.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
+        na.content = na.content.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
+        na.title = na.title.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
         try:
-            sql = "INSERT INTO koin.notice_articles(board_id, title, content, author, hit, is_deleted, article_num, permalink, has_notice, registered_at) \
+            notice_sql = "INSERT INTO koin.notice_articles(board_id, title, content, author, hit, is_deleted, article_num, permalink, has_notice, registered_at) \
                 VALUES (%d, '%s', '%s', '%s', %d, %d, %d, '%s', %d, '%s') \
-                ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id), board_id = %d, article_num = %d"
+                    ON DUPLICATE KEY UPDATE title = '%s', content = '%s', author = '%s'"
 
-            cur.execute(sql % (
+            notice_query = notice_sql % (
                 na.board_id, na.title, na.content, na.author, na.hit, na.is_deleted, int(na.article_num), na.permalink,
-                na.has_notice, na.registered_at, na.board_id, int(na.article_num)))
+                na.has_notice, na.registered_at,
+                na.title, na.content, na.author
+            )
+
+            cur.execute(notice_query)
+            print("NOTICE_QUERY :", na.board_id, na.title[0:31], na.author)
 
             newNoticeId = cur.lastrowid
 
             meta = json.dumps({"registered_at": na.registered_at, "permalink": na.permalink})
 
-            sql = "INSERT INTO koin.articles(board_id, title, nickname, content, user_id, ip, meta, is_notice, created_at, notice_article_id) \
+            article_sql = "INSERT INTO koin.articles(board_id, title, nickname, content, user_id, ip, meta, is_notice, created_at, notice_article_id) \
                 VALUES (%d, '%s', '%s', '%s', %d, '%s', '%s', %d, '%s', %d) \
-                ON DUPLICATE KEY UPDATE board_id = %d, notice_article_id = %d"
+                ON DUPLICATE KEY UPDATE title = '%s', content = '%s', nickname = '%s'"
 
-            cur.execute(sql % (
+            article_query = article_sql % (
                 na.board_id, na.title, na.author, na.content, 0, "127.0.0.1", meta, 1, na.registered_at, newNoticeId,
-                na.board_id, newNoticeId))
+                na.title, na.content, na.author
+            )
+
+            cur.execute(article_query)
+            print("ARTICLE_QUERY :", na.board_id, na.title[0:31], na.author)
+
             connection.commit()
 
         except Exception as error:
