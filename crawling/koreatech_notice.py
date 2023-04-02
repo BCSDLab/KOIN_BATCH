@@ -1,3 +1,6 @@
+import datetime
+from datetime import date
+
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -142,12 +145,12 @@ def updateDB(nas):
         try:
             notice_sql = "INSERT INTO koin.notice_articles(board_id, title, content, author, hit, is_deleted, article_num, permalink, has_notice, registered_at) \
                 VALUES (%d, '%s', '%s', '%s', %d, %d, %d, '%s', %d, '%s') \
-                    ON DUPLICATE KEY UPDATE title = '%s', content = '%s', author = '%s'"
+                    ON DUPLICATE KEY UPDATE title = '%s', content = '%s', author = '%s', updated_at = '%s'"
 
             notice_query = notice_sql % (
                 na.board_id, na.title, na.content, na.author, na.hit, na.is_deleted, int(na.article_num), na.permalink,
                 na.has_notice, na.registered_at,
-                na.title, na.content, na.author
+                na.title, na.content, na.author,  datetime.datetime.now()
             )
 
             cur.execute(notice_query)
@@ -159,11 +162,11 @@ def updateDB(nas):
 
             article_sql = "INSERT INTO koin.articles(board_id, title, nickname, content, user_id, ip, meta, is_notice, created_at, notice_article_id) \
                 VALUES (%d, '%s', '%s', '%s', %d, '%s', '%s', %d, '%s', %d) \
-                ON DUPLICATE KEY UPDATE title = '%s', content = '%s', nickname = '%s'"
+                ON DUPLICATE KEY UPDATE title = '%s', content = '%s', nickname = '%s', updated_at = '%s'"
 
             article_query = article_sql % (
                 na.board_id, na.title, na.author, na.content, 0, "127.0.0.1", meta, 1, na.registered_at, newNoticeId,
-                na.title, na.content, na.author
+                na.title, na.content, na.author, datetime.datetime.now()
             )
 
             cur.execute(article_query)
