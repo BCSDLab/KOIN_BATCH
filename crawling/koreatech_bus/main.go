@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -74,26 +76,87 @@ func getBusSchedule(fileName string, class interface{}) error {
 	return bindingData(data, class)
 }
 
-func ConnectDB() (client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
+type Properties map[string]string
+
+func ConnectDB(configs Properties) (client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
-	clientOptions := options.Client().ApplyURI("mongodb://" + "localhost:27017")
+
+	uri := fmt.Sprintf("%s://%s:%s", "mongodb", configs["mongo.host"], configs["mongo.port"])
+
+	clientOptions := options.Client().ApplyURI(uri)
 	client, _ = mongo.Connect(ctx, clientOptions)
+
 	return client, ctx, cancel
 }
 
+func getConfigProperties() (Properties, error) {
+	configFile, err := os.Open("config.properties")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	configs := Properties{}
+	properties, err := fillConfigProperties(configFile, configs, err)
+
+	if err != nil {
+		return properties, err
+	}
+	return configs, nil
+}
+
+func fillConfigProperties(configFile *os.File, configs Properties, err error) (Properties, error) {
+	scanner := bufio.NewScanner(configFile)
+	for scanner.Scan() {
+		aLine := scanner.Text()
+
+		separateIndex := strings.Index(aLine, "=")
+		if separateIndex == -1 {
+			continue
+		}
+
+		key := strings.TrimSpace(aLine[:separateIndex])
+		value := strings.TrimSpace(aLine[separateIndex+1:])
+
+		if len(key) == 0 {
+			continue
+		}
+		configs[key] = value
+	}
+
+	err = scanner.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func main() {
+	//Config
+	configs, err := getConfigProperties()
+
+	if err != nil {
+		panic(err.Error())
+	}
+
 	// MongoDB
-	mongodb, ctx, _ := ConnectDB()
-	col := mongodb.Database("koin").Collection("bus_timetables")
+	mongodb, ctx, _ := ConnectDB(configs)
+	col := mongodb.Database(configs["mongo.database"]).Collection("bus_timetables")
 	findAndReplaceOptions := options.FindOneAndReplaceOptions{}
 	findAndReplaceOptions.SetUpsert(true)
 
 	// MySQL
-	mysql, err := sql.Open("mysql", "root:1234@tcp(127.0.0.1:3306)/koin")
+	dataSourceName := fmt.Sprintf("%s:%s@%s(%s:%s)/%s", configs["dataSource.username"], configs["dataSource.password"], configs["dataSource.protocol"], configs["dataSource.ipAddress"], configs["dataSource.port"], configs["dataSource.database"])
+	mysql, err := sql.Open(configs["dataSource.driverName"], dataSourceName)
 	if err != nil {
 		panic(err.Error())
 	}
-	defer mysql.Close()
+	defer func(mysql *sql.DB) {
+		err := mysql.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(mysql)
 
 	_, filename, _, _ := runtime.Caller(0)
 	pwd := filepath.Dir(filename)
