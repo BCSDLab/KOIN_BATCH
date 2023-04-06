@@ -206,7 +206,7 @@ func main() {
 
 func updateVersion(mysql *sql.DB) {
 	now := time.Now()
-	version := fmt.Sprintf("%d_%d", now.Year(), now.UnixMilli())
+	version := fmt.Sprintf("%d0_%d", now.Year(), now.UnixMilli()/1000)
 	if _, err := mysql.Query(
 		"INSERT INTO versions (version, type) VALUES (?, ?) ON DUPLICATE KEY UPDATE version = ?;",
 		version,
