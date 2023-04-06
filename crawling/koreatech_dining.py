@@ -182,12 +182,12 @@ def updateDB(menus):
             sql = """
             INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu)
             VALUES ('%s', '%s', '%s', %s, %s, %s, '%s')
-            ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', updated_at = '%s'
+            ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s'
             """
 
             values = (
                 menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
-                menu.price_card, menu.price_cash, menu.kcal, menu.menu, datetime.datetime.now()
+                menu.price_card, menu.price_cash, menu.kcal, menu.menu
             )
 
             print(sql % values)
