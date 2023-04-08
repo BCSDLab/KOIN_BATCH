@@ -78,7 +78,7 @@ func getBusSchedule(fileName string, class interface{}) error {
 
 type Properties map[string]string
 
-func ConnectDB(configs Properties) (client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
+func ConnectMongoDB(configs Properties) (client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 
 	uri := fmt.Sprintf("%s://%s:%s", "mongodb", configs["mongo.host"], configs["mongo.port"])
@@ -140,7 +140,7 @@ func main() {
 	}
 
 	// MongoDB
-	mongodb, ctx, _ := ConnectDB(configs)
+	mongodb, ctx, _ := ConnectMongoDB(configs)
 	col := mongodb.Database(configs["mongo.database"]).Collection("bus_timetables")
 	findAndReplaceOptions := options.FindOneAndReplaceOptions{}
 	findAndReplaceOptions.SetUpsert(true)
