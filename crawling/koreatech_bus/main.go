@@ -210,7 +210,7 @@ func updateVersion(mysql *sql.DB) {
 	if _, err := mysql.Query(
 		"INSERT INTO versions (version, type) VALUES (?, ?) ON DUPLICATE KEY UPDATE version = ?;",
 		version,
-		"bus_timetable",
+		"shuttle_bus_timetable",
 		version,
 	); err == nil {
 		log.Printf("%s 버전 업데이트 완료\r\n", version)
