@@ -6,7 +6,33 @@ import openpyxl
 import config
 import time
 from datetime import date
+from enum import Enum
+
 sys.path.append("/home/ubuntu/myvenv/lib/python3.5/site-packages")
+
+class ColumnNames(Enum):
+    # 매핑이 되는 칼럼 명을 여러가지로 설정할 수 있도록 하였다.
+    # `학\n점` 등으로 적혀져 있는 것을 주의할 것
+    # 23.3 기준, 학교에서 "수강정원" 대신 "수정정원"으로 올려놓아서, 이에 대응하기 위해 설정하였다.
+    SEMESTER = ["학기" ]
+    CODE = ["과목코드" ]
+    NAME = ["교과목명" ]
+    GRADES = ["학\n점" ]
+    CLASS_NUMBER = ["분반" ]
+    REGULAR_NUMBER = ["수강\n정원", "수정\n정원"]
+    DEPARTMENT = ["개설학부(과)" ]
+    TARGET = ["수강신청\n가능학년" ]
+    PROFESSOR = ["담당교수" ]
+    IS_ENGLISH = ["영어강의" ]
+    DESIGN_SCORE = ["설\n계" ]
+    ## e러닝은 병합이 되어있지만 첫 열을 가져오도록 로직이 구성되어있다.
+    IS_ELEARNING = ["E-Learning" ]
+    CLASS_TIME = ["강의시간" ]
+
+    def include(self, column_name):
+        return column_name in self.value
+
+
 
 
 ### static field ###
@@ -14,7 +40,7 @@ sys.path.append("/home/ubuntu/myvenv/lib/python3.5/site-packages")
 year = date.today().year  # 오늘 연도
 filename = 'lecture.xlsx'  # 읽어들일 엑셀파일명
 start_row = 5  # 데이터가 시작하는 row
-end_row = 781  # 데이터가 끝나는 row
+end_row = 791  # 데이터가 끝나는 row
 semester_col = 'D'  # 학기 column
 code_col = 'E'  # 교과목코드 column
 name_col = 'F'  # 교과목명 column
@@ -30,6 +56,62 @@ is_elearning_col = 'AF'  # 이러닝여부 column
 class_time_col = 'R'  # 시간 column
 
 day_to_index = {'월': '0', '화': '1', '수': '2', '목': '3', '금': '4', '토': '5', '일': '6'}
+
+
+class WorkSheetHelper:
+    def __init__(self, work_sheet):
+        self.sheet = work_sheet
+        self.max_row = work_sheet.max_row
+        self.max_column = work_sheet.max_column
+
+        for i in range(1, self.max_row + 1):
+            if self.at('A', i) == 'No.':
+                self.schema_row = i
+                self.instance_row = i + 1
+                break
+
+    # A1 형식으로 셀에 접근 (col, row 순)
+    def at(self, column, row):
+        return self.sheet['%s%d' % (column, row)].value
+
+
+class ColumnMapping:
+    def __init__(self, work_sheet_helper):
+        self.mapping_table = {}
+
+        row = work_sheet_helper.schema_row
+        for i in range(1, work_sheet_helper.max_column + 1):
+            col = self.get_column(i)
+
+            self.mapping_for(col, row, work_sheet_helper)
+
+        self.validates()
+
+    def validates(self):
+        if len(self.mapping_table) != len(ColumnNames):
+            errors = ""
+
+            for actual_column_name in self.mapping_table:
+                for expected_column_name in ColumnNames:
+                    if not expected_column_name.include(actual_column_name):
+                        errors += "%s(%s) " % (expected_column_name.name, expected_column_name.value)
+
+    def get_column(self, i):
+        if i <= 26:
+            return chr(i + 64)
+        else:
+            return chr(i // 26 + 64) + chr(i % 26 + 64)
+
+    def mapping_for(self, col, row, work_sheet_helper):
+        for column_name in ColumnNames:
+            if column_name.include(work_sheet_helper.at(col, row)):
+                self.mapping_table[column_name] = col
+                break
+
+    def get(self, column_name):
+        return self.mapping_table[column_name]
+
+
 
 
 def connect_db():
@@ -48,6 +130,8 @@ def crawling():
     lectures = []
     semester = ws['%s%d' % (semester_col, start_row)].value
     semester_date = '%s%s' % (year, semester.split('학기')[0])
+    work_sheet_helper = WorkSheetHelper(ws)
+    column_mapping = ColumnMapping(work_sheet_helper)
 
     for row in range(start_row, end_row + 1):
         code = ws['%s%d' % (code_col, row)].value
