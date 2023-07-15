@@ -37,8 +37,6 @@ class ColumnNames(Enum):
         return column_name in self.value
 
 
-
-
 ### static field ###
 # 정규 수강신청 엑셀파일
 year = date.today().year  # 오늘 연도
@@ -105,8 +103,6 @@ class WorkSheetMapper:
         return self.work_sheet_helper.at(self.mapping_table[column_name], row_index)
 
 
-
-
 def connect_db():
     urllib3.disable_warnings()
     conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
@@ -121,34 +117,36 @@ def crawling():
     wb = openpyxl.load_workbook(filename=filename, data_only=True)
     ws = wb.active
     lectures = []
-    semester = ws['%s%d' % (semester_col, start_row)].value
-    semester_date = '%s%s' % (year, semester.split('학기')[0])
-    work_sheet_helper = WorkSheetHelper(ws)
-    column_mapping = ColumnMapping(work_sheet_helper)
+    work_sheet = WorkSheet(ws)
+    work_sheet_mapper = WorkSheetMapper(work_sheet)
 
-    for row in range(start_row, end_row + 1):
-        code = ws['%s%d' % (code_col, row)].value
-        name = ws['%s%d' % (name_col, row)].value
-        grades = ws['%s%d' % (grades_col, row)].value
-        class_number = ws['%s%d' % (class_number_col, row)].value
-        regular_number = ws['%s%d' % (regular_number_col, row)].value
+    semester = work_sheet_mapper.get(ColumnNames.SEMESTER, work_sheet.instance_start_row)
+    semester_date = '%s%s' % (year, semester.split('학기')[0])
+
+    for row in range(work_sheet.instance_start_row, work_sheet.max_row + 1):
+        code = work_sheet_mapper.get(ColumnNames.CODE, row)
+        name = work_sheet_mapper.get(ColumnNames.NAME, row)
+        grades = work_sheet_mapper.get(ColumnNames.GRADES, row)
+        class_number = work_sheet_mapper.get(ColumnNames.CLASS_NUMBER, row)
+        regular_number = work_sheet_mapper.get(ColumnNames.REGULAR_NUMBER, row)
         if not regular_number:
             regular_number = ''
-        department = ws['%s%d' % (department_col, row)].value
+        department = work_sheet_mapper.get(ColumnNames.DEPARTMENT, row)
         if not department:
             department = ''
-        target = ws['%s%d' % (target_col, row)].value
+        target = work_sheet_mapper.get(ColumnNames.TARGET, row)
         if target:  # None이 아니라면 target의 여백들 지워준다.
             target = str(target).strip()
         else:
             target = ''
-        professor = ws['%s%d' % (professor_col, row)].value
+        professor = work_sheet_mapper.get(ColumnNames.PROFESSOR, row)
         if not professor:
             professor = ''
-        is_english = ws['%s%d' % (is_english_col, row)].value
-        design_score = ws['%s%d' % (design_score_col, row)].value
-        is_elearning = ws['%s%d' % (is_elearning_col, row)].value
-        class_time = convert_classtime(ws['%s%d' % (class_time_col, row)].value)
+        is_english = work_sheet_mapper.get(ColumnNames.IS_ENGLISH, row)
+        design_score = work_sheet_mapper.get(ColumnNames.DESIGN_SCORE, row)
+        is_elearning = work_sheet_mapper.get(ColumnNames.IS_ELEARNING, row)
+        class_time = convert_classtime(work_sheet_mapper.get(ColumnNames.CLASS_TIME, row))
+
         lecture = Lecture(semester_date=semester_date, code=code, name=name, grades=grades, class_number=class_number,
                           regular_number=regular_number, department=department, target=target,
                           professor=professor, is_english=is_english, design_score=design_score,
