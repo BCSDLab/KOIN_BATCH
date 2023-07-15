@@ -6,30 +6,101 @@ import openpyxl
 import config
 import time
 from datetime import date
+from enum import Enum
+
+OFFSET_BETWEEN_SCHEMA_INSTANCE = 2
+
+SCHEMA_ROW_DELIMITER = 'No.'
+
 sys.path.append("/home/ubuntu/myvenv/lib/python3.5/site-packages")
+
+
+class ColumnNames(Enum):
+    # 매핑이 되는 칼럼 명을 여러가지로 설정할 수 있도록 하였다.
+    # `학\n점` 등으로 적혀져 있는 것을 주의할 것
+    # 23.2 기준, 학교에서 "수강정원" 대신 "수정정원"으로 올려놓아서, 이에 대응하기 위해 배열로 여러 후보군을 설정하였다.
+    SEMESTER = ["학기"]
+    CODE = ["과목코드"]
+    NAME = ["교과목명"]
+    GRADES = ["학\n점"]
+    CLASS_NUMBER = ["분반"]
+    REGULAR_NUMBER = ["수강\n정원", "수정\n정원"]
+    DEPARTMENT = ["개설학부(과)"]
+    TARGET = ["수강신청\n가능학년"]
+    PROFESSOR = ["담당교수"]
+    IS_ENGLISH = ["영어강의"]
+    DESIGN_SCORE = ["설\n계"]
+    IS_ELEARNING = ["E-Learning"]
+    CLASS_TIME = ["강의시간"]
+
+    def include(self, column_name):
+        return column_name in self.value
 
 
 ### static field ###
 # 정규 수강신청 엑셀파일
 year = date.today().year  # 오늘 연도
 filename = 'lecture.xlsx'  # 읽어들일 엑셀파일명
-start_row = 5  # 데이터가 시작하는 row
-end_row = 781  # 데이터가 끝나는 row
-semester_col = 'D'  # 학기 column
-code_col = 'E'  # 교과목코드 column
-name_col = 'F'  # 교과목명 column
-grades_col = 'J'  # 학점 column
-class_number_col = 'G'  # 분반 column
-regular_number_col = 'V'  # 수정정원 column
-department_col = 'O'  # 개설학과 column
-target_col = 'Q'  # 대상학과 학년 전공 column
-professor_col = 'S'  # 교수 column
-is_english_col = 'AI'  # 영어강의여부 column
-design_score_col = 'M'  # 설계학점 column
-is_elearning_col = 'AF'  # 이러닝여부 column
-class_time_col = 'R'  # 시간 column
-
 day_to_index = {'월': '0', '화': '1', '수': '2', '목': '3', '금': '4', '토': '5', '일': '6'}
+
+
+class WorkSheet:
+    def __init__(self, work_sheet):
+        self.sheet = work_sheet
+        self.max_row = work_sheet.max_row
+        self.instance_max_row = work_sheet.max_row
+        self.max_column = work_sheet.max_column
+
+        for i in range(1, self.max_row + 1):
+            if self.at('A', i) == SCHEMA_ROW_DELIMITER:
+                self.schema_row = i
+                self.instance_start_row = i + OFFSET_BETWEEN_SCHEMA_INSTANCE
+                break
+
+        if self.instance_start_row == 0 or self.instance_start_row > self.instance_max_row:
+            raise Exception(SCHEMA_ROW_DELIMITER + "를 통해 행 시작을 찾을 수 없습니다.")
+
+    # A1 형식으로 셀에 접근 (col, row 순)
+    def at(self, column, row):
+        return self.sheet['%s%d' % (column, row)].value
+
+
+class WorkSheetMapper:
+    def __init__(self, work_sheet_helper):
+        self.mapping_table = {}
+        self.work_sheet_helper = work_sheet_helper
+
+        row = work_sheet_helper.schema_row
+        for i in range(1, work_sheet_helper.max_column + 1):
+            col = self.get_column(i)
+
+            self.mapping_for(col, row, work_sheet_helper)
+
+        self.validates()
+
+    def validates(self):
+        if len(self.mapping_table) != len(ColumnNames):
+            errors = ""
+
+            for actual_column_name in self.mapping_table:
+                for expected_column_name in ColumnNames:
+                    if not expected_column_name.include(actual_column_name):
+                        errors += "%s(%s) " % (expected_column_name.name, expected_column_name.value)
+
+    def get_column(self, i):
+        if i <= 26:
+            return chr(i + 64)
+        else:
+            return chr(i // 26 + 64) + chr(i % 26 + 64)
+
+    def mapping_for(self, col, row, work_sheet_helper):
+        for column_name in ColumnNames:
+            if column_name.include(work_sheet_helper.at(col, row)):
+                self.mapping_table[column_name] = col
+                break
+
+    def get(self, column_name, row_index):
+        return self.work_sheet_helper.at(self.mapping_table[column_name], row_index)
 
 
 def connect_db():
@@ -46,32 +117,36 @@ def crawling():
     wb = openpyxl.load_workbook(filename=filename, data_only=True)
     ws = wb.active
     lectures = []
-    semester = ws['%s%d' % (semester_col, start_row)].value
+    work_sheet = WorkSheet(ws)
+    work_sheet_mapper = WorkSheetMapper(work_sheet)
+
+    semester = work_sheet_mapper.get(ColumnNames.SEMESTER, work_sheet.instance_start_row)
     semester_date = '%s%s' % (year, semester.split('학기')[0])
 
-    for row in range(start_row, end_row + 1):
-        code = ws['%s%d' % (code_col, row)].value
-        name = ws['%s%d' % (name_col, row)].value
-        grades = ws['%s%d' % (grades_col, row)].value
-        class_number = ws['%s%d' % (class_number_col, row)].value
-        regular_number = ws['%s%d' % (regular_number_col, row)].value
+    for row in range(work_sheet.instance_start_row, work_sheet.max_row + 1):
+        code = work_sheet_mapper.get(ColumnNames.CODE, row)
+        name = work_sheet_mapper.get(ColumnNames.NAME, row)
+        grades = work_sheet_mapper.get(ColumnNames.GRADES, row)
+        class_number = work_sheet_mapper.get(ColumnNames.CLASS_NUMBER, row)
+        regular_number = work_sheet_mapper.get(ColumnNames.REGULAR_NUMBER, row)
         if not regular_number:
             regular_number = ''
-        department = ws['%s%d' % (department_col, row)].value
+        department = work_sheet_mapper.get(ColumnNames.DEPARTMENT, row)
         if not department:
             department = ''
-        target = ws['%s%d' % (target_col, row)].value
+        target = work_sheet_mapper.get(ColumnNames.TARGET, row)
         if target:  # None이 아니라면 target의 여백들 지워준다.
             target = str(target).strip()
         else:
             target = ''
-        professor = ws['%s%d' % (professor_col, row)].value
+        professor = work_sheet_mapper.get(ColumnNames.PROFESSOR, row)
         if not professor:
             professor = ''
-        is_english = ws['%s%d' % (is_english_col, row)].value
-        design_score = ws['%s%d' % (design_score_col, row)].value
-        is_elearning = ws['%s%d' % (is_elearning_col, row)].value
-        class_time = convert_classtime(ws['%s%d' % (class_time_col, row)].value)
+        is_english = work_sheet_mapper.get(ColumnNames.IS_ENGLISH, row)
+        design_score = work_sheet_mapper.get(ColumnNames.DESIGN_SCORE, row)
+        is_elearning = work_sheet_mapper.get(ColumnNames.IS_ELEARNING, row)
+        class_time = convert_classtime(work_sheet_mapper.get(ColumnNames.CLASS_TIME, row))
+
         lecture = Lecture(semester_date=semester_date, code=code, name=name, grades=grades, class_number=class_number,
                           regular_number=regular_number, department=department, target=target,
                           professor=professor, is_english=is_english, design_score=design_score,
@@ -183,6 +258,9 @@ class Lecture:
 
 
 if __name__ == "__main__":
-    connection = connect_db()
-    crawling()
-    connection.close()
+    try:
+        connection = connect_db()
+        crawling()
+        connection.close()
+    except Exception as error:
+        print(error)
