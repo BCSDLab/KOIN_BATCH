@@ -1,0 +1,176 @@
+nodes:
+  - &yongarm "용암동현대@"
+  - &gs_daechung "GS 대청주유소(용암동)"
+  - &sg_six "석교동 육거리"
+  - &sd_park_b "상당공원B(지하상가)"
+  - &sd_park_c "상당공원C"
+  - &gym_nepa "체육관(NEPA)"
+  - &sc_four_bs "사창사거리(청주고용센터맞은편BS)"
+  - &sc_four "사창사거리"
+  - &gallery "갤러리호텔(봉명우체국BS)"
+  - &sollbat "솔밭공원"
+  - &chungjoo_a "청주역 A(서촌동 BS)"
+  - &chungjoo_b "청주역 B"
+  - &oksan "옥산 (가락3리 BS)"
+  - &g_well_city "G-WELL CITY"
+  - &bongmyoung_post "봉명우체국"
+  - &bongmyoung_four "봉명사거리"
+  - &gym "체육관"
+  - &six "육거리"
+  - &chungjoo_cityhall "청주시청(방아다리)"
+  - &culture_industry "문화 산업단지(구 제조창)"
+  - &sm_hospital "성모병원(율량 맥도날드)"
+  - &science_park "과학단지(오창프라자)"
+  - &oc_science_park "오창과학단지"
+  - &sb_four "신봉사거리(LPG충전소)"
+  - &sy_gas "삼양가스"
+  - &koreatech "한기대"
+
+to_school:
+  - route_name: "미운행"
+    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    arrival_info: []
+#  - route_name: "주중(11시 50분)"
+#    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+#    arrival_info:
+#      - node_name: *yongarm
+#        arrival_time: "11:50"
+#      - node_name: *gs_daechung
+#        arrival_time: "11:51"
+#      - node_name: *sg_six
+#        arrival_time: "11:54"
+#      - node_name: *sd_park_b
+#        arrival_time: "11:56"
+#      - node_name: *gym_nepa
+#        arrival_time: "11:58"
+#      - node_name: *sc_four_bs
+#        arrival_time: "12:00"
+#      - node_name: *gallery
+#        arrival_time: "12:02"
+#      - node_name: *sollbat
+#        arrival_time: "12:05"
+#      - node_name: *chungjoo_a
+#        arrival_time: "12:10"
+#      - node_name: *oksan
+#        arrival_time: "12:12"
+#      - node_name: *koreatech
+#        arrival_time: "12:50"
+
+from_school:
+  - route_name: "미운행"
+    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    arrival_info: []
+#  - route_name: "주중(13시 30분)"
+#    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+#    arrival_info:
+#      - node_name: *koreatech
+#        arrival_time: "13:30"
+#      - node_name: *oksan
+#        arrival_time: "13:57"
+#      - node_name: *chungjoo_b
+#        arrival_time: "14:07"
+#      - node_name: *g_well_city
+#        arrival_time: "14:12"
+#      - node_name: *sollbat
+#        arrival_time: "14:17"
+#      - node_name: *bongmyoung_post
+#        arrival_time: "14:21"
+#      - node_name: *sc_four
+#        arrival_time: "14:25"
+#      - node_name: *gym
+#        arrival_time: "14:30"
+#      - node_name: *sd_park_c
+#        arrival_time: "14:33"
+#      - node_name: *six
+#        arrival_time: "14:36"
+#      - node_name: *sy_gas
+#        arrival_time: "14:39"
+#      - node_name: *yongarm
+#        arrival_time: "14:45"
+##      - node_name: *chungjoo_cityhall
+##        arrival_time: "14:45"
+#      - node_name: *culture_industry
+#        arrival_time: "15:05"
+#      - node_name: *sm_hospital
+#        arrival_time: "15:12"
+#      - node_name: *science_park
+#        arrival_time: "15:23"
+#      - node_name: *koreatech
+#        arrival_time: "15:50"
+#
+#  - route_name: "주중(15시 40분)"
+#    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+#    arrival_info:
+#      - node_name: *koreatech
+#        arrival_time: "15:40"
+#      - node_name: *oc_science_park
+#        arrival_time: "하차"
+#      - node_name: *sm_hospital
+#        arrival_time: "하차"
+#      - node_name: *sb_four
+#        arrival_time: "하차"
+#      - node_name: *bongmyoung_four
+#        arrival_time: "하차"
+#      - node_name: *sc_four
+#        arrival_time: "하차"
+#      - node_name: *gym
+#        arrival_time: "하차"
+#      - node_name: *sd_park_c
+#        arrival_time: "종점"
+##      - node_name: *six
+##       arrival_time: "하차"
+##      - node_name: *sy_gas
+##        arrival_time: "하차"
+##      - node_name: *yongarm
+##        arrival_time: "하차"
+#
+#  - route_name: "주중(20시 30분)"
+#    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+#    arrival_info:
+#      - node_name: *koreatech
+#        arrival_time: "20:30"
+#      - node_name: *oksan
+#        arrival_time: "20:45"
+#      - node_name: *chungjoo_b
+#        arrival_time: "20:47"
+#      - node_name: *g_well_city
+#        arrival_time: "20:49"
+#      - node_name: *sollbat
+#        arrival_time: "20:50"
+#      - node_name: *bongmyoung_post
+#        arrival_time: "20:53"
+#      - node_name: *sc_four
+#        arrival_time: "20:55"
+#      - node_name: *gym
+#        arrival_time: "20:57"
+#      - node_name: *sd_park_c
+#        arrival_time: "20:59"
+#      - node_name: *chungjoo_cityhall
+#        arrival_time: "21:15"
+#      - node_name: *culture_industry
+#        arrival_time: "21:17"
+#      - node_name: *sm_hospital
+#        arrival_time: "21:29"
+#      - node_name: *science_park
+#        arrival_time: "21:37"
+#      - node_name: *koreatech
+#        arrival_time: "21:50"
+#
+#  - route_name: "목요일, 금요일(22시 10분)"
+#    running_days: ["THU", "FRI"]
+#    arrival_info:
+#      - node_name: *koreatech
+#        arrival_time: "22:10"
+#      - node_name: *oc_science_park
+#        arrival_time: "하차"
+#      - node_name: *sm_hospital
+#        arrival_time: "하차"
+#      - node_name: *sb_four
+#        arrival_time: "하차"
+#      - node_name: *bongmyoung_four
+#        arrival_time: "하차"
+#      - node_name: *sc_four
+#        arrival_time: "하차"
+#      - node_name: *gym
+#        arrival_time: "종점"
+

@@ -1,0 +1,68 @@
+nodes:
+  - &complex_nine "9단지중흥S클래스(달콤제작소)"
+  - &sejong_city_hall "세종시청(자율주행서비스정류장)"
+  - &sejong_love_church "세종 순복음더사랑교회"
+  - &fire_department "소방청"
+  - &lg_electronics "LG전자 세종본점"
+  - &sejong_gov_complex "정부세종청사정류장(남측)BS"
+  - &dodam_library "도담풍경채도서관(도담마을6,9단지BS)"
+  - &bumjigi_village  "범지기마을10단지 교회BS"
+  - &jochiwon_xi_apartment "조치원 자이아파트(노브랜드앞BS)"
+  #- &jochiwon_burger_king "조치원 버거킹 사거리(LG전자 조치원점)"
+  - &sinbong "신봉초등학교BS"
+  - &koreatech "한기대"
+
+to_school:
+  - route_name: "세종"
+    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    arrival_info:
+      - node_name: *complex_nine
+        arrival_time: "07:20"
+      - node_name: *sejong_city_hall
+        arrival_time: "07:25"
+      - node_name: *sejong_love_church
+        arrival_time: "07:28"
+      - node_name: *fire_department
+        arrival_time: "07:34"
+      - node_name: *lg_electronics
+        arrival_time: "07:36"
+      - node_name: *sejong_gov_complex
+        arrival_time: "07:41"
+      - node_name: *dodam_library
+        arrival_time: "07:43"
+      - node_name: *bumjigi_village
+        arrival_time: "07:52"
+      - node_name: *jochiwon_xi_apartment
+        arrival_time: "08:05"
+      - node_name: *sinbong
+        arrival_time: "08:10"
+      - node_name: *koreatech
+        arrival_time: "08:50"
+
+from_school:
+  - route_name: "세종"
+    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "18:10"
+      - node_name: *sinbong
+        arrival_time: "18:50"
+      - node_name: *jochiwon_xi_apartment
+        arrival_time: "18:55"
+      - node_name: *bumjigi_village
+        arrival_time: "19:08"
+      - node_name: *dodam_library
+        arrival_time: "19:17"
+      - node_name: *sejong_gov_complex
+        arrival_time: "19:19"
+      - node_name: *lg_electronics
+        arrival_time: "19:24"
+      - node_name: *fire_department
+        arrival_time: "19:26"
+      - node_name: *sejong_love_church
+        arrival_time: "19:32"
+      - node_name: *sejong_city_hall
+        arrival_time: "19:35"
+      - node_name: *complex_nine
+        arrival_time: "19:40"
+
