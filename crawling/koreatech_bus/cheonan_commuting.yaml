@@ -55,31 +55,31 @@ to_school:
     running_days: ["MON", "TUE", "WED", "THU", "FRI"]
     arrival_info:
       - node_name: *doojung
-        arrival_time: "7:41"
+        arrival_time: "07:41"
       - node_name: *nodong
-        arrival_time: "7:43"
+        arrival_time: "07:43"
       - node_name: *neul
-        arrival_time: "7:44"
+        arrival_time: "07:44"
       - node_name: *sungjung
-        arrival_time: "7:46"
+        arrival_time: "07:46"
       - node_name: *jeonja
-        arrival_time: "7:47"
+        arrival_time: "07:47"
       - node_name: *gwanghye
-        arrival_time: "7:48"
+        arrival_time: "07:48"
       - node_name: *choongmu
-        arrival_time: "7:51"
+        arrival_time: "07:51"
       - node_name: *yongam
-        arrival_time: "7:54"
+        arrival_time: "07:54"
       - node_name: *y_city
-        arrival_time: "7:56"
+        arrival_time: "07:56"
       - node_name: *ktx_exit_3
-        arrival_time: "8:01"
+        arrival_time: "08:01"
       - node_name: *chungdang
-        arrival_time: "8:20"
+        arrival_time: "08:20"
       - node_name: *joongang
-        arrival_time: "8:40"
+        arrival_time: "08:40"
       - node_name: *koreatech
-        arrival_time: "8:50"
+        arrival_time: "08:50"
 
 from_school:
   - route_name: "천안역"
