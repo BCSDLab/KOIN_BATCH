@@ -60,6 +60,10 @@ to_school:
         arrival_time: "7:43"
       - node_name: *neul
         arrival_time: "7:44"
+      - node_name: *sungjung
+        arrival_time: "7:46"
+      - node_name: *jeonja
+        arrival_time: "7:47"
       - node_name: *gwanghye
         arrival_time: "7:48"
       - node_name: *choongmu
@@ -135,6 +139,10 @@ from_school:
         arrival_time: "19:09"
       - node_name: *gwanghye
         arrival_time: "19:12"
+      - node_name: *jeonja
+        arrival_time: "19:13"
+      - node_name: *sungjung
+        arrival_time: "19:14"
       - node_name: *neul
         arrival_time: "19:16"
       - node_name: *nodong
