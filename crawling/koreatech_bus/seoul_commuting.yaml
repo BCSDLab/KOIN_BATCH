@@ -1,0 +1,68 @@
+nodes:
+  - &koreatech "한기대"
+  - &seoul_gyodae_station "서울 교대역 3호선 14번 출구"
+  - &dongcheon_station "동천역 환승정류장"
+  - &jukjeon_simple_station "죽전 간이정류장"
+
+to_school:
+#  - route_name: "월요일 (07시10분)"
+#    running_days: [ "MON" ]
+#    arrival_info:
+#      - node_name: *seoul_gyodae_station
+#        arrival_time: "07:10"
+#      - node_name: *koreatech
+#        arrival_time: "08:40"
+#
+#  - route_name: "월요일(07시30분)"
+#    running_days: [ "MON" ]
+#    arrival_info:
+#      - node_name: *dongcheon_station
+#        arrival_time: "07:30"
+#      - node_name: *jukjeon_simple_station
+#        arrival_time: "07:33"
+#      - node_name: *koreatech
+#        arrival_time: "08:40"
+
+  - route_name: "월요일~금요일 (07시20분)"
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *seoul_gyodae_station
+        arrival_time: "07:20"
+      - node_name: *dongcheon_station
+        arrival_time: "07:37"
+      - node_name: *jukjeon_simple_station
+        arrival_time: "07:40"
+      - node_name: *koreatech
+        arrival_time: "08:50"
+
+from_school:
+#  - route_name: "금요일 (14시10분)"
+#    running_days: [ "FRI" ]
+#    arrival_info:
+#      - node_name: *koreatech
+#        arrival_time: "14:10"
+#      - node_name: *jukjeon_simple_station
+#        arrival_time: "하차"
+#      - node_name: *seoul_gyodae_station
+#        arrival_time: "하차"
+#
+#  - route_name: "수요일추가배차 (16시10분)"
+#    running_days: [ "WED" ]
+#    arrival_info:
+#      - node_name: *koreatech
+#        arrival_time: "16:10"
+#      - node_name: *jukjeon_simple_station
+#        arrival_time: "하차"
+#      - node_name: *seoul_gyodae_station
+#        arrival_time: "하차"
+
+  - route_name: "월요일~금요일 (18시10분)"
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "18:10"
+      - node_name: *jukjeon_simple_station
+        arrival_time: "하차"
+      - node_name: *seoul_gyodae_station
+        arrival_time: "하차"
+
