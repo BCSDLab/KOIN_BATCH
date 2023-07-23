@@ -110,7 +110,7 @@ from_school:
     - node_name: *bangsu
       arrival_time: "19:40"
 
-  - route_name: "분평동/산남동"
+  - route_name: "산남동/분평동"
     running_days: ["MON", "TUE", "WED", "THU", "FRI"]
     arrival_info:
       - node_name: *koreatech
