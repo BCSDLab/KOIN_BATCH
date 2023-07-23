@@ -37,21 +37,21 @@ to_school:
   - route_name: "터미널/천안역"
     running_days: ["MON", "TUE", "WED", "THU", "FRI"]
     arrival_info:
-    - node_name: *koreatech
-      arrival_time: "18:10"
-    - node_name: *dongwoo
-      arrival_time: "승하차"
-    - node_name: *baro
-      arrival_time: "18:45"
-    - node_name: *samryong
-      arrival_time: "18:47"
-    - node_name: *nambu
-      arrival_time: "18:48"
-    - node_name: *cheonan_station
-      arrival_time: "18:50"
-    - node_name: *terminal
-      arrival_time: "18:55"
-  - route_name: "두정 KTX"
+      - node_name: *terminal
+        arrival_time: "08:05"
+      - node_name: *cheonan_station
+        arrival_time: "08:10"
+      - node_name: *nambu
+        arrival_time: "08:12"
+      - node_name: *samryong
+        arrival_time: "08:13"
+      - node_name: *baro
+        arrival_time: "08:15"
+      - node_name: *dongwoo
+        arrival_time: "승하차"
+      - node_name: *koreatech
+        arrival_time: "08:50"
+  - route_name: "두정역 / KTX"
     running_days: ["MON", "TUE", "WED", "THU", "FRI"]
     arrival_info:
       - node_name: *doojung
@@ -82,43 +82,23 @@ to_school:
         arrival_time: "08:50"
 
 from_school:
-  - route_name: "천안역"
+  - route_name: "터미널/천안역"
     running_days: ["MON", "TUE", "WED", "THU", "FRI"]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "18:10"
-      - node_name: *joongang
-        arrival_time: "승하차"
       - node_name: *dongwoo
-        arrival_time: "승하차"
-      - node_name: *chungdang
-        arrival_time: "18:39"
-      - node_name: *hanyang
-        arrival_time: "18:42"
-      - node_name: *cheonan_station
-        arrival_time: "18:50"
-
-  - route_name: "터미널"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
-    arrival_info:
-      - node_name: *koreatech
-        arrival_time: "18:10"
-      - node_name: *joongang
         arrival_time: "승하차"
       - node_name: *baro
         arrival_time: "18:45"
       - node_name: *samryong
-        arrival_time: "18:46"
-      - node_name: *wonseung
         arrival_time: "18:47"
-      - node_name: *jeil
-        arrival_time: "18:49"
+      - node_name: *nambu
+        arrival_time: "18:48"
+      - node_name: *cheonan_station
+        arrival_time: "18:50"
       - node_name: *terminal
         arrival_time: "18:55"
-      - node_name: *joogong
-        arrival_time: "19:17"
-      - node_name: *dongil
-        arrival_time: "19:20"
 
   - route_name: "두정역/KTX"
     running_days: ["MON", "TUE", "WED", "THU", "FRI"]
