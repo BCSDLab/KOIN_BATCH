@@ -65,4 +65,3 @@ from_school:
         arrival_time: "19:35"
       - node_name: *complex_nine
         arrival_time: "19:40"
-
