@@ -167,7 +167,7 @@ from_school:
       - node_name: *terminal
         arrival_time: "18:55"
       - node_name: *joogong
-        arrival_time: "18:59"
+        arrival_time: "19:17"
       - node_name: *dongil
         arrival_time: "19:20"
 
@@ -183,11 +183,11 @@ from_school:
       - node_name: *baro
         arrival_time: "19:00"
       - node_name: *samryong
-        arrival_time: "19:01"
+        arrival_time: "19:02"
       - node_name: *nambu
-        arrival_time: "19:03"
-      - node_name: *sejong
         arrival_time: "19:04"
+      - node_name: *sejong
+        arrival_time: "19:05"
       - node_name: *choongmu
         arrival_time: "19:07"
       - node_name: *gwanghye
@@ -209,24 +209,24 @@ from_school:
       - node_name: *koreatech
         arrival_time: "18:10"
       - node_name: *buyoung
-        arrival_time: "18:24"
+        arrival_time: "18:34"
       - node_name: *chungdang
-        arrival_time: "18:40"
-      - node_name: *sinbang_gs
         arrival_time: "18:42"
+      - node_name: *sinbang_gs
+        arrival_time: "18:52"
       - node_name: *sinbang_leechard
-        arrival_time: "18:45"
-      - node_name: *yongam
-        arrival_time: "18:49"
-      - node_name: *hanwha
-        arrival_time: "18:53"
-      - node_name: *y_city
         arrival_time: "18:55"
-      - node_name: *ktx_exit_3
-        arrival_time: "18:58"
-      - node_name: *hoseo
+      - node_name: *yongam
+        arrival_time: "18:59"
+      - node_name: *hanwha
+        arrival_time: "19:03"
+      - node_name: *y_city
         arrival_time: "19:05"
-      - node_name: *baebang
+      - node_name: *ktx_exit_3
+        arrival_time: "19:08"
+      - node_name: *hoseo
         arrival_time: "19:15"
+      - node_name: *baebang
+        arrival_time: "19:25"
       - node_name: *onyang
-        arrival_time: "19:30"
+        arrival_time: "19:40"
