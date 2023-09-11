@@ -48,7 +48,7 @@ to_school:
       - node_name: *joongang
         arrival_time: "승하차"
       - node_name: *koreatech
-        arrival_time: "08:50"
+        arrival_time: "99:99"
 
   - route_name: "터미널"
     running_days: ["MON", "TUE", "WED", "THU", "FRI"]
