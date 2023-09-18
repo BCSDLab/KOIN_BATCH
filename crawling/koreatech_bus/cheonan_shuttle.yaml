@@ -123,6 +123,8 @@ from_school:
         arrival_time: "22:10"
       - node_name: *terminal
         arrival_time: "22:35"
+      - node_name: *cheonan_station
+        arrival_time: "종점"
 
   - route_name: "목,금 추가(14시 10분)"
     running_days: [ "THU", "FRI" ]
