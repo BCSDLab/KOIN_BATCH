@@ -116,6 +116,16 @@ from_school:
       - node_name: *koreatech
         arrival_time: "22:00"
 
+  - route_name: "주중(22시 10분)"
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "22:10"
+      - node_name: *terminal
+        arrival_time: "22:35"
+      - node_name: *cheonan_station
+        arrival_time: "종점"
+
   - route_name: "목,금 추가(14시 10분)"
     running_days: [ "THU", "FRI" ]
     arrival_info:

@@ -43,6 +43,8 @@ to_school:
         arrival_time: "08:18"
       - node_name: *chungdang
         arrival_time: "08:21"
+      - node_name: *buyoung
+        arrival_time: "08:26"
       - node_name: *dongwoo
         arrival_time: "승하차"
       - node_name: *joongang
@@ -127,8 +129,6 @@ to_school:
         arrival_time: "08:08"
       - node_name: *chungdang
         arrival_time: "08:18"
-      - node_name: *buyoung
-        arrival_time: "08:26"
       - node_name: *koreatech
         arrival_time: "08:50"
 
@@ -142,6 +142,8 @@ from_school:
         arrival_time: "승하차"
       - node_name: *dongwoo
         arrival_time: "승하차"
+      - node_name: *buyoung
+        arrival_time: "18:34"
       - node_name: *chungdang
         arrival_time: "18:39"
       - node_name: *hanyang
@@ -208,8 +210,6 @@ from_school:
     arrival_info:
       - node_name: *koreatech
         arrival_time: "18:10"
-      - node_name: *buyoung
-        arrival_time: "18:34"
       - node_name: *chungdang
         arrival_time: "18:42"
       - node_name: *sinbang_gs
