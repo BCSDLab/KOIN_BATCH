@@ -12,6 +12,7 @@ nodes:
   - &cheongju_station "청주역A(서촌동BS)"
   - &bangsu "방서동(다이소)"
   - &koreatech "학교"
+  - &koreatech_change "학교(인문경영관)"
   - &yongarmdong_hyundai "용암동 현대APT"
   - &gs_daechung "GS대청주유소(용암동)"
   - &seokyodong "석교동육거리"
@@ -57,7 +58,7 @@ to_school:
         arrival_time: "07:46"
       - node_name: *solbat
         arrival_time: "07:50"
-      - node_name: *koreatech
+      - node_name: *koreatech_change
         arrival_time: "08:50"
 
   - route_name: "용암동"
@@ -79,7 +80,7 @@ to_school:
         arrival_time: "07:45"
       - node_name: *scinece_state
         arrival_time: "08:00"
-      - node_name: *koreatech
+      - node_name: *koreatech_change
         arrival_time: "08:50"
 
   - route_name: "산남분평동"
@@ -109,7 +110,7 @@ to_school:
         arrival_time: "07:46"
       - node_name: *oksangarak_threeri
         arrival_time: "07:49"
-      - node_name: *koreatech
+      - node_name: *koreatech_change
         arrival_time: "08:50"
 
 from_school:
