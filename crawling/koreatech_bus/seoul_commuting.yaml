@@ -1,5 +1,6 @@
 nodes:
   - &koreatech "한기대"
+  - &koreatech_change "한기대(인문경영관)"
   - &seoul_gyodae_station "서울 교대역 3호선 14번 출구"
   - &dongcheon_station "동천역 환승정류장"
   - &jukjeon_simple_station "죽전 간이정류장"
@@ -32,7 +33,7 @@ to_school:
         arrival_time: "07:37"
       - node_name: *jukjeon_simple_station
         arrival_time: "07:40"
-      - node_name: *koreatech
+      - node_name: *koreatech_change
         arrival_time: "08:50"
 
 from_school:
