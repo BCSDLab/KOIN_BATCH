@@ -25,7 +25,6 @@ nodes:
   - &sb_four "신봉사거리(LPG충전소)"
   - &sy_gas "삼양가스"
   - &koreatech "한기대"
-  - &koreatech_change "한기대(인문경영관)"
 
 to_school:
   - route_name: "주중(11시 50분)"
@@ -51,7 +50,7 @@ to_school:
         arrival_time: "12:10"
       - node_name: *oksan
         arrival_time: "12:12"
-      - node_name: *koreatech_change
+      - node_name: *koreatech
         arrival_time: "12:50"
 
 from_school:
@@ -90,13 +89,13 @@ from_school:
         arrival_time: "15:12"
       - node_name: *science_park
         arrival_time: "15:23"
-      - node_name: *koreatech_change
+      - node_name: *koreatech
         arrival_time: "15:50"
 
   - route_name: "주중(15시 40분)"
     running_days: ["MON", "TUE", "WED", "THU", "FRI"]
     arrival_info:
-      - node_name: *koreatech_change
+      - node_name: *koreatech
         arrival_time: "15:40"
       - node_name: *oc_science_park
         arrival_time: "하차"
