@@ -11,7 +11,6 @@ nodes:
   #- &jochiwon_burger_king "조치원 버거킹 사거리(LG전자 조치원점)"
   - &sinbong "신봉초등학교BS"
   - &koreatech "한기대"
-  - &koreatech_change "한기대(인문경영관)"
 
 to_school:
   - route_name: "세종"
@@ -37,7 +36,7 @@ to_school:
         arrival_time: "08:05"
       - node_name: *sinbong
         arrival_time: "08:10"
-      - node_name: *koreatech_change
+      - node_name: *koreatech
         arrival_time: "08:50"
 
 from_school:

@@ -7,7 +7,6 @@ nodes:
   - &dongwoo "동우APT,신계초,운전리,연춘리"
   - &joongang "중앙APT"
   - &koreatech "한기대"
-  - &koreatech_change "한기대(인문경영관)"
   - &dongil "동일하이빌APT"
   - &joogong "주공11단지APT"
   - &terminal "터미널(신세계 앞 횡단보도)"
@@ -50,7 +49,7 @@ to_school:
         arrival_time: "승하차"
       - node_name: *joongang
         arrival_time: "승하차"
-      - node_name: *koreatech_change
+      - node_name: *koreatech
         arrival_time: "08:50"
 
   - route_name: "터미널"
@@ -72,7 +71,7 @@ to_school:
         arrival_time: "08:15"
       - node_name: *joongang
         arrival_time: "승하차"
-      - node_name: *koreatech_change
+      - node_name: *koreatech
         arrival_time: "08:50"
 
   - route_name: "두정역"
@@ -104,7 +103,7 @@ to_school:
         arrival_time: "승하차"
       - node_name: *joongang
         arrival_time: "승하차"
-      - node_name: *koreatech_change
+      - node_name: *koreatech
         arrival_time: "08:50"
 
   - route_name: "아산/KTX"
@@ -130,7 +129,7 @@ to_school:
         arrival_time: "08:08"
       - node_name: *chungdang
         arrival_time: "08:18"
-      - node_name: *koreatech_change
+      - node_name: *koreatech
         arrival_time: "08:50"
 
 from_school:
