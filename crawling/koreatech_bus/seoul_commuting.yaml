@@ -16,6 +16,8 @@ to_school:
         arrival_time: "07:40"
       - node_name: *koreatech
         arrival_time: "08:50"
+
+from_school:
   - route_name: "월요일~금요일 (18시10분)"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
