@@ -35,7 +35,7 @@ to_school:
       - node_name: *koreatech
         arrival_time: "21:30"
 
-  - route_name: "토(08시 00분)"
+  - route_name: "토요일 천안시내(08시 00분)"
     running_days: [ "SAT" ]
     arrival_info:
       - node_name: *dujeong-station
@@ -47,7 +47,7 @@ to_school:
       - node_name: *koreatech
         arrival_time: "08:45"
 
-  - route_name: "토(08시 05분)"
+  - route_name: "토요일 천안시내(08시 05분)"
     running_days: [ "SAT" ]
     arrival_info:
       - node_name: *campus_2
@@ -60,6 +60,15 @@ to_school:
         arrival_time: "08:20"
       - node_name: *koreatech
         arrival_time: "08:55"
+
+  - route_name: "토요일 천안아산역(08시 15분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *ktx_exit_3
+        arrival_time: "08:15"
+      - node_name: *koreatech
+        arrival_time: "하차"
+
 
 
 from_school:
@@ -91,8 +100,8 @@ from_school:
       - node_name: *koreatech
         arrival_time: "21:30"
 
-  - route_name: "토(08시 05분)"
-    running_days: ["SAT"]
+  - route_name: "토요일 천안시내(16시 15분)"
+    running_days: [ "SAT" ]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "16:15"
@@ -103,8 +112,16 @@ from_school:
       - node_name: *dujeong-station
         arrival_time: "17:00"
 
-  - route_name: "토(08시 05분)"
-    running_days: ["SAT"]
+  - route_name: "토요일 천안아산역(16시 15분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "16:15"
+      - node_name: *ktx_exit_3
+        arrival_time: "하차"
+
+  - route_name: "토(18시 15분)"
+    running_days: [ "SAT" ]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "18:15"
