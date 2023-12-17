@@ -4,7 +4,9 @@ nodes:
   - &samryong "삼룡교(유니클로)"
   - &guseong "구성동 부광약국"
   - &baro "바로약국 앞"
-  - &dongwoo "동우APT,신계초,운전리,연춘리"
+  - &dongwoo__singuye_cho__dongwon_ri__yeonchun_ri "동우APT,신계초,운전리,연춘리"
+  - &dongwoo_apt "동우APT"
+  - &singuye_cho__dongwon_ri__yeonchun_ri "신계초,운전리,연춘리"
   - &joongang "중앙APT"
   - &koreatech "한기대"
   - &dongil "동일하이빌APT"
@@ -43,9 +45,9 @@ to_school:
         arrival_time: "08:18"
       - node_name: *chungdang
         arrival_time: "08:21"
-      - node_name: *buyoung
+      - node_name: *dongwoo_apt
         arrival_time: "08:26"
-      - node_name: *dongwoo
+      - node_name: *singuye_cho__dongwon_ri__yeonchun_ri
         arrival_time: "승하차"
       - node_name: *joongang
         arrival_time: "승하차"
@@ -99,7 +101,7 @@ to_school:
         arrival_time: "07:58"
       - node_name: *baro
         arrival_time: "08:00"
-      - node_name: *dongwoo
+      - node_name: *dongwoo__singuye_cho__dongwon_ri__yeonchun_ri
         arrival_time: "승하차"
       - node_name: *joongang
         arrival_time: "승하차"
@@ -140,9 +142,9 @@ from_school:
         arrival_time: "18:10"
       - node_name: *joongang
         arrival_time: "승하차"
-      - node_name: *dongwoo
+      - node_name: *singuye_cho__dongwon_ri__yeonchun_ri
         arrival_time: "승하차"
-      - node_name: *buyoung
+      - node_name: *dongwoo_apt
         arrival_time: "18:34"
       - node_name: *chungdang
         arrival_time: "18:39"
@@ -180,7 +182,7 @@ from_school:
         arrival_time: "18:10"
       - node_name: *joongang
         arrival_time: "승하차"
-      - node_name: *dongwoo
+      - node_name: *dongwoo__singuye_cho__dongwon_ri__yeonchun_ri
         arrival_time: "승하차"
       - node_name: *baro
         arrival_time: "19:00"
