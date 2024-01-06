@@ -5,10 +5,10 @@ nodes:
 
 to_school:
   - route_name: "미운행"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
-    arrival_info: []
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info: [ ]
 
 from_school:
   - route_name: "미운행"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
-    arrival_info: []
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info: [ ]

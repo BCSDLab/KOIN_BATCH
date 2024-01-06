@@ -37,7 +37,7 @@ nodes:
 
 to_school:
   - route_name: "천안역/터미널"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *terminal
         arrival_time: "08:05"
@@ -55,7 +55,7 @@ to_school:
         arrival_time: "08:50"
 
   - route_name: "두정역/KTX"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *doojung
         arrival_time: "07:41"
@@ -86,7 +86,7 @@ to_school:
 
 from_school:
   - route_name: "터미널/천안역"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "18:10"
@@ -104,7 +104,7 @@ from_school:
         arrival_time: "18:55"
 
   - route_name: "두정역/KTX"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "18:10"
