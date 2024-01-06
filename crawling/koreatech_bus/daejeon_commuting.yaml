@@ -4,23 +4,11 @@ nodes:
   - &compound_terminal "복합터미널"
 
 to_school:
-  - route_name: "일요일(18시20분)"
-    running_days: [ "SUN" ]
-    arrival_info:
-      - node_name: *daejeon_station
-        arrival_time: "18:20"
-      - node_name: *compound_terminal
-        arrival_time: "하차"
-      - node_name: *koreatech
-        arrival_time: "하차"
+  - route_name: "미운행"
+    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    arrival_info: []
 
 from_school:
-  - route_name: "금요일(18시20분)"
-    running_days: [ "FRI" ]
-    arrival_info:
-      - node_name: *koreatech
-        arrival_time: "18:20"
-      - node_name: *compound_terminal
-        arrival_time: "하차"
-      - node_name: *daejeon_station
-        arrival_time: "하차"
+  - route_name: "미운행"
+    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    arrival_info: []
