@@ -14,7 +14,7 @@ nodes:
 
 to_school:
   - route_name: "세종"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *complex_nine
         arrival_time: "07:20"
@@ -41,7 +41,7 @@ to_school:
 
 from_school:
   - route_name: "세종"
-    running_days: ["MON", "TUE", "WED", "THU", "FRI"]
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "18:10"

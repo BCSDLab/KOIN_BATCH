@@ -28,3 +28,4 @@ from_school:
       - node_name: *seoul_gyodae_station
         arrival_time: "하차"
 
+
