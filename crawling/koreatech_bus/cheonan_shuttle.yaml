@@ -11,34 +11,114 @@ nodes:
   - &terminal_b "터미널(신세계 반대 횡단보도)"
 
 to_school:
-  - route_name: "주중(14시 35분)"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+  - route_name: "토요일 오후(18시 30분)"
+    running_days: [ "SAT" ]
     arrival_info:
       - node_name: *terminal
-        arrival_time: "14:35"
+        arrival_time: "18:30"
       - node_name: *cheonan_station
-        arrival_time: "14:40"
-      - node_name: *samryong_bridge
-        arrival_time: "14:45"
-      - node_name: *baro_pharmacy
-        arrival_time: "14:48"
+        arrival_time: "18:35"
       - node_name: *koreatech
-        arrival_time: "15:30"
+        arrival_time: "19:15"
 
-  - route_name: "주중(20시 55분)"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+  - route_name: "일요일 야간(21시 15분)"
+    running_days: [ "SUN" ]
     arrival_info:
       - node_name: *terminal
-        arrival_time: "20:55"
+        arrival_time: "21:15"
       - node_name: *cheonan_station
-        arrival_time: "21:00"
+        arrival_time: "21:20"
       - node_name: *koreatech
+        arrival_time: "21:50"
+
+  - route_name: "일요일 야간(21시 30분)"
+    running_days: [ "SUN" ]
+    arrival_info:
+      - node_name: *terminal
         arrival_time: "21:30"
+      - node_name: *cheonan_station
+        arrival_time: "21:35"
+      - node_name: *koreatech
+        arrival_time: "22:00"
 
 
 from_school:
+  - route_name: "주중(11시 10분)"
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "11:10"
+      - node_name: *terminal
+        arrival_time: "11:35"
+      - node_name: *cheonan_station
+        arrival_time: "11:40"
+      - node_name: *koreatech
+        arrival_time: "12:10"
+
+  - route_name: "주중(13시 10분)"
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "13:10"
+      - node_name: *terminal
+        arrival_time: "13:35"
+      - node_name: *cheonan_station
+        arrival_time: "13:40"
+      - node_name: *koreatech
+        arrival_time: "14:10"
+
   - route_name: "주중(14시 10분)"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "13:10"
+      - node_name: *campus_2
+        arrival_time: "14:35"
+      - node_name: *terminal
+        arrival_time: "14:42"
+      - node_name: *cheonan_station
+        arrival_time: "14:47"
+      - node_name: *koreatech
+        arrival_time: "15:15"
+
+  - route_name: "주중(16시 10분)"
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "16:10"
+      - node_name: *terminal
+        arrival_time: "16:35"
+      - node_name: *cheonan_station
+        arrival_time: "16:40"
+      - node_name: *koreatech
+        arrival_time: "17:10"
+
+  - route_name: "주중(20시 00분)"
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "20:00"
+      - node_name: *terminal
+        arrival_time: "20:25"
+      - node_name: *cheonan_station
+        arrival_time: "20:30"
+      - node_name: *koreatech
+        arrival_time: "21:00"
+
+  - route_name: "주중(21시 00분)"
+    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "21:00"
+      - node_name: *terminal
+        arrival_time: "21:25"
+      - node_name: *cheonan_station
+        arrival_time: "21:30"
+      - node_name: *koreatech
+        arrival_time: "22:00"
+
+  - route_name: "목,금 추가(14시 10분)"
+    running_days: [ "THU", "FRI" ]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "14:10"
@@ -46,21 +126,41 @@ from_school:
         arrival_time: "14:35"
       - node_name: *cheonan_station
         arrival_time: "14:40"
-      - node_name: *samryong_bridge
-        arrival_time: "14:45"
-      - node_name: *baro_pharmacy
-        arrival_time: "14:48"
       - node_name: *koreatech
-        arrival_time: "15:30"
+        arrival_time: "15:10"
 
-  - route_name: "주중(20시 30분)"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
+  - route_name: "목,금 추가(16시 30분)"
+    running_days: [ "THU", "FRI" ]
     arrival_info:
       - node_name: *koreatech
-        arrival_time: "20:30"
+        arrival_time: "16:30"
       - node_name: *terminal
-        arrival_time: "20:55"
+        arrival_time: "16:55"
       - node_name: *cheonan_station
-        arrival_time: "21:00"
+        arrival_time: "17:00"
       - node_name: *koreatech
-        arrival_time: "21:30"
+        arrival_time: "17:30"
+
+  - route_name: "토요일 오후(14시 00분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "14:00"
+      - node_name: *terminal
+        arrival_time: "14:25"
+      - node_name: *cheonan_station
+        arrival_time: "14:30"
+      - node_name: *koreatech
+        arrival_time: "15:00"
+
+  - route_name: "일요일 오후(17시 00분)"
+    running_days: [ "SUN" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "17:00"
+      - node_name: *terminal
+        arrival_time: "17:25"
+      - node_name: *cheonan_station
+        arrival_time: "17:30"
+      - node_name: *koreatech
+        arrival_time: "18:10"
