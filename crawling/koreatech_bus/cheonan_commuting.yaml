@@ -169,7 +169,7 @@ from_school:
       - node_name: *samryong
         arrival_time: "18:46"
       - node_name: *wonseung
-        arrival_time: "18:48"
+        arrival_time: "18:47"
       - node_name: *jeil
         arrival_time: "18:49"
       - node_name: *terminal

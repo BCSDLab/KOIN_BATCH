@@ -139,8 +139,6 @@ from_school:
         arrival_time: "20:57"
       - node_name: *sd_park_c
         arrival_time: "20:59"
-      - node_name: *chungjoo_cityhall
-        arrival_time: "21:15"
       - node_name: *culture_industry
         arrival_time: "21:17"
       - node_name: *sm_hospital
