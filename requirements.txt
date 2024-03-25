@@ -4,3 +4,4 @@ bs4
 regex
 urllib3
 openpyxl
+config

@@ -13,4 +13,5 @@ pip3 install bs4
 pip3 install regex
 pip3 install urllib3
 pip3 install openpyxl
+pip3 install config
 ```
