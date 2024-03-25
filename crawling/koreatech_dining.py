@@ -199,8 +199,39 @@ def updateDB(menus):
             print(error)
 
 
+def check_meal_time():
+    def to_minute(hour):
+        return hour * 60
+
+    # 분 단위로 변환하여 계산
+    now = datetime.datetime.now()
+    minutes = to_minute(now.hour) + now.minute
+
+    # 조식 08:00~09:30
+    if to_minute(8) <= minutes <= to_minute(9) + 30:
+        return True
+
+    # 중식 11:30~13:30
+    if to_minute(11) + 30 <= minutes <= to_minute(13) + 30:
+        return True
+
+    # 석식 17:30~18:30
+    if to_minute(17) + 30 <= minutes <= to_minute(18) + 30:
+        return True
+
+    return False
+
+
+def loop_crawling(sleep=10):
+    crawling()
+    while check_meal_time():
+        print(f"waiting {sleep} seconds...")
+        time.sleep(sleep)
+        crawling()
+
+
 # execute only if run as a script
 if __name__ == "__main__":
     connection = connect_db()
-    crawling()
+    loop_crawling()
     connection.close()
