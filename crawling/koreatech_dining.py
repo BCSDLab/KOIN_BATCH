@@ -224,10 +224,11 @@ def check_meal_time():
 
 def loop_crawling(sleep=10):
     crawling()
+    today = datetime.datetime.now()
     while meal_time := check_meal_time():
         print(f"{meal_time} 업데이트중...")
         time.sleep(sleep)
-        crawling()
+        crawling(start_date=today, end_date=today)
 
 
 # execute only if run as a script
