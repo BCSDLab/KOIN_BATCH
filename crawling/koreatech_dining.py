@@ -85,12 +85,12 @@ class MenuEntity:
     def __eq__(self, other):
         if isinstance(other, MenuEntity):
             return self.date == other.date and \
-                    self.dining_time == other.dining_time and \
-                    self.place == other.place and \
-                    self.price_card == other.price_card and \
-                    self.price_cash == other.price_cash and \
-                    self.kcal == other.kcal and \
-                    self.menu == other.menu
+                self.dining_time == other.dining_time and \
+                self.place == other.place and \
+                self.price_card == other.price_card and \
+                self.price_cash == other.price_cash and \
+                self.kcal == other.kcal and \
+                self.menu == other.menu
 
         return False
 
@@ -267,16 +267,16 @@ def loop_crawling(sleep=10):
 
 
 def filter_dup(menu_a: list[MenuEntity | None], menu_b: list[MenuEntity | None]):
-    menu_a.sort(key=lambda x: (datetime.datetime.strptime(x.date, "%Y%m%d"), x.dining_time, x.place))
-    menu_b.sort(key=lambda x: (datetime.datetime.strptime(x.date, "%Y%m%d"), x.dining_time, x.place))
+    menu_a = {(menu.date, menu.dining_time, menu.place): menu for menu in menu_a}
 
-    return [
-        menu_b[i]
-        for i in range(
-            min(len(menu_a), len(menu_b))
-        )
-        if menu_a[i] != menu_b[i]
-    ]
+    result = []
+
+    for menu in menu_b:
+        key = (menu.date, menu.dining_time, menu.place)
+        if key not in menu_a or menu_a[key] != menu:
+            result.append(menu)
+
+    return result
 
 
 # execute only if run as a script
