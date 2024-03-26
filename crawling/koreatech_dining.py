@@ -91,7 +91,7 @@ def filter_emoji(row):
     return emoji_pattern.sub(r'', row)
 
 
-def getMenus(target_date: datetime):
+def getMenus(target_date: datetime, target_time: set[str]):
     year, month, day = target_date.year, target_date.month, target_date.day
     chrono_time = int(time.mktime(datetime.datetime(year, month, day).timetuple()))
 
@@ -109,6 +109,9 @@ def getMenus(target_date: datetime):
     for tr in trs:
         tds = tr.select('td')
         dining_time = str(tds[0].text).strip().upper()
+
+        if dining_time not in target_time:
+            continue
 
         tds = tds[1:]
 
@@ -155,14 +158,15 @@ def getMenus(target_date: datetime):
     return menus
 
 
-def crawling(start_date: datetime = None, end_date: datetime = None):
+def crawling(start_date: datetime = None, end_date: datetime = None, target_time=None):
     start_date = datetime.datetime.now() if start_date is None else start_date
     end_date = start_date + datetime.timedelta(days=7) if end_date is None or end_date < start_date else end_date
+    target_time = {"BREAKFAST", "LAUNCH", "DINNER"} if target_time is None else target_time
 
     currentDate = start_date
     while currentDate <= end_date:
         print(currentDate)
-        menus = getMenus(currentDate)
+        menus = getMenus(currentDate, target_time)
 
         print("%s Found" % str(len(menus)))
         for menu in menus:
@@ -209,17 +213,17 @@ def check_meal_time():
 
     # 조식 08:00~09:30
     if to_minute(8) <= minutes <= to_minute(9) + 30:
-        return "조식"
+        return "BREAKFAST"
 
     # 중식 11:30~13:30
     if to_minute(11) + 30 <= minutes <= to_minute(13) + 30:
-        return "중식"
+        return "LAUNCH"
 
     # 석식 17:30~18:30
     if to_minute(17) + 30 <= minutes <= to_minute(18) + 30:
-        return "석식"
+        return "DINNER"
 
-    return 0
+    return ''
 
 
 def loop_crawling(sleep=10):
@@ -228,7 +232,7 @@ def loop_crawling(sleep=10):
     while meal_time := check_meal_time():
         print(f"{meal_time} 업데이트중...")
         time.sleep(sleep)
-        crawling(start_date=today, end_date=today)
+        crawling(start_date=today, end_date=today, target_time={meal_time})
 
 
 # execute only if run as a script
