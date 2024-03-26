@@ -77,6 +77,23 @@ class MenuEntity:
             self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu
         )
 
+    def __repr__(self):
+        return '%s, %s, %s, %s, %s, %s' % (
+            self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, MenuEntity):
+            return self.date == other.date and \
+                    self.dining_time == other.dining_time and \
+                    self.place == other.place and \
+                    self.price_card == other.price_card and \
+                    self.price_cash == other.price_cash and \
+                    self.kcal == other.kcal and \
+                    self.menu == other.menu
+
+        return False
+
 
 coop = Coop()
 
