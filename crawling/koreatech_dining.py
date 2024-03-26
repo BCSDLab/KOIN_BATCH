@@ -108,7 +108,7 @@ def filter_emoji(row):
     return emoji_pattern.sub(r'', row)
 
 
-def getMenus(target_date: datetime, target_time: set[str]):
+def getMenus(target_date: datetime, target_time: str = None):
     year, month, day = target_date.year, target_date.month, target_date.day
     chrono_time = int(time.mktime(datetime.datetime(year, month, day).timetuple()))
 
@@ -127,7 +127,7 @@ def getMenus(target_date: datetime, target_time: set[str]):
         tds = tr.select('td')
         dining_time = str(tds[0].text).strip().upper()
 
-        if dining_time not in target_time:
+        if target_time is not None and dining_time != target_time:
             continue
 
         tds = tds[1:]
@@ -175,15 +175,14 @@ def getMenus(target_date: datetime, target_time: set[str]):
     return menus
 
 
-def crawling(start_date: datetime = None, end_date: datetime = None, target_time=None):
+def crawling(start_date: datetime = None, end_date: datetime = None):
     start_date = datetime.datetime.now() if start_date is None else start_date
     end_date = start_date + datetime.timedelta(days=7) if end_date is None or end_date < start_date else end_date
-    target_time = {"BREAKFAST", "LAUNCH", "DINNER"} if target_time is None else target_time
 
     currentDate = start_date
     while currentDate <= end_date:
         print(currentDate)
-        menus = getMenus(currentDate, target_time)
+        menus = getMenus(currentDate)
 
         print("%s Found" % str(len(menus)))
         for menu in menus:
@@ -234,22 +233,50 @@ def check_meal_time():
 
     # 중식 11:30~13:30
     if to_minute(11) + 30 <= minutes <= to_minute(13) + 30:
-        return "LAUNCH"
+        return "LUNCH"
 
     # 석식 17:30~18:30
     if to_minute(17) + 30 <= minutes <= to_minute(18) + 30:
         return "DINNER"
+
+    if to_minute(11) <= minutes <= to_minute(12):
+        return "LUNCH"
 
     return ''
 
 
 def loop_crawling(sleep=10):
     crawling()
-    today = datetime.datetime.now()
+    today_menus = getMenus(target_date=datetime.datetime.now(), target_time=check_meal_time())
     while meal_time := check_meal_time():
         print(f"{meal_time} 업데이트중...")
         time.sleep(sleep)
-        crawling(start_date=today, end_date=today, target_time={meal_time})
+
+        now = datetime.datetime.now()
+        print(now)
+
+        menus = getMenus(target_date=now, target_time=meal_time)
+        filtered = filter_dup(today_menus, menus)
+
+        print("%s Found" % str(len(filtered)))
+        for menu in filtered:
+            print(menu)
+
+        updateDB(filtered)
+        today_menus = menus
+
+
+def filter_dup(menu_a: list[MenuEntity | None], menu_b: list[MenuEntity | None]):
+    menu_a.sort(key=lambda x: (datetime.datetime.strptime(x.date, "%Y%m%d"), x.dining_time, x.place))
+    menu_b.sort(key=lambda x: (datetime.datetime.strptime(x.date, "%Y%m%d"), x.dining_time, x.place))
+
+    return [
+        menu_b[i]
+        for i in range(
+            min(len(menu_a), len(menu_b))
+        )
+        if menu_a[i] != menu_b[i]
+    ]
 
 
 # execute only if run as a script
