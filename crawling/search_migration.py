@@ -91,6 +91,7 @@ def getConnectionToDB():
 
     conn = pymysql.connect(
         host = DATABASE_CONFIG['host'],
+        port= DATABASE_CONFIG['port'],
         user = DATABASE_CONFIG['user'],
         password = DATABASE_CONFIG['password'],
         db = DATABASE_CONFIG['db'],
