@@ -12,6 +12,7 @@ import config
 
 def connect_db():
     conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
+                           port=config.DATABASE_CONFIG['port'],
                            user=config.DATABASE_CONFIG['user'],
                            password=config.DATABASE_CONFIG['password'],
                            db=config.DATABASE_CONFIG['db'],
@@ -77,6 +78,23 @@ class MenuEntity:
             self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu
         )
 
+    def __repr__(self):
+        return '%s, %s, %s, %s, %s, %s' % (
+            self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, MenuEntity):
+            return self.date == other.date and \
+                self.dining_time == other.dining_time and \
+                self.place == other.place and \
+                self.price_card == other.price_card and \
+                self.price_cash == other.price_cash and \
+                self.kcal == other.kcal and \
+                self.menu == other.menu
+
+        return False
+
 
 coop = Coop()
 
@@ -91,7 +109,7 @@ def filter_emoji(row):
     return emoji_pattern.sub(r'', row)
 
 
-def getMenus(target_date: datetime):
+def getMenus(target_date: datetime, target_time: str = None):
     year, month, day = target_date.year, target_date.month, target_date.day
     chrono_time = int(time.mktime(datetime.datetime(year, month, day).timetuple()))
 
@@ -109,6 +127,9 @@ def getMenus(target_date: datetime):
     for tr in trs:
         tds = tr.select('td')
         dining_time = str(tds[0].text).strip().upper()
+
+        if target_time is not None and dining_time != target_time:
+            continue
 
         tds = tds[1:]
 
@@ -199,8 +220,65 @@ def updateDB(menus):
             print(error)
 
 
+def check_meal_time():
+    def to_minute(hour):
+        return hour * 60
+
+    # 분 단위로 변환하여 계산
+    now = datetime.datetime.now()
+    minutes = to_minute(now.hour) + now.minute
+
+    # 조식 08:00~09:30
+    if to_minute(8) <= minutes <= to_minute(9) + 30:
+        return "BREAKFAST"
+
+    # 중식 11:30~13:30
+    if to_minute(11) + 30 <= minutes <= to_minute(13) + 30:
+        return "LUNCH"
+
+    # 석식 17:30~18:30
+    if to_minute(17) + 30 <= minutes <= to_minute(18) + 30:
+        return "DINNER"
+
+    return ''
+
+
+def loop_crawling(sleep=10):
+    crawling()
+    today_menus = getMenus(target_date=datetime.datetime.now(), target_time=check_meal_time())
+    while meal_time := check_meal_time():
+        print(f"{meal_time} 업데이트중...")
+        time.sleep(sleep)
+
+        now = datetime.datetime.now()
+        print(now)
+
+        menus = getMenus(target_date=now, target_time=meal_time)
+        filtered = check_duplication_menu(today_menus, menus)
+
+        print("%s Found" % str(len(filtered)))
+        for menu in filtered:
+            print(menu)
+
+        updateDB(filtered)
+        today_menus = menus
+
+
+def check_duplication_menu(existed_menu: list[MenuEntity | None], new_menu: list[MenuEntity | None]):
+    existed_menu = {(menu.date, menu.dining_time, menu.place): menu for menu in existed_menu}
+
+    result = []
+
+    for menu in new_menu:
+        key = (menu.date, menu.dining_time, menu.place)
+        if key not in existed_menu or existed_menu[key] != menu:
+            result.append(menu)
+
+    return result
+
+
 # execute only if run as a script
 if __name__ == "__main__":
     connection = connect_db()
-    crawling()
+    loop_crawling()
     connection.close()
