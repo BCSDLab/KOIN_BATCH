@@ -253,7 +253,7 @@ def loop_crawling(sleep=10):
         print(now)
 
         menus = getMenus(target_date=now, target_time=meal_time)
-        filtered = filter_dup(today_menus, menus)
+        filtered = check_duplication_menu(today_menus, menus)
 
         print("%s Found" % str(len(filtered)))
         for menu in filtered:
@@ -263,14 +263,14 @@ def loop_crawling(sleep=10):
         today_menus = menus
 
 
-def filter_dup(menu_a: list[MenuEntity | None], menu_b: list[MenuEntity | None]):
-    menu_a = {(menu.date, menu.dining_time, menu.place): menu for menu in menu_a}
+def check_duplication_menu(existed_menu: list[MenuEntity | None], new_menu: list[MenuEntity | None]):
+    existed_menu = {(menu.date, menu.dining_time, menu.place): menu for menu in existed_menu}
 
     result = []
 
-    for menu in menu_b:
+    for menu in new_menu:
         key = (menu.date, menu.dining_time, menu.place)
-        if key not in menu_a or menu_a[key] != menu:
+        if key not in existed_menu or existed_menu[key] != menu:
             result.append(menu)
 
     return result
