@@ -106,6 +106,7 @@ class WorkSheetMapper:
 def connect_db():
     urllib3.disable_warnings()
     conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
+                           port=config.DATABASE_CONFIG['port'],
                            user=config.DATABASE_CONFIG['user'],
                            password=config.DATABASE_CONFIG['password'],
                            db=config.DATABASE_CONFIG['db'],
