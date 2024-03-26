@@ -239,9 +239,6 @@ def check_meal_time():
     if to_minute(17) + 30 <= minutes <= to_minute(18) + 30:
         return "DINNER"
 
-    if to_minute(11) <= minutes <= to_minute(12):
-        return "LUNCH"
-
     return ''
 
 
