@@ -22,6 +22,7 @@ is_english_col = 'O'  # 영어강의여부 column
 def connect_db():
     urllib3.disable_warnings()
     conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
+                           port=config.DATABASE_CONFIG['port'],
                            user=config.DATABASE_CONFIG['user'],
                            password=config.DATABASE_CONFIG['password'],
                            db=config.DATABASE_CONFIG['db'],
