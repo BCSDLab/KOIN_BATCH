@@ -264,7 +264,7 @@ def loop_crawling(sleep=10):
         today_menus = menus
 
 
-def check_duplication_menu(existed_menu: list[MenuEntity | None], new_menu: list[MenuEntity | None]):
+def check_duplication_menu(existed_menu, new_menu):
     existed_menu = {(menu.date, menu.dining_time, menu.place): menu for menu in existed_menu}
 
     result = []
