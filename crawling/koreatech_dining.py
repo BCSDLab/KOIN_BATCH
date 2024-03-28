@@ -202,12 +202,12 @@ def updateDB(menus, is_changed=False):
             # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
             sql = """
             INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, is_changed)
-            VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', %s)
+            VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', FALSE)
             ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s
             """
 
             values = (
-                menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu, is_changed,
+                menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
                 menu.price_card, menu.price_cash, menu.kcal, menu.menu, is_changed
             )
 
