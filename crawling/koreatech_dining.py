@@ -257,6 +257,9 @@ def loop_crawling(sleep=10):
         filtered = check_duplication_menu(today_menus, menus)
 
         print("%s Found" % str(len(filtered)))
+        if len(filtered) != 0:
+            print("메뉴 변경됨")
+
         for menu in filtered:
             print(menu)
 
