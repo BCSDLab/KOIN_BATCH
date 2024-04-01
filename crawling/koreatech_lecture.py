@@ -91,7 +91,10 @@ class WorkSheetMapper:
         if i <= 26:
             return chr(i + 64)
         else:
-            return chr(i // 26 + 64) + chr(i % 26 + 64)
+            first_char = ((i - 1) // 26)
+            second_char = ((i - 1) % 26) + 1
+        return chr(first_char + 64) + chr(second_char + 64)
+
 
     def mapping_for(self, col, row, work_sheet_helper):
         for column_name in ColumnNames:
