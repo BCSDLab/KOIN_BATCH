@@ -193,7 +193,7 @@ def crawling(start_date: datetime = None, end_date: datetime = None):
         currentDate += datetime.timedelta(days=1)
 
 
-def updateDB(menus):
+def updateDB(menus, is_changed=False):
     cur = connection.cursor()
 
     for menu in menus:
@@ -201,14 +201,14 @@ def updateDB(menus):
         try:
             # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
             sql = """
-            INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu)
-            VALUES ('%s', '%s', '%s', %s, %s, %s, '%s')
-            ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s'
+            INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, is_changed)
+            VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', FALSE)
+            ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s
             """
 
             values = (
                 menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
-                menu.price_card, menu.price_cash, menu.kcal, menu.menu
+                menu.price_card, menu.price_cash, menu.kcal, menu.menu, is_changed
             )
 
             print(sql % values)
@@ -257,14 +257,17 @@ def loop_crawling(sleep=10):
         filtered = check_duplication_menu(today_menus, menus)
 
         print("%s Found" % str(len(filtered)))
+        if len(filtered) != 0:
+            print("메뉴 변경됨")
+
         for menu in filtered:
             print(menu)
 
-        updateDB(filtered)
+        updateDB(filtered, is_changed=True)
         today_menus = menus
 
 
-def check_duplication_menu(existed_menu: list[MenuEntity | None], new_menu: list[MenuEntity | None]):
+def check_duplication_menu(existed_menu, new_menu):
     existed_menu = {(menu.date, menu.dining_time, menu.place): menu for menu in existed_menu}
 
     result = []
