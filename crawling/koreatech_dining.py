@@ -249,11 +249,10 @@ def loop_crawling(sleep=10):
     crawling()
     today_menus = getMenus(target_date=datetime.datetime.now(), target_time=check_meal_time())
     while meal_time := check_meal_time():
-        print(f"{meal_time} 업데이트중...")
         time.sleep(sleep)
 
         now = datetime.datetime.now()
-        print(now)
+        print(f"[{now}] {meal_time} 업데이트중...", end=" ")
 
         menus = getMenus(target_date=now, target_time=meal_time)
         filtered = check_duplication_menu(today_menus, menus)
