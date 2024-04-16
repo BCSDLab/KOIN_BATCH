@@ -242,9 +242,6 @@ def check_meal_time():
     if to_minute(17) + 30 <= minutes <= to_minute(18) + 30:
         return "DINNER"
 
-    if to_minute(9) + 40 <= minutes <= to_minute(10) + 40:
-        return "BREAKFAST"
-
     return ''
 
 
