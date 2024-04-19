@@ -206,11 +206,11 @@ def updateDB(menus, is_changed=None):
             ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s
             """
 
-            changed = is_changed.strftime('%Y-%m-%d %H:%M:%S') if is_changed else "NULL"
+            changed = is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if is_changed else "NULL"
 
             values = (
                 menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
-                menu.price_card, menu.price_cash, menu.kcal, menu.menu, f'"{changed}"'
+                menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed
             )
 
             print(sql % values, flush=True)
