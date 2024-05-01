@@ -5,11 +5,20 @@ BATCH로 구동되는 작업을 모아둔 프로젝트입니다.
 # 환경구성
 
 프로젝트에 포함되어있는 run.sh 파일을 활용하여 프로젝트를 구동할 수 있습니다.
+사용 전 실행권한을 부여해주세요
+
+```shell
+chmod +x run.sh
+```
 
 > 사용예시
 
 ```shell
-run.sh -n koreatech_notice 
+run.sh -n koreatech_notice -d /usr/local/KOIN_BATCH 
+```
+
+```shell
+run.sh -h
 ```
 
 ## Crontab
