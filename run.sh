@@ -23,7 +23,7 @@ if [ $# -eq 0 ]; then
     usage
 fi
 
-while getopts "n:" opt; do
+while getopts "n:d:h" opt; do
   case $opt in
     n) FILE_NAME="$OPTARG"
     ;;
