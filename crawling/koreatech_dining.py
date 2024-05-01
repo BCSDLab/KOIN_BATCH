@@ -182,42 +182,44 @@ def crawling(start_date: datetime = None, end_date: datetime = None):
 
     currentDate = start_date
     while currentDate <= end_date:
-        print(currentDate)
+        print(currentDate, flush=True)
         menus = getMenus(currentDate)
 
-        print("%s Found" % str(len(menus)))
+        print("%s Found" % str(len(menus)), flush=True)
         for menu in menus:
-            print(menu)
+            print(menu, flush=True)
 
         updateDB(menus)
         currentDate += datetime.timedelta(days=1)
 
 
-def updateDB(menus, is_changed=False):
+def updateDB(menus, is_changed=None):
     cur = connection.cursor()
 
     for menu in menus:
-        print("updating to DB..\n%s %s %s" % (menu.date, menu.dining_time, menu.place))
+        print("updating to DB..\n%s %s %s" % (menu.date, menu.dining_time, menu.place), flush=True)
         try:
             # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
             sql = """
             INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, is_changed)
-            VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', FALSE)
+            VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', NULL)
             ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s
             """
 
+            changed = is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if is_changed else "NULL"
+
             values = (
                 menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
-                menu.price_card, menu.price_cash, menu.kcal, menu.menu, is_changed
+                menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed
             )
 
-            print(sql % values)
+            print(sql % values, flush=True)
             cur.execute(sql % values)
 
             connection.commit()
         except Exception as error:
             connection.rollback()
-            print(error)
+            print(error, flush=True)
 
 
 def check_meal_time():
@@ -247,23 +249,22 @@ def loop_crawling(sleep=10):
     crawling()
     today_menus = getMenus(target_date=datetime.datetime.now(), target_time=check_meal_time())
     while meal_time := check_meal_time():
-        print(f"{meal_time} 업데이트중...")
         time.sleep(sleep)
 
         now = datetime.datetime.now()
-        print(now)
+        print(f"[{now}] {meal_time} 업데이트중...", end=" ", flush=True)
 
         menus = getMenus(target_date=now, target_time=meal_time)
         filtered = check_duplication_menu(today_menus, menus)
 
-        print("%s Found" % str(len(filtered)))
+        print("%s Found" % str(len(filtered)), flush=True)
         if len(filtered) != 0:
-            print("메뉴 변경됨")
+            print("메뉴 변경됨", flush=True)
 
         for menu in filtered:
-            print(menu)
+            print(menu, flush=True)
 
-        updateDB(filtered, is_changed=True)
+        updateDB(filtered, is_changed=now)
         today_menus = menus
 
 
