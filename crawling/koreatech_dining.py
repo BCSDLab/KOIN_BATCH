@@ -109,6 +109,11 @@ def filter_emoji(row):
     return emoji_pattern.sub(r'', row)
 
 
+def filter_space(row):
+    row = ' '.join(row.split())  # 2개 이상의 공백을 공백 1개로 수정
+    return row.replace('& ', '&')  # '&'뒤에 공백이 있을 경우 제거
+
+
 def getMenus(target_date: datetime, target_time: str = None):
     year, month, day = target_date.year, target_date.month, target_date.day
     chrono_time = int(time.mktime(datetime.datetime(year, month, day).timetuple()))
@@ -164,6 +169,7 @@ def getMenus(target_date: datetime, target_time: str = None):
                     hasKcal = True
                     break
                 row = filter_emoji(row)
+                row = filter_space(row)
                 cols.append(row)
                 contentIndex += 1
 
