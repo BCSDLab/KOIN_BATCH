@@ -4,7 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from crawling.koreatech_portal_login.gmail_verification import parse_verification_code_from_email
+from gmail_verification import parse_verification_code_from_email
 import config
 
 # 알림창 닫기
@@ -79,6 +79,7 @@ def login():
             time.sleep(5)
             url = driver.current_url
         if url == "https://portal.koreatech.ac.kr/p/STHOME/":
+            print('로그인 성공')
             return True
         else:
             print('로그인 실패 - 예상치 못한 url 접근: ' + url)
@@ -87,3 +88,4 @@ def login():
         return False
     finally:
         driver.quit()
+login()
