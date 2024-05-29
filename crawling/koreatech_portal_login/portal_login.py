@@ -60,6 +60,8 @@ def login():
         # URL에 따라 분기
         time.sleep(5)
         url = driver.current_url
+
+        # 교외 인증 페이지
         if url == "https://portal.koreatech.ac.kr/kut/page/secondCertIp.jsp":
             print('2차 인증 필요')
             radioButton = driver.find_element(By.XPATH, '//*[@id="typeEmail"]')
@@ -78,6 +80,17 @@ def login():
             authButton.click()
             time.sleep(5)
             url = driver.current_url
+
+        # 비밀번호 변경 페이지
+        if url.startswith("https://portal.koreatech.ac.kr/proc/Login.do?user_id="):
+            print("비밀번호 변경 페이지 진입")
+            nextTimeChangeButton = driver.find_element(By.XPATH, '//*[@id="pwdUpdateFrm"]/div/div/div[3]/div/ul/li[2]/a')
+            nextTimeChangeButton.click()
+            check_for_alert(driver)
+            time.sleep(5)
+            url = driver.current_url
+
+        # 아우누리 페이지
         if url == "https://portal.koreatech.ac.kr/p/STHOME/":
             print('로그인 성공')
             return True
@@ -89,3 +102,21 @@ def login():
     finally:
         driver.quit()
 login()
+
+
+"""
+비밀번호 변경 페이지 elements XPATH
+
+## input text (READ ONLY, 자동 입력됨)
+사용자 ID: //*[@id="loginId"]
+학생/교직원번호: //*[@id="empno"]
+
+## input text
+이전 비밀번호: //*[@id="prePwd"]
+신규 비밀번호: //*[@id="newPwd"]
+신규 비밀번호 확인: //*[@id="confirmNewPwd"]
+
+## button
+비밀번호 변경: //*[@id="pwdUpdateFrm"]/div/div/div[3]/div/ul/li[1]/a
+다음에 변경: //*[@id="pwdUpdateFrm"]/div/div/div[3]/div/ul/li[2]/a
+"""
