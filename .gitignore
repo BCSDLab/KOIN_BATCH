@@ -1,7 +1,7 @@
 .vscode
 crawling/__pycache__
 crawling/config.py
-crawling/koreatech_portal_login/config.py
+crawling/koreatech_portal/config.py
 myenv
 *.iml
 *.xml

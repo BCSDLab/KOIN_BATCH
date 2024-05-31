@@ -13,11 +13,11 @@ def check_for_alert(driver, timeout=5):
         WebDriverWait(driver, timeout).until(EC.alert_is_present())
         alert = driver.switch_to.alert
         alert.accept()
-        print("Alert accepted")
+        print("알림창 제거")
     except:
-        print("No alert found")
+        print("알림창 없음")
 
-def login():
+def portal_login():
     # 설정 불러오기
     koreatech_id = config.PORTAL_CONFIG['id']
     koreatech_pw = config.PORTAL_CONFIG['pw']
@@ -93,15 +93,19 @@ def login():
         # 아우누리 페이지
         if url == "https://portal.koreatech.ac.kr/p/STHOME/":
             print('로그인 성공')
-            return True
+            cookies = driver.get_cookies()
+            cookie_dict = {}
+            for cookie in cookies:
+                cookie_dict[cookie['name']] = cookie['value']
+            return cookie_dict
         else:
             print('로그인 실패 - 예상치 못한 url 접근: ' + url)
-            return False
+            return None
     except:
-        return False
+        print('로그인 실패 - 로직 수행 간 오류 발생')
+        return None
     finally:
         driver.quit()
-login()
 
 
 """
