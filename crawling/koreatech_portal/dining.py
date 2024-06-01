@@ -25,26 +25,6 @@ from login import portal_login
 7. 변경된 메뉴가 있으면 DB를 업데이트한다.
     1. 이 때는 is_changed를 현재 시간으로 업데이트한다.
 8. 식사시간이 끝날 때까지 5번부터 반복한다.
-
-
-
-
-DB 커넥션 open/close 위치 바꾸기
-"""
-
-"""
-1. redis에 쿠키 저장 [완]
-2. 필요한 경우 로그인 요청 후 쿠키 획득 [완]
-  - redis에 저장된 쿠키 만료 시 [완]
-  - redis에 저장된 쿠키가 없을 시 [완]
-3. 응답 획득 [완]
-  - eat_date: 오늘 ~ 일주일 후
-  - eat_type: breakfast / lunch / dinner
-  - restaurant: 한식 / 일품 / 특식-전골/뚝배기 / 능수관 / (2캠인 경우만 고정) 코너1
-  - campus: Campus1 / Campus2
-4. MySql에 결과 저장 [완]
-  - 변경 여부 확인
-  - 식사시간에만 빠르게 반복하는 로직도 확인해봐야 함
 """
 
 redis_client = None
@@ -126,9 +106,8 @@ def send_request(login_cookie, eat_date, eat_type, restaurant, campus):
     soup = BeautifulSoup(response.text, 'lxml-xml')
     if soup.find("Parameter", {"id": "ErrorCode"}).text == '0':
         return response
-
     # 잘못된 쿠키 사용 예외 던지기
-    raise ConnectionError("잘못된 쿠키 사용")
+    raise ConnectionError("식단 요청 실패")
 
 
 def connect_redis():
@@ -207,14 +186,14 @@ def parse_row(row):
         if len(prices) >= 2:
             return int(prices[0]), int(prices[1])
         else:
-            return None, None
+            return int(prices[0]), int(prices[0]) if prices else (None, None)
 
     def parse_place(place_description):
         places = {"한식": "A코너", "일품": "B코너", "특식-전골/뚝배기": "C코너", "능수관": "능수관", "1코너": "1코너"}
         for key in places.keys():
             if key in place_description:
                 return places[key]
-        raise ValueError("존재하지 않는 코너명")
+        return place_description  # 기본적으로 동일한 값 반환
 
     try:
         price_card, price_cash = parse_price(row.find("Col", {"id": "PRICE"}).text)
@@ -234,8 +213,30 @@ def parse_row(row):
             'place': place,
             'dining_time': clean_text(row.find("Col", {"id": "EAT_TYPE"}).text)
         }
-    except:
+    except Exception as e:
         return None
+
+
+def parse_response(response):
+    soup = BeautifulSoup(response.text, 'lxml-xml')
+    rows = soup.find_all('Row')
+    data = [parse_row(row) for row in rows]
+
+    # 식단이 미운영인 경우 (응답은 정상이나 식단이 없는 경우)
+    if data is None or len(data) == 0 or data[0] is None:
+        return None
+
+    # None이 아닌 첫 번째 데이터 반환
+    valid_data = [d for d in data if d is not None]
+    if not valid_data:
+        return None
+
+    first_data = valid_data[0]
+    return MenuEntity(
+        first_data['date'], first_data['dining_time'], first_data['place'],
+        first_data['price_card'], first_data['price_cash'], first_data['kcal'],
+        json.dumps(first_data['menu'], ensure_ascii=False)
+    )
 
 
 def check_meal_time():
@@ -248,15 +249,15 @@ def check_meal_time():
 
     # 조식 08:00~09:30
     if to_minute(8) <= minutes <= to_minute(9) + 30:
-        return "BREAKFAST"
+        return "breakfast"
 
     # 중식 11:30~13:30
-    if to_minute(1) + 30 <= minutes <= to_minute(13) + 30:
-        return "LUNCH"
+    if to_minute(11) + 30 <= minutes <= to_minute(13) + 30:
+        return "lunch"
 
     # 석식 17:30~18:30
     if to_minute(17) + 30 <= minutes <= to_minute(18) + 30:
-        return "DINNER"
+        return "dinner"
 
     return ''
 
@@ -297,15 +298,15 @@ def update_db(menus, is_changed=None):
 def parse_response(response):
     soup = BeautifulSoup(response.text, 'lxml-xml')
     rows = soup.find_all('Row')
-    data = [parse_row(row) for row in rows][0]
-    print_flush(data)
+    data = [parse_row(row) for row in rows]
 
-    # 식단이 미운영인 경우 (응답은 정상이나 식단이 없는 경우)
-    if data is None:
+    # 응답은 정상이나 식단이 없는 경우 (아직 올라오지 않은 식단)
+    if data is None or len(data) == 0 or data[0] is None:
         return None
 
-    return MenuEntity(data['date'], data['dining_time'], data['place'], data['price_card'], data['price_cash'],
-                      data['kcal'], json.dumps(data['menu'], ensure_ascii=False))
+    menu = data[0]
+    return MenuEntity(menu['date'], menu['dining_time'], menu['place'], menu['price_card'], menu['price_cash'],
+                      menu['kcal'], json.dumps(menu['menu'], ensure_ascii=False))
 
 
 def get_menus(target_date: datetime, target_time: str = None):
@@ -317,39 +318,36 @@ def get_menus(target_date: datetime, target_time: str = None):
     date = target_date.strftime("%Y-%m-%d")
     menus = []
 
-    menu_data = parse_response(send_request(cookie, date, eat_types[1], "한식", "Campus1"))
-    if menu_data:
-        menus.append(menu_data)
-    """
     for eat_type in eat_types:
+        if target_time and eat_type != target_time:
+            continue
         for restaurant in restaurants:
-            menus.append(parse_response(send_request(cookie, date, eat_type, restaurant, "Campus1")))
-        menus.append(parse_response(send_request(cookie, date, eat_type, "코너1", "Campus2")))
-    """
+            menu_data = parse_response(send_request(cookie, date, eat_type, restaurant, "Campus1"))
+            if menu_data:
+                menus.append(menu_data)
+        menu_data = parse_response(send_request(cookie, date, eat_type, "코너1", "Campus2"))
+        if menu_data:
+            menus.append(menu_data)
 
     return menus
 
 
 def check_duplication_menu(existed_menu, new_menu):
     existed_menu = {(menu.date, menu.dining_time, menu.place): menu for menu in existed_menu}
-
     result = []
-
     for menu in new_menu:
         key = (menu.date, menu.dining_time, menu.place)
         if key not in existed_menu or existed_menu[key] != menu:
             result.append(menu)
-
     return result
 
 
 def crawling():
     today = datetime.today()
-    menus = get_menus((today + timedelta(days=0)))
-    if menus is None or menus != [None]:
-        update_db(menus)
-    # for day in range(8):
-    #    update_db(get_menus((today + timedelta(days=day))))
+    for day in range(8):
+        menus = get_menus((today + timedelta(days=day)))
+        if menus is None or menus != [None]:
+            update_db(menus)
 
 
 def loop_crawling(sleep=10):
@@ -359,7 +357,7 @@ def loop_crawling(sleep=10):
         time.sleep(sleep)
 
         now = datetime.now()
-        print_flush(f"[{now}] {meal_time} 업데이트중...", end=" ", )
+        print(f"[{now}] {meal_time} 업데이트중...", end=" ", )
 
         menus = get_menus(target_date=now, target_time=meal_time)
         filtered = check_duplication_menu(now_menus, menus)
