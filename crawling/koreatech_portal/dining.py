@@ -31,6 +31,7 @@ redis_client = None
 mysql_connection = None
 
 
+# 식단 메뉴 정보를 담는 클래스
 class MenuEntity:
     def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu):
         self.date = date
@@ -64,10 +65,12 @@ class MenuEntity:
         return False
 
 
+# flush=True로 출력 (지연 출력 방지)
 def print_flush(target):
     print(target, flush=True)
 
 
+# 아우누리 포탈에 식단 정보 요청
 def send_request(login_cookie, eat_date, eat_type, restaurant, campus):
     headers = {"Content-Type": "text/xml; charset=utf-8"}
     cookies = {"__KSMSID__": f"{login_cookie};Domain=koreatech.ac.kr;"}
@@ -110,6 +113,7 @@ def send_request(login_cookie, eat_date, eat_type, restaurant, campus):
     raise ConnectionError("식단 요청 실패")
 
 
+# 레디스 연결
 def connect_redis():
     # Redis 클라이언트 생성
     host = config.REDIS_CONFIG['host']
@@ -125,6 +129,7 @@ def connect_redis():
         raise ConnectionError("레디스 연결 불가")
 
 
+# MySQL 연결
 def connect_mysql():
     return pymysql.connect(
         host=config.MYSQL_CONFIG['host'],
@@ -137,6 +142,7 @@ def connect_mysql():
     )
 
 
+# 로그인 쿠키 취득
 def get_cookie():
     # redis 캐시 조회
     global redis_client
@@ -155,6 +161,7 @@ def get_cookie():
     return login_cookie
 
 
+# 식단 정보 파싱
 def parse_row(row):
     def clean_text(text):
         # '\t', '\n', '\r' 제거
@@ -217,28 +224,7 @@ def parse_row(row):
         return None
 
 
-def parse_response(response):
-    soup = BeautifulSoup(response.text, 'lxml-xml')
-    rows = soup.find_all('Row')
-    data = [parse_row(row) for row in rows]
-
-    # 식단이 미운영인 경우 (응답은 정상이나 식단이 없는 경우)
-    if data is None or len(data) == 0 or data[0] is None:
-        return None
-
-    # None이 아닌 첫 번째 데이터 반환
-    valid_data = [d for d in data if d is not None]
-    if not valid_data:
-        return None
-
-    first_data = valid_data[0]
-    return MenuEntity(
-        first_data['date'], first_data['dining_time'], first_data['place'],
-        first_data['price_card'], first_data['price_cash'], first_data['kcal'],
-        json.dumps(first_data['menu'], ensure_ascii=False)
-    )
-
-
+# 현재 어떤 식사 시간인지 확인
 def check_meal_time():
     def to_minute(hour):
         return hour * 60
@@ -262,6 +248,26 @@ def check_meal_time():
     return ''
 
 
+# 아직 남은 식사 시간을 반환
+def get_remaining_meal_times():
+    now = datetime.now()
+    remaining_meal_times = []
+
+    breakfast_start = now.replace(hour=8, minute=0, second=0, microsecond=0)
+    lunch_start = now.replace(hour=11, minute=30, second=0, microsecond=0)
+    dinner_start = now.replace(hour=17, minute=30, second=0, microsecond=0)
+
+    if now < breakfast_start:
+        remaining_meal_times.append("breakfast")
+    if now < lunch_start:
+        remaining_meal_times.append("lunch")
+    if now < dinner_start:
+        remaining_meal_times.append("dinner")
+
+    return remaining_meal_times
+
+
+# MySQL DB에 크롤링한 식단 정보 업데이트
 def update_db(menus, is_changed=None):
     global mysql_connection
     try:
@@ -295,6 +301,7 @@ def update_db(menus, is_changed=None):
         cur.close()
 
 
+# 크롤링 데이터를 메뉴 객체로 변환
 def parse_response(response):
     soup = BeautifulSoup(response.text, 'lxml-xml')
     rows = soup.find_all('Row')
@@ -309,6 +316,9 @@ def parse_response(response):
                       menu['kcal'], json.dumps(menu['menu'], ensure_ascii=False))
 
 
+# 메뉴 정보를 요청하여 메뉴 리스트 반환
+# target_time이 None이면 모든 식사 시간에 대해 크롤링
+# target_time이 있으면 해당 식사 시간에 대해서만 크롤링
 def get_menus(target_date: datetime, target_time: str = None):
     eat_types = ["breakfast", "lunch", "dinner"]
     restaurants = {"한식": "A코너", "일품": "B코너", "특식-전골/뚝배기": "C코너", "능수관": "능수관"}
@@ -332,6 +342,7 @@ def get_menus(target_date: datetime, target_time: str = None):
     return menus
 
 
+# 기존 메뉴와 현재 메뉴가 다른지 확인
 def check_duplication_menu(existed_menu, new_menu):
     existed_menu = {(menu.date, menu.dining_time, menu.place): menu for menu in existed_menu}
     result = []
@@ -342,14 +353,26 @@ def check_duplication_menu(existed_menu, new_menu):
     return result
 
 
+# 일주일 식단 전체 크롤링
 def crawling():
     today = datetime.today()
-    for day in range(8):
+    remaining_meal_times = get_remaining_meal_times()
+
+    # 오늘의 식단 중 지나거나 진행중인 식사 시간은 크롤링하지 않음
+    # 크롤링하게 되면 DB에 덮어씌워지는데, 이 때 is_changed가 사라져버림
+    for meal_time in remaining_meal_times:
+        menus = get_menus(today, meal_time)
+        if menus is None or menus != [None]:
+            update_db(menus)
+
+    for day in range(1, 7):
         menus = get_menus((today + timedelta(days=day)))
         if menus is None or menus != [None]:
             update_db(menus)
 
 
+# 현재 식사 시간에 대해서만 크롤링하고 변경 감지 시 DB 업데이트
+# 실행 시간이 식사 시간인 경우에만 호출됨
 def loop_crawling(sleep=10):
     crawling()
     now_menus = get_menus(target_date=datetime.now(), target_time=check_meal_time())
