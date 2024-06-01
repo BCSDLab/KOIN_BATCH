@@ -11,6 +11,28 @@ import redis as redis_library
 from login import portal_login
 
 """
+동작 과정
+1. 아우누리 식단을 크롤링한다.
+    1. redis에 저장된 쿠키가 있으면 사용한다.
+    2. redis에 저장된 쿠키가 없으면 아우누리에 로그인하여 쿠키를 저장한다.
+2. 크롤링한 식단 정보를 DB에 저장한다.
+    1. DB에 저장된 식단 정보와 비교하여 변경된 식단이 있으면 업데이트한다.
+    2. 이 때는 식단이 변경되어도 is_changed를 업데이트하지 않는다.
+3. 현재 시간이 식사 시간인지 확인한다.
+4. 식사시간이 아니면 종료된다.
+5. 식사시간이면 현재 식사시간 메뉴를 크롤링한다.
+6. 이전에 크롤링했던 메뉴 정보와 새로 크롤링한 메뉴 정보를 비교한다.
+7. 변경된 메뉴가 있으면 DB를 업데이트한다.
+    1. 이 때는 is_changed를 현재 시간으로 업데이트한다.
+8. 식사시간이 끝날 때까지 5번부터 반복한다.
+
+
+
+
+DB 커넥션 open/close 위치 바꾸기
+"""
+
+"""
 1. redis에 쿠키 저장 [완]
 2. 필요한 경우 로그인 요청 후 쿠키 획득 [완]
   - redis에 저장된 쿠키 만료 시 [완]
@@ -61,6 +83,7 @@ class MenuEntity:
 
 def print_flush(target):
     print(target, flush=True)
+
 
 def send_request(login_cookie, eat_date, eat_type, restaurant, campus):
     headers = {"Content-Type": "text/xml; charset=utf-8"}
@@ -150,23 +173,21 @@ def get_cookie():
     return login_cookie
 
 
-def clean_text(text):
-    # '\t', '\n', '\r' 제거
-    text = re.sub(r'[\t\n\r]', ' ', text)
-    # 다중 공백 제거
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
-
-
-def extract_kcal(kcal_text):
-    # 'kcal' 제거하고 숫자만 반환
-    match = re.search(r'\d+', kcal_text)
-    if match:
-        return int(match.group())
-    return None
-
-
 def parse_row(row):
+    def clean_text(text):
+        # '\t', '\n', '\r' 제거
+        text = re.sub(r'[\t\n\r]', ' ', text)
+        # 다중 공백 제거
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def extract_kcal(kcal_text):
+        # 'kcal' 제거하고 숫자만 반환
+        match = re.search(r'\d+', kcal_text)
+        if match:
+            return int(match.group())
+        return None
+
     def parse_dish(dish_text):
         # '\t', '\n', '\r' 제거 및 다중 공백 제거
         dish_text = clean_text(dish_text)
@@ -237,7 +258,6 @@ def check_meal_time():
     return ''
 
 
-# TODO 여기부터 하기 . 쿼리작성메서드
 def update_db(menus, is_changed=None):
     connection = None
     try:
@@ -273,13 +293,17 @@ def update_db(menus, is_changed=None):
         if connection:
             connection.close()
 
+
 def parse_response(response):
     soup = BeautifulSoup(response.text, 'lxml-xml')
     rows = soup.find_all('Row')
     data = [parse_row(row) for row in rows][0]
     print_flush(data)
+
+    # 식단이 미운영인 경우 (응답은 정상이나 식단이 없는 경우)
     if data is None:
         return None
+    
     return MenuEntity(data['date'], data['dining_time'], data['place'], data['price_card'], data['price_cash'],
                       data['kcal'], json.dumps(data['menu'], ensure_ascii=False))
 
@@ -328,14 +352,14 @@ def crawling():
     #    update_db(get_menus((today + timedelta(days=day))))
 
 
-def loop_crawling(sleep = 10):
+def loop_crawling(sleep=10):
     crawling()
     now_menus = get_menus(target_date=datetime.now(), target_time=check_meal_time())
     while meal_time := check_meal_time():
         time.sleep(sleep)
 
         now = datetime.now()
-        print_flush(f"[{now}] {meal_time} 업데이트중...", end=" ",)
+        print_flush(f"[{now}] {meal_time} 업데이트중...", end=" ", )
 
         menus = get_menus(target_date=now, target_time=meal_time)
         filtered = check_duplication_menu(now_menus, menus)
@@ -353,18 +377,6 @@ def loop_crawling(sleep = 10):
 
 # execute only if run as a script
 if __name__ == "__main__":
-    #connection = connect_db()
+    # connection = connect_db()
     loop_crawling()
-    #connection.close()
-
-"""
-크롤링 함 때리고 (디비 최신화)      ㅇㅋ
-오늘의 지금 시간 메뉴를 불러와서      ㅇㅋ
-지금 시간이 끝나기 전까지 반복한다. ㅇㅋ
-오늘의 지금 시간 메뉴를 불러와서    ㅇㅋ
-아까 메뉴 정보와 달라졌다면         ㅇㅋ
-DB를 업데이트하고                  아마 ㅇㅋ
-불러왔던 메뉴 정보도 최신화해준다.     ㅇㅋ
-
-DB 커넥션 open/close 위치 바꾸기
-"""
+    # connection.close()
