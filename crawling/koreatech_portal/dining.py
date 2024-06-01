@@ -47,6 +47,9 @@ DB 커넥션 open/close 위치 바꾸기
   - 식사시간에만 빠르게 반복하는 로직도 확인해봐야 함
 """
 
+redis_client = None
+mysql_connection = None
+
 
 class MenuEntity:
     def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu):
@@ -122,7 +125,7 @@ def send_request(login_cookie, eat_date, eat_type, restaurant, campus):
 
     soup = BeautifulSoup(response.text, 'lxml-xml')
     if soup.find("Parameter", {"id": "ErrorCode"}).text == '0':
-        return login_cookie
+        return response
 
     # 잘못된 쿠키 사용 예외 던지기
     raise ConnectionError("잘못된 쿠키 사용")
@@ -143,7 +146,7 @@ def connect_redis():
         raise ConnectionError("레디스 연결 불가")
 
 
-def connect_to_database():
+def connect_mysql():
     return pymysql.connect(
         host=config.MYSQL_CONFIG['host'],
         port=config.MYSQL_CONFIG['port'],
@@ -157,8 +160,8 @@ def connect_to_database():
 
 def get_cookie():
     # redis 캐시 조회
-    redis = connect_redis()
-    login_cookie = redis.get('__KSMSID__')
+    global redis_client
+    login_cookie = redis_client.get('__KSMSID__')
     if login_cookie:
         login_cookie = login_cookie.decode("utf-8")
         try:
@@ -169,7 +172,7 @@ def get_cookie():
 
     # 아우누리 로그인하여 쿠키 취득
     login_cookie = portal_login()['__KSMSID__']
-    redis.set('__KSMSID__', login_cookie)
+    redis_client.set('__KSMSID__', login_cookie)
     return login_cookie
 
 
@@ -259,11 +262,9 @@ def check_meal_time():
 
 
 def update_db(menus, is_changed=None):
-    connection = None
+    global mysql_connection
     try:
-        connection = connect_to_database()
-        cur = connection.cursor()
-
+        cur = mysql_connection.cursor()
         for menu in menus:
             print_flush("updating to DB..\n%s %s %s" % (menu.date, menu.dining_time, menu.place))
             try:
@@ -284,14 +285,13 @@ def update_db(menus, is_changed=None):
                 print_flush(sql % values)
                 cur.execute(sql % values)
 
-                connection.commit()
+                mysql_connection.commit()
             except Exception as error:
-                connection.rollback()
+                mysql_connection.rollback()
                 print_flush(error)
 
     finally:
-        if connection:
-            connection.close()
+        cur.close()
 
 
 def parse_response(response):
@@ -303,7 +303,7 @@ def parse_response(response):
     # 식단이 미운영인 경우 (응답은 정상이나 식단이 없는 경우)
     if data is None:
         return None
-    
+
     return MenuEntity(data['date'], data['dining_time'], data['place'], data['price_card'], data['price_cash'],
                       data['kcal'], json.dumps(data['menu'], ensure_ascii=False))
 
@@ -377,6 +377,9 @@ def loop_crawling(sleep=10):
 
 # execute only if run as a script
 if __name__ == "__main__":
-    # connection = connect_db()
-    loop_crawling()
-    # connection.close()
+    redis_client = connect_redis()
+    mysql_connection = connect_mysql()
+    try:
+        loop_crawling()
+    finally:
+        mysql_connection.close()
