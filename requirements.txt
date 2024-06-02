@@ -5,3 +5,6 @@ regex
 urllib3
 openpyxl
 config
+selenium
+redis
+lxml
