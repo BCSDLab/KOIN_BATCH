@@ -37,9 +37,9 @@ class MenuEntity:
         self.date = date
         self.dining_time = dining_time
         self.place = place
-        self.price_card = price_card if price_card is not None else 'NULL'
-        self.price_cash = price_cash if price_cash is not None else 'NULL'
-        self.kcal = kcal if kcal is not None else 'NULL'
+        self.price_card = price_card or 'NULL'
+        self.price_cash = price_cash or 'NULL'
+        self.kcal = kcal or 'NULL'
         self.menu = menu
 
     def __str__(self):
