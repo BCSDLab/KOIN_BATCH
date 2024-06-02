@@ -286,7 +286,7 @@ def update_db(menus, is_changed=None):
                 changed = is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if is_changed else "NULL"
 
                 values = (
-                    menu.date, menu.dining_time, menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
+                    menu.date, menu.dining_time.upper(), menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
                     menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed
                 )
 
@@ -381,12 +381,10 @@ def loop_crawling(sleep=10):
         time.sleep(sleep)
 
         now = datetime.now()
-        print(f"[{now}] {meal_time} 업데이트중...", end=" ", )
-
         menus = get_menus(target_date=now, target_time=meal_time)
         filtered = check_duplication_menu(now_menus, menus)
 
-        print_flush("%s Found" % str(len(filtered)))
+        print_flush(f"[{now}] {meal_time} 업데이트중... %s Found" % str(len(filtered)))
         if len(filtered) != 0:
             print_flush("메뉴 변경됨")
 
