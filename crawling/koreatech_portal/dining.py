@@ -119,7 +119,8 @@ def connect_redis():
     host = config.REDIS_CONFIG['host']
     port = config.REDIS_CONFIG['port']
     db = config.REDIS_CONFIG['db']
-    redis = redis_library.StrictRedis(host=host, port=port, db=db)
+    password = config.REDIS_CONFIG['password']
+    redis = redis_library.StrictRedis(host=host, port=port, db=db, password=password)
 
     # 연결 테스트
     try:
