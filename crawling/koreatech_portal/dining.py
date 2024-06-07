@@ -1,7 +1,7 @@
 import re
 import json
 import time
-
+import pytz
 import pymysql
 import requests
 import config
@@ -29,6 +29,7 @@ from login import portal_login
 
 redis_client = None
 mysql_connection = None
+KST = pytz.timezone('Asia/Seoul')
 
 
 # 식단 메뉴 정보를 담는 클래스
@@ -232,7 +233,7 @@ def check_meal_time():
         return hour * 60
 
     # 분 단위로 변환하여 계산
-    now = datetime.now()
+    now = datetime.now().astimezone(KST)
     minutes = to_minute(now.hour) + now.minute
 
     # 조식 08:00~09:30
@@ -252,7 +253,7 @@ def check_meal_time():
 
 # 아직 남은 식사 시간을 반환
 def get_remaining_meal_times():
-    now = datetime.now()
+    now = datetime.now().astimezone(KST)
     remaining_meal_times = []
 
     breakfast_start = now.replace(hour=8, minute=0, second=0, microsecond=0)
@@ -287,7 +288,8 @@ def update_db(menus, is_changed=None):
                 changed = is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if is_changed else "NULL"
 
                 values = (
-                    menu.date, menu.dining_time.upper(), menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
+                    menu.date, menu.dining_time.upper(), menu.place, menu.price_card, menu.price_cash, menu.kcal,
+                    menu.menu,
                     menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed
                 )
 
@@ -377,11 +379,11 @@ def crawling():
 # 실행 시간이 식사 시간인 경우에만 호출됨
 def loop_crawling(sleep=10):
     crawling()
-    now_menus = get_menus(target_date=datetime.now(), target_time=check_meal_time())
+    now_menus = get_menus(target_date=datetime.now().astimezone(KST), target_time=check_meal_time())
     while meal_time := check_meal_time():
         time.sleep(sleep)
 
-        now = datetime.now()
+        now = datetime.now().astimezone(KST)
         menus = get_menus(target_date=now, target_time=meal_time)
         filtered = check_duplication_menu(now_menus, menus)
 
