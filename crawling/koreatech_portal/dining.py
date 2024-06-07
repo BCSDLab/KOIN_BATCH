@@ -179,12 +179,13 @@ def parse_row(row):
         return None
 
     def parse_dish(dish_text):
-        # '\t', '\n', '\r' 제거 및 다중 공백 제거
-        dish_text = clean_text(dish_text)
+        # '\t', '\r' 제거 및 다중 공백 제거
+        dish_text = re.sub(r'[\t\r]', ' ', dish_text)
         # 마지막 칼로리 정보 및 가격 정보 제거
-        dish_text = re.sub(r'\d+ kcal.*', '', dish_text)
-        # 각 메뉴를 리스트로 변환
-        dishes = [dish.strip() for dish in dish_text.split(' ') if dish]
+        dish_text = re.sub(r'\d+ kcal.*', '', dish_text).strip()
+        dish_text = re.sub(r'\d+ 원.*', '', dish_text).strip()
+        # 줄바꿈 기준으로 메뉴를 구분
+        dishes = [dish.strip() for dish in dish_text.split('\n') if dish]
         return dishes
 
     def parse_price(price_text):
