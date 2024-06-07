@@ -1,15 +1,13 @@
-import json
 import re
+import json
 import time
-from datetime import datetime, timedelta
-
-import pymysql
 import pytz
-import redis as redis_library
+import pymysql
 import requests
-from bs4 import BeautifulSoup
-
 import config
+from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
+import redis as redis_library
 from login import portal_login
 
 """
