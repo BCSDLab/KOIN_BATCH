@@ -8,3 +8,4 @@ config
 selenium
 redis
 lxml
+pytz
