@@ -18,6 +18,7 @@ from login import portal_login
 2. 크롤링한 식단 정보를 DB에 저장한다.
     1. DB에 저장된 식단 정보와 비교하여 변경된 식단이 있으면 업데이트한다.
     2. 이 때는 식단이 변경되어도 is_changed를 업데이트하지 않는다.
+    3. 식단에 '천원의 아침'이 포함되어있으면 image_url에 천원의 아침 이미지 url을 삽입한다.
 3. 현재 시간이 식사 시간인지 확인한다.
 4. 식사시간이 아니면 종료된다.
 5. 식사시간이면 현재 식사시간 메뉴를 크롤링한다.
@@ -33,7 +34,7 @@ mysql_connection = None
 
 # 식단 메뉴 정보를 담는 클래스
 class MenuEntity:
-    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu):
+    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu, image_url):
         self.date = date
         self.dining_time = dining_time
         self.place = place
@@ -41,15 +42,16 @@ class MenuEntity:
         self.price_cash = price_cash or 'NULL'
         self.kcal = kcal or 'NULL'
         self.menu = menu
+        self.image_url = image_url
 
     def __str__(self):
-        return '%s, %s, %s, %s, %s, %s' % (
-            self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu
+        return '%s, %s, %s, %s, %s, %s, %s' % (
+            self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu, self.image_url
         )
 
     def __repr__(self):
-        return '%s, %s, %s, %s, %s, %s' % (
-            self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu
+        return '%s, %s, %s, %s, %s, %s, %s' % (
+            self.dining_time, self.place, self.price_card, self.price_cash, self.kcal, self.menu, self.image_url
         )
 
     def __eq__(self, other):
@@ -60,7 +62,8 @@ class MenuEntity:
                 self.price_card == other.price_card and \
                 self.price_cash == other.price_cash and \
                 self.kcal == other.kcal and \
-                self.menu == other.menu
+                self.menu == other.menu and \
+                self.image_url == other.image_url
 
         return False
 
@@ -278,15 +281,17 @@ def update_db(menus, is_changed=None):
             try:
                 # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
                 sql = """
-                INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, is_changed)
-                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', NULL)
+                INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, image_url, is_changed)
+                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', %s, NULL)
                 ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s
                 """
 
                 changed = is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if is_changed else "NULL"
+                image_url = f'"{menu.image_url}"' if menu.image_url else "NULL"
 
                 values = (
-                    menu.date, menu.dining_time.upper(), menu.place, menu.price_card, menu.price_cash, menu.kcal, menu.menu,
+                    menu.date, menu.dining_time.upper(), menu.place, menu.price_card, menu.price_cash, menu.kcal,
+                    menu.menu, image_url,
                     menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed
                 )
 
@@ -313,8 +318,13 @@ def parse_response(response):
         return None
 
     menu = data[0]
+
+    image_url = None
+    if '천원의아침' in json.dumps(menu['menu'], ensure_ascii=False):
+        image_url = "https://team-kap-koin-storage.s3.ap-northeast-2.amazonaws.com/dining/%EC%B2%9C%EC%9B%90%EC%9D%98%EC%95%84%EC%B9%A8.png"
+
     return MenuEntity(menu['date'], menu['dining_time'], menu['place'], menu['price_card'], menu['price_cash'],
-                      menu['kcal'], json.dumps(menu['menu'], ensure_ascii=False))
+                      menu['kcal'], json.dumps(menu['menu'], ensure_ascii=False), image_url)
 
 
 # 메뉴 정보를 요청하여 메뉴 리스트 반환
