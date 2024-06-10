@@ -175,12 +175,17 @@ def parse_row(row):
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    def extract_kcal(kcal_text):
-        # 'kcal' 제거하고 숫자만 반환
-        match = re.search(r'\d+', kcal_text)
-        if match:
-            return int(match.group())
-        return None
+    def extract_kcal(kcal_row):
+        # 칼로리 정보는 비어있을 수 있음 (능수관 및 미운영)
+        try:
+            kcal_text = kcal_row.find("Col", {"id": "KCAL"}).text
+            # 'kcal' 제거하고 숫자만 반환
+            match = re.search(r'\d+', kcal_text)
+            if match:
+                return int(match.group())
+            return None
+        except Exception:
+            return "NULL"
 
     def parse_dish(dish_text):
         # '\t', '\r' 제거 및 다중 공백 제거
@@ -192,24 +197,29 @@ def parse_row(row):
         dishes = [dish.strip() for dish in dish_text.split('\n') if dish]
         return dishes
 
-    def parse_price(price_text):
-        # 쉼표와 공백 제거 후 가격 추출
-        prices = re.findall(r'\d+', price_text.replace(',', ''))
-        # 가격이 두 개 이상일 경우 첫 번째와 두 번째 값을 반환
-        if len(prices) >= 2:
-            return int(prices[0]), int(prices[1])
-        else:
-            return int(prices[0]), int(prices[0]) if prices else (None, None)
+    def parse_price(price_row):
+        # 가격 정보는 비어있을 수 있음 (능수관 및 미운영)
+        try:
+            price_text = price_row.find("Col", {"id": "PRICE"}).text
+            # 쉼표와 공백 제거 후 가격 추출
+            prices = re.findall(r'\d+', price_text.replace(',', ''))
+            # 가격이 두 개 이상일 경우 첫 번째와 두 번째 값을 반환
+            if len(prices) >= 2:
+                return int(prices[0]), int(prices[1])
+            else:
+                return int(prices[0]), int(prices[0]) if prices else (None, None)
+        except Exception:
+            return "NULL", "NULL"
 
     def parse_place(place_description):
-        places = {"한식": "A코너", "일품": "B코너", "특식-전골/뚝배기": "C코너", "능수관": "능수관", "1코너": "1코너"}
+        places = {"한식": "A코너", "일품": "B코너", "특식-전골/뚝배기": "C코너", "능수관": "능수관", "코너1": "1코너"}
         for key in places.keys():
             if key in place_description:
                 return places[key]
         return place_description  # 기본적으로 동일한 값 반환
 
     try:
-        price_card, price_cash = parse_price(row.find("Col", {"id": "PRICE"}).text)
+        price_card, price_cash = parse_price(row)
         place = clean_text(row.find("Col", {"id": "RESTURANT"}).text)
         place = parse_place(place)
         campus = clean_text(row.find("Col", {"id": "CAMPUS"}).text)
@@ -217,7 +227,7 @@ def parse_row(row):
             place = "2캠퍼스"
 
         return {
-            'kcal': extract_kcal(row.find("Col", {"id": "KCAL"}).text),
+            'kcal': extract_kcal(row),
             'date': clean_text(row.find("Col", {"id": "EAT_DATE"}).text),
             'campus': campus,
             'price_card': price_card,
@@ -334,7 +344,7 @@ def parse_response(response):
 # target_time이 있으면 해당 식사 시간에 대해서만 크롤링
 def get_menus(target_date: datetime, target_time: str = None):
     eat_types = ["breakfast", "lunch", "dinner"]
-    restaurants = {"한식": "A코너", "일품": "B코너", "특식-전골/뚝배기": "C코너", "능수관": "능수관"}
+    restaurants = ["한식", "일품", "특식-전골/뚝배기", "능수관"]
     # campuses = ["Campus1", "Campus2"]
 
     cookie = get_cookie()
