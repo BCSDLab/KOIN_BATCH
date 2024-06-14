@@ -56,4 +56,4 @@ mkdir -p $FULL_LOG_DIR
 pip3 install -r $BASE_DIR/requirements.txt >> $FULL_LOG_DIR/$FILE_NAME.out 2>&1
 
 # 파이썬 스크립트 실행
-python3 $BASE_DIR/crawling/$FILE_NAME.py >> $FULL_LOG_DIR/$FILE_NAME.out 2>&1
+python3 $BASE_DIR/$FILE_NAME.py >> $FULL_LOG_DIR/$FILE_NAME.out 2>&1
