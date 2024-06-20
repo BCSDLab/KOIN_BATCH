@@ -1,5 +1,5 @@
 import time
-from selenium import webdriver
+from seleniumwire import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,6 +16,13 @@ def check_for_alert(driver, timeout=5):
         print("알림창 제거")
     except:
         print("알림창 없음")
+
+
+# request 인터셉트 후 ip 숨기기
+def interceptor(request):
+    request.headers["X-Forwarded-For"] = config.PORTAL_CONFIG["ip"]
+    request.headers["X-Real-IP"] = config.PORTAL_CONFIG["ip"]
+
 
 def portal_login():
     # 설정 불러오기
@@ -39,6 +46,8 @@ def portal_login():
 
     driver = webdriver.Chrome(options=options)
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
+    driver.request_interceptor = interceptor
 
     try:
         # 웹사이트로 이동
@@ -101,8 +110,9 @@ def portal_login():
         else:
             print('로그인 실패 - 예상치 못한 url 접근: ' + url)
             return None
-    except:
+    except Exception as e:
         print('로그인 실패 - 로직 수행 간 오류 발생')
+        print(e)
         return None
     finally:
         driver.quit()
@@ -124,3 +134,6 @@ def portal_login():
 비밀번호 변경: //*[@id="pwdUpdateFrm"]/div/div/div[3]/div/ul/li[1]/a
 다음에 변경: //*[@id="pwdUpdateFrm"]/div/div/div[3]/div/ul/li[2]/a
 """
+
+if __name__ == '__main__':
+    print(portal_login()['__KSMSID__'])
