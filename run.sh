@@ -3,6 +3,19 @@
 # 현재 작업 디렉토리를 BASE_DIR로 설정
 BASE_DIR=$(pwd)
 
+while getopts "n:d:h" opt; do
+  case $opt in
+    n) FILE_NAME="$OPTARG"
+    ;;
+    d) BASE_DIR="$OPTARG"
+    ;;
+    h) usage
+    ;;
+    \?) usage
+    ;;
+  esac
+done
+
 # 로그 디렉토리
 LOG_DIR="$BASE_DIR/logs"
 
@@ -22,19 +35,6 @@ usage() {
 if [ $# -eq 0 ]; then
     usage
 fi
-
-while getopts "n:d:h" opt; do
-  case $opt in
-    n) FILE_NAME="$OPTARG"
-    ;;
-    d) BASE_DIR="$OPTARG"
-    ;;
-    h) usage
-    ;;
-    \?) usage
-    ;;
-  esac
-done
 
 # 파일 이름 인자 확인
 if [ -z "$FILE_NAME" ]; then
