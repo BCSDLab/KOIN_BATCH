@@ -1,5 +1,5 @@
 import time
-from seleniumwire import webdriver
+from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,10 +18,15 @@ def check_for_alert(driver, timeout=5):
         print("알림창 없음")
 
 
-# request 인터셉트 후 ip 숨기기
-def interceptor(request):
-    request.headers["X-Forwarded-For"] = config.PORTAL_CONFIG["ip"]
-    request.headers["X-Real-IP"] = config.PORTAL_CONFIG["ip"]
+# Chrome DevTools Protocol(CDP)를 이용하여 헤더를 추가
+def insert_header(driver):
+    driver.execute_cdp_cmd(
+        "Network.setExtraHTTPHeaders",
+        {'headers': {
+            "X-Forwarded-For": config.PORTAL_CONFIG["ip"],
+            "X-Real-IP": config.PORTAL_CONFIG["ip"]
+        }}
+    )
 
 
 def portal_login():
@@ -47,7 +52,11 @@ def portal_login():
     driver = webdriver.Chrome(options=options)
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
-    driver.request_interceptor = interceptor
+    # Chrome DevTools Protocol(CDP) 활성화
+    driver.execute_cdp_cmd("Network.enable", {})
+
+    # 헤더 추가
+    insert_header(driver)
 
     try:
         # 웹사이트로 이동
