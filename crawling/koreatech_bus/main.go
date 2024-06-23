@@ -81,7 +81,8 @@ type Properties map[string]string
 func ConnectMongoDB(configs Properties) (client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 
-	uri := fmt.Sprintf("%s://%s:%s", "mongodb", configs["mongo.host"], configs["mongo.port"])
+    uri := fmt.Sprintf("mongodb://%s:%s@%s:%s", configs["mongo.username"], configs["mongo.password"], configs["mongo.host"], configs["mongo.port"])
+	// uri := fmt.Sprintf("%s://%s:%s", "mongodb", configs["mongo.host"], configs["mongo.port"])
 
 	clientOptions := options.Client().ApplyURI(uri)
 	client, _ = mongo.Connect(ctx, clientOptions)
