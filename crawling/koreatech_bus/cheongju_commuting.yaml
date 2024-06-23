@@ -1,24 +1,24 @@
 nodes:
   - &dongnam "동남지구(대원칸타빌BS)"
-  - &prau "프라우삼성산부인과"
+  - &prau "프라우 삼성산부인과"
   - &cheongju_school "청주혜원학교"
   - &geumchun "금천광장(농협앞)"
-  - &dragon_bezing "용담동 베이징"
-  - &sangdang "상당공원B(지하상가)"
+  - &dragon_bezing "용담동베이징(초양교회 앞)"
+  - &sangdang "상당공원 B(안경매니져 성안점 앞)"
   - &gym "체육관(NEPA)"
   - &sachang "사창사거리(청주고용센터맞은편BS)"
-  - &gallery_hotel "갤러리호텔"
+  - &gallery_hotel "갤러리호텔(봉명우체국BS)"
   - &solbat "솔밭공원"
   - &cheongju_station "청주역A(서촌동BS)"
   - &bangsu "방서동(다이소)"
   - &koreatech "학교"
   - &yongarmdong_hyundai "용암동 현대APT"
-  - &gs_daechung "GS대청주유소(용암동)"
-  - &seokyodong "석교동육거리"
-  - &sangdang_park "상당공원(상공회의소)"
+  - &gs_daechung "GS 대청주유소 맞은편(용암동)"
+  - &seokyodong "석교동 육거리"
+  - &sangdang_park "상당공원 A(상공회의소)"
   - &cheongju_cityhall "청주시청(방아다리)"
-  - &culture_industry "문화산업단지(구제조창)"
-  - &maria_hospital "성모병원(율량맥도널드)"
+  - &culture_industry "문화 산업단지(구 제조창)"
+  - &maria_hospital "성모병원(율량 맥도널드)"
   - &scinece_state "과학단지(오창프라자)"
   - &electronic_land "분평동 전자랜드"
   - &namsung_elementry "남성초등학교"
@@ -82,36 +82,6 @@ to_school:
         - node_name: *koreatech
           arrival_time: "08:50"
 
-  - route_name: "산남/분평"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
-    arrival_info:
-      - node_name: *electronic_land
-        arrival_time: "07:15"
-      - node_name: *namsung_elementry
-        arrival_time: "07:17"
-      - node_name: *sannam_sugok
-        arrival_time: "07:20"
-      - node_name: *chungbuk_nonghyup
-        arrival_time: "07:22"
-      - node_name: *chungbuk_university_hospital
-        arrival_time: "07:26"
-      - node_name: *KBS_reverse
-        arrival_time: "07:27"
-      - node_name: *gaesin_puruzio
-        arrival_time: "07:31"
-      - node_name: *samil_apt
-        arrival_time: "07:32"
-      - node_name: *busterminal_reverse
-        arrival_time: "07:37"
-      - node_name: *heungduck_highschool
-        arrival_time: "07:42"
-      - node_name: *cheongju_station_seochon
-        arrival_time: "07:46"
-      - node_name: *oksangarak_threeri
-        arrival_time: "07:49"
-      - node_name: *koreatech
-        arrival_time: "08:50"
-
 from_school:
   - route_name: "동남지구"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
@@ -160,34 +130,3 @@ from_school:
           arrival_time: "19:30"
         - node_name: *bangsu
           arrival_time: "19:32"
-
-
-  - route_name: "산남분평동"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
-    arrival_info:
-      - node_name: *koreatech
-        arrival_time: "18:10"
-      - node_name: *oksangarak_threeri
-        arrival_time: "19:11"
-      - node_name: *cheongju_station_seochon
-        arrival_time: "19:14"
-      - node_name: *heungduck_highschool
-        arrival_time: "19:18"
-      - node_name: *busterminal_reverse
-        arrival_time: "19:23"
-      - node_name: *samil_apt
-        arrival_time: "19:28"
-      - node_name: *gaesin_puruzio
-        arrival_time: "19:29"
-      - node_name: *KBS_reverse
-        arrival_time: "19:33"
-      - node_name: *chungbuk_university_hospital
-        arrival_time: "19:34"
-      - node_name: *chungbuk_nonghyup
-        arrival_time: "19:38"
-      - node_name: *sannam_sugok
-        arrival_time: "19:40"
-      - node_name: *namsung_elementry
-        arrival_time: "19:43"
-      - node_name: *electronic_land
-        arrival_time: "19:45"
