@@ -1,0 +1,37 @@
+nodes:
+  - &yongarm "용암동현대@"
+  - &gs_daechung "GS 대청주유소(용암동)"
+  - &sg_six "석교동 육거리"
+  - &sd_park_b "상당공원B(지하상가)"
+  - &sd_park_c "상당공원C"
+  - &gym_nepa "체육관(NEPA)"
+  - &sc_four_bs "사창사거리(청주고용센터맞은편BS)"
+  - &sc_four "사창사거리"
+  - &gallery "갤러리호텔(봉명우체국BS)"
+  - &sollbat "솔밭공원"
+  - &chungjoo_a "청주역 A(서촌동 BS)"
+  - &chungjoo_b "청주역 B"
+  - &oksan "옥산 (가락3리 BS)"
+  - &g_well_city "G-WELL CITY"
+  - &bongmyoung_post "봉명우체국"
+  - &bongmyoung_four "봉명사거리"
+  - &gym "체육관"
+  - &six "육거리"
+  - &chungjoo_cityhall "청주시청(방아다리)"
+  - &culture_industry "문화 산업단지(구 제조창)"
+  - &sm_hospital "성모병원(율량 맥도날드)"
+  - &science_park "과학단지(오창프라자)"
+  - &oc_science_park "오창과학단지"
+  - &sb_four "신봉사거리(LPG충전소)"
+  - &sy_gas "삼양가스"
+  - &koreatech "한기대"
+
+to_school:
+  - route_name: "미운행"
+    running_days:
+    arrival_info:
+
+from_school:
+  - route_name: "미운행"
+    running_days:
+    arrival_info:
