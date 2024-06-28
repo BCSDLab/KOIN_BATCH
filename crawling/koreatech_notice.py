@@ -7,6 +7,7 @@ from urllib.parse import urlparse, parse_qs
 import pymysql
 import json
 import config
+from slack_notice import filter_nas, notice_to_slack
 
 
 def connect_db():
@@ -195,9 +196,18 @@ class NoticeArticle:
 
 if __name__ == "__main__":
     # execute only if run as a script
+    articles = []
     connection = connect_db()
     for noticeId in noticeIds.keys():
         nas = crawling(noticeId)
         print(nas)
+
+        # DB에 없고, 키워드가 들어있는 게시글 필터링
+        articles.extend(filter_nas(connection, nas, keywords={"버스", "bus"}))
+
         updateDB(nas)
+
     connection.close()
+
+    if articles:
+        notice_to_slack(articles)
