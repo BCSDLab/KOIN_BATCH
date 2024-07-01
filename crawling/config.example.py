@@ -5,3 +5,7 @@ DATABASE_CONFIG = {
     'password': '',
     'port': 3306
 }
+
+SLACK_CONFIG = {
+    'url': ''
+}
