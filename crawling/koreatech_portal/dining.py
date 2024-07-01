@@ -35,7 +35,7 @@ KST = pytz.timezone('Asia/Seoul')
 
 # 식단 메뉴 정보를 담는 클래스
 class MenuEntity:
-    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu, image_url):
+    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu, image_url=None):
         self.date = date
         self.dining_time = dining_time
         self.place = place
@@ -319,27 +319,28 @@ def update_db(menus, is_changed=None):
         cur.close()
 
 
-# 결손값 정합성 확인 후 검증된 데이터만 반환
-def check_missing_menus(menus):
+# 해당 날짜의 시간대에 DB에 있는 메뉴 반환
+def get_now_menus(target_date: datetime, target_time: str = None):
     global mysql_connection
 
-    verified_menus = []
+    menus = []
     with mysql_connection.cursor() as cur:
-        for menu in menus:
-            try:
-                sql = f"SELECT COUNT(*) FROM koin.dining_menus WHERE date = '%s' AND type = '%s' AND place = '%s'"
+        try:
+            sql = f"""SELECT date, type as dining_time, place, price_card, price_cash, kcal, menu
+            FROM koin.dining_menus
+            WHERE date = '{target_date.date()}'
+            AND type = '{target_time.upper()}'"""
 
-                cur.execute(sql % (menu.date, menu.dining_time.upper(), menu.place))
+            cur.execute(sql)
 
-                result = cur.fetchone()
+            result = cur.fetchall()
 
-                if 0 < result["COUNT(*)"]:
-                    verified_menus.append(menu)
+            menus = list(map(lambda menu: MenuEntity(**menu), result))
 
-            except Exception as error:
-                print_flush(error)
+        except Exception as error:
+            print_flush(error)
 
-    return verified_menus
+    return menus
 
 
 # 크롤링 데이터를 메뉴 객체로 변환
@@ -421,9 +422,10 @@ def crawling():
 # 실행 시간이 식사 시간인 경우에만 호출됨
 def loop_crawling(sleep=10):
     crawling()
-    now_menus = get_menus(target_date=datetime.now().astimezone(KST), target_time=check_meal_time())
-    now_menus = check_missing_menus(now_menus)
+    if not check_meal_time():
+        return
 
+    now_menus = get_now_menus(target_date=datetime.now().astimezone(KST), target_time=check_meal_time())
     while meal_time := check_meal_time():
         time.sleep(sleep)
 
