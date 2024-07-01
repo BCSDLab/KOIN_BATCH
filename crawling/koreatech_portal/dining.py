@@ -254,7 +254,7 @@ def check_meal_time():
         return "breakfast"
 
     # 중식 11:30~13:30
-    if to_minute(11) + 30 <= minutes <= to_minute(13) + 30:
+    if to_minute(14) + 55 <= minutes <= to_minute(15) + 55:
         return "lunch"
 
     # 석식 17:30~18:30
@@ -271,6 +271,7 @@ def get_remaining_meal_times():
 
     breakfast_start = now.replace(hour=8, minute=0, second=0, microsecond=0)
     lunch_start = now.replace(hour=11, minute=30, second=0, microsecond=0)
+    lunch_start = now.replace(hour=14, minute=55, second=0, microsecond=0)
     dinner_start = now.replace(hour=17, minute=30, second=0, microsecond=0)
 
     if now < breakfast_start:
@@ -317,6 +318,29 @@ def update_db(menus, is_changed=None):
 
     finally:
         cur.close()
+
+
+# 결손값 정합성 확인 후 검증된 데이터만 반환
+def check_missing_menus(menus):
+    global mysql_connection
+
+    verified_menus = []
+    with mysql_connection.cursor() as cur:
+        for menu in menus:
+            try:
+                sql = f"SELECT COUNT(*) FROM koin.dining_menus WHERE date = '%s' AND type = '%s' AND place = '%s'"
+
+                cur.execute(sql % (menu.date, menu.dining_time.upper(), menu.place))
+
+                result = cur.fetchone()
+
+                if 0 < result["COUNT(*)"]:
+                    verified_menus.append(menu)
+
+            except Exception as error:
+                print_flush(error)
+
+    return verified_menus
 
 
 # 크롤링 데이터를 메뉴 객체로 변환
@@ -399,6 +423,8 @@ def crawling():
 def loop_crawling(sleep=10):
     crawling()
     now_menus = get_menus(target_date=datetime.now().astimezone(KST), target_time=check_meal_time())
+    now_menus = check_missing_menus(now_menus)
+
     while meal_time := check_meal_time():
         time.sleep(sleep)
 
