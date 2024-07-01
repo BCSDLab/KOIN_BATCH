@@ -254,7 +254,7 @@ def check_meal_time():
         return "breakfast"
 
     # 중식 11:30~13:30
-    if to_minute(14) + 55 <= minutes <= to_minute(15) + 55:
+    if to_minute(11) + 30 <= minutes <= to_minute(13) + 30:
         return "lunch"
 
     # 석식 17:30~18:30
@@ -271,7 +271,6 @@ def get_remaining_meal_times():
 
     breakfast_start = now.replace(hour=8, minute=0, second=0, microsecond=0)
     lunch_start = now.replace(hour=11, minute=30, second=0, microsecond=0)
-    lunch_start = now.replace(hour=14, minute=55, second=0, microsecond=0)
     dinner_start = now.replace(hour=17, minute=30, second=0, microsecond=0)
 
     if now < breakfast_start:
