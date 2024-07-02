@@ -1,6 +1,7 @@
 PORTAL_CONFIG = {
     'id': '',
-    'pw': ''
+    'pw': '',
+    'ip': ''
 }
 
 GMAIL_CONFIG = {
