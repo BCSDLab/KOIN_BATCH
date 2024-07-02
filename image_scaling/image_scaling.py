@@ -11,9 +11,13 @@
 import os
 from PIL import Image
 import piexif
-originalPath = '/usr/local/KOIN_BATCH/s3Image/' # 원본 폴더
-resultPath = '/usr/local/KOIN_BATCH/s3Image/' # 대상 폴더
-target_widths = [320, 640, 800, 1024, 2560] # 고정 가로 픽셀 수
+import s3_config
+
+originalPath = s3_config.folderPath
+resultPath = s3_config.folderPath
+target_widths = [320, 640, 800, 1024, 2560]  # 고정 가로 픽셀 수
+
+
 def size_scaling(img, target_width):
     # 고정된 가로 픽셀 수를 기준으로 이미지 크기 조절
     if img.width > target_width:
@@ -21,7 +25,8 @@ def size_scaling(img, target_width):
         new_dimensions = (target_width, int(img.height * scaling_factor))
         img_resized = img.resize(new_dimensions, Image.Resampling.LANCZOS)
         return img_resized
-    return None # 리사이징이 필요 없는 경우
+    return None  # 리사이징이 필요 없는 경우
+
 # 메타 데이터를 활용한 회전 형태 유지
 def rotate_image(img):
     try:
@@ -44,12 +49,15 @@ def rotate_image(img):
         return img
     except:
         return img
+
 def createDirectory(dir):
     try:
         if not os.path.exists(dir):
             os.makedirs(dir)
-    except OSError:
+    except OSError as e :
+        print(e)
         print("Error: Failed to create the directory.")
+
 for (path, dir, files) in os.walk(originalPath):
     for filename in files:
         # 이미 최적화된 파일은 스킵 (_{width}.webp로 끝나는 파일들)
@@ -75,6 +83,5 @@ for (path, dir, files) in os.walk(originalPath):
                 # 이미 최적화된 이미지가 존재한다면 최적화를 진행하지 않는다
                 if not os.path.exists(output_filename):
                     resized_img = size_scaling(img, target_width)
-                    if resized_img: # 리사이징이 필요한 경우만 저장
-                        resized_img.save(output_filename, 'WEBP') (편집됨)
-
+                    if resized_img:  # 리사이징이 필요한 경우만 저장
+                        resized_img.save(output_filename, 'WEBP')

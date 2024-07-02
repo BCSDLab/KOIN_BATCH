@@ -9,5 +9,5 @@ selenium
 redis
 lxml
 pytz
-PIL
+pillow
 piexif
