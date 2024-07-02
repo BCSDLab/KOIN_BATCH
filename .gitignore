@@ -7,3 +7,4 @@ myenv
 *.xml
 *.xlsx
 .idea
+image_scaling/s3.config
