@@ -35,7 +35,7 @@ KST = pytz.timezone('Asia/Seoul')
 
 # 식단 메뉴 정보를 담는 클래스
 class MenuEntity:
-    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu, image_url):
+    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu, image_url=None):
         self.date = date
         self.dining_time = dining_time
         self.place = place
@@ -319,6 +319,30 @@ def update_db(menus, is_changed=None):
         cur.close()
 
 
+# 해당 날짜의 시간대에 DB에 있는 메뉴 반환
+def get_now_menus(target_date: datetime, target_time: str = None):
+    global mysql_connection
+
+    menus = []
+    with mysql_connection.cursor() as cur:
+        try:
+            sql = f"""SELECT date, type as dining_time, place, price_card, price_cash, kcal, menu
+            FROM koin.dining_menus
+            WHERE date = '{target_date.date()}'
+            AND type = '{target_time.upper()}'"""
+
+            cur.execute(sql)
+
+            result = cur.fetchall()
+
+            menus = list(map(lambda menu: MenuEntity(**menu), result))
+
+        except Exception as error:
+            print_flush(error)
+
+    return menus
+
+
 # 크롤링 데이터를 메뉴 객체로 변환
 def parse_response(response):
     soup = BeautifulSoup(response.text, 'lxml-xml')
@@ -398,7 +422,10 @@ def crawling():
 # 실행 시간이 식사 시간인 경우에만 호출됨
 def loop_crawling(sleep=10):
     crawling()
-    now_menus = get_menus(target_date=datetime.now().astimezone(KST), target_time=check_meal_time())
+    if not check_meal_time():
+        return
+
+    now_menus = get_now_menus(target_date=datetime.now().astimezone(KST), target_time=check_meal_time())
     while meal_time := check_meal_time():
         time.sleep(sleep)
 
