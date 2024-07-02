@@ -8,3 +8,4 @@ myenv
 *.xlsx
 .idea
 image_scaling/s3.config
+image_scaling/s3_config.py
