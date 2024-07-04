@@ -35,7 +35,7 @@ KST = pytz.timezone('Asia/Seoul')
 
 # 식단 메뉴 정보를 담는 클래스
 class MenuEntity:
-    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu, image_url=None):
+    def __init__(self, date, dining_time, place, price_card, price_cash, kcal, menu, image_url=None, is_changed=None):
         self.date = date
         self.dining_time = dining_time
         self.place = place
@@ -44,6 +44,7 @@ class MenuEntity:
         self.kcal = kcal or 'NULL'
         self.menu = menu
         self.image_url = image_url
+        self.is_changed = None
 
     def __str__(self):
         return '%s, %s, %s, %s, %s, %s, %s' % (
@@ -57,14 +58,13 @@ class MenuEntity:
 
     def __eq__(self, other):
         if isinstance(other, MenuEntity):
-            return self.date == other.date and \
-                self.dining_time == other.dining_time and \
-                self.place == other.place and \
-                self.price_card == other.price_card and \
-                self.price_cash == other.price_cash and \
-                self.kcal == other.kcal and \
-                self.menu == other.menu and \
-                self.image_url == other.image_url
+            return str(self.date) == str(other.date) and \
+                str(self.dining_time).upper() == str(other.dining_time).upper() and \
+                str(self.place).upper() == str(other.place).upper() and \
+                str(self.price_card).upper() == str(other.price_card).upper() and \
+                str(self.price_cash).upper() == str(other.price_cash).upper() and \
+                str(self.kcal).upper() == str(other.kcal).upper() and \
+                self.menu == other.menu
 
         return False
 
@@ -284,7 +284,7 @@ def get_remaining_meal_times():
 
 
 # MySQL DB에 크롤링한 식단 정보 업데이트
-def update_db(menus, is_changed=None):
+def update_db(menus):
     global mysql_connection
     try:
         cur = mysql_connection.cursor()
@@ -298,7 +298,7 @@ def update_db(menus, is_changed=None):
                 ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s
                 """
 
-                changed = is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if is_changed else "NULL"
+                changed = menu.is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if menu.is_changed else "NULL"
                 image_url = f'"{menu.image_url}"' if menu.image_url else "NULL"
 
                 values = (
@@ -391,12 +391,22 @@ def get_menus(target_date: datetime, target_time: str = None):
 
 # 기존 메뉴와 현재 메뉴가 다른지 확인
 def check_duplication_menu(existed_menu, new_menu):
-    existed_menu = {(menu.date, menu.dining_time, menu.place): menu for menu in existed_menu}
+    existed_menu = {(str(menu.date), str(menu.dining_time).upper(), str(menu.place)): menu for menu in existed_menu}
     result = []
     for menu in new_menu:
-        key = (menu.date, menu.dining_time, menu.place)
-        if key not in existed_menu or existed_menu[key] != menu:
+        key = (str(menu.date), str(menu.dining_time).upper(), str(menu.place))
+
+        # 새로운 메뉴
+        if key not in existed_menu:
             result.append(menu)
+            continue
+
+        if existed_menu[key] != menu:
+            # 메뉴가 변경됨
+            if existed_menu[key].menu != menu.menu:
+                menu.is_changed = datetime.now().astimezone(KST)
+            result.append(menu)
+
     return result
 
 
@@ -440,7 +450,7 @@ def loop_crawling(sleep=10):
         for menu in filtered:
             print_flush(menu)
 
-        update_db(filtered, is_changed=now)
+        update_db(filtered)
         now_menus = menus
 
 
