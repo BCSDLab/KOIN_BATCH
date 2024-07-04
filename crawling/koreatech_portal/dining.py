@@ -254,7 +254,7 @@ def check_meal_time():
         return "breakfast"
 
     # 중식 11:30~13:30
-    if to_minute(11) + 30 <= minutes <= to_minute(14) + 30:
+    if to_minute(11) + 30 <= minutes <= to_minute(13) + 30:
         return "lunch"
 
     # 석식 17:30~18:30
