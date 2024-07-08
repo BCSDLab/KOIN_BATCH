@@ -289,7 +289,8 @@ def update_db(menus):
     try:
         cur = mysql_connection.cursor()
         for menu in menus:
-            print_flush("updating to DB..\n%s %s %s" % (menu.date, menu.dining_time, menu.place))
+            now = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+            print_flush("[%s] updating to DB..\n%s %s %s" % (now, menu.date, menu.dining_time, menu.place))
             try:
                 # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
                 sql = """
