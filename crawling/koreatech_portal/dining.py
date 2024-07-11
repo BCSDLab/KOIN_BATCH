@@ -429,9 +429,31 @@ def crawling():
             update_db(menus)
 
 
+def between_breakfast_lunch():
+    now = datetime.now().astimezone(KST)
+    now_menus = get_now_menus(target_date=now, target_time="lunch")
+
+    menus = get_menus(target_date=now, target_time="lunch")
+    filtered = check_duplication_menu(now_menus, menus)
+
+    print_flush(f"[{now}] lunch 업데이트중... %s Found" % str(len(filtered)))
+    if len(filtered) != 0:
+        print_flush("메뉴 변경됨")
+
+    for menu in filtered:
+        print_flush(menu)
+
+    update_db(filtered)
+
+
 # 현재 식사 시간에 대해서만 크롤링하고 변경 감지 시 DB 업데이트
 # 실행 시간이 식사 시간인 경우에만 호출됨
 def loop_crawling(sleep=10):
+    # 아침과 점심 사이에 실행
+    if get_remaining_meal_times() and get_remaining_meal_times()[0] == "lunch":
+        between_breakfast_lunch()
+        return
+
     crawling()
     if not check_meal_time():
         return
