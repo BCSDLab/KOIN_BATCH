@@ -11,3 +11,4 @@ lxml
 pytz
 pillow
 piexif
+pymongo

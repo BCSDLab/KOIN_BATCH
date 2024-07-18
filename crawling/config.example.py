@@ -9,3 +9,11 @@ DATABASE_CONFIG = {
 SLACK_CONFIG = {
     'url': ''
 }
+
+MONGO_CONFIG = {
+    'host': '',
+    'port': '',
+    'db': '',
+    'user': '',
+    'password': ''
+}
