@@ -9,3 +9,13 @@ myenv
 .idea
 image_scaling/s3.config
 image_scaling/s3_config.py
+
+# 모든 config 파일 무시
+**/*.config
+**/config.py
+**/*.properties
+
+# example config 파일 제외
+!**/*.example.config
+!**/config.example.py
+!**/*.example.properties
