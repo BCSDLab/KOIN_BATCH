@@ -131,7 +131,7 @@ def get_timetable(route_info):
         )
 
     return (
-        TimetableDocument(datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S'), route_info, timetables)
+        TimetableDocument(datetime.now(KST), route_info, timetables)
         .dict()
     )
 
