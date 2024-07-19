@@ -44,14 +44,14 @@ class BusInfo:
 
 
 class BusTimeTable:
-    def __init__(self, day_of_week, arrival_info):
+    def __init__(self, day_of_week, depart_info):
         self.day_of_week = day_of_week
-        self.arrival_info = arrival_info
+        self.depart_info = depart_info
 
     def dict(self):
         return {
             'day_of_week': self.day_of_week,
-            'arrival_info': self.arrival_info
+            'depart_info': self.depart_info
         }
 
     def __str__(self): return str(self.dict())
@@ -121,12 +121,12 @@ def get_timetable(route_info):
 
     timetables = []
     for idx, day_of_week in enumerate(("평일", "주말", "공휴일", "임시")):
-        arrival_info = soup.select(
+        depart_info = soup.select(
             f"body > div.timeTalbeWrap > div > div.timeTable-wrap > div:nth-child({idx + 1}) > dl > dd")
-        arrival_info = list(map(lambda x: x.string[:5], arrival_info))
+        depart_info = list(map(lambda x: x.string[:5], depart_info))
 
         timetables.append(
-            BusTimeTable(day_of_week, arrival_info)
+            BusTimeTable(day_of_week, depart_info)
             .dict()
         )
 
