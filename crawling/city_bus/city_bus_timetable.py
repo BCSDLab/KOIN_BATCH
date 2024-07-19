@@ -1,4 +1,4 @@
-import crawling.config as config
+from config import MONGO_CONFIG
 
 import requests
 from bs4 import BeautifulSoup
@@ -18,11 +18,11 @@ KST = timezone('Asia/Seoul')
 @lru_cache(maxsize=None)
 def get_mongodb_connection():
     return MongoClient(
-        host=config.MONGO_CONFIG["host"],
-        port=config.MONGO_CONFIG["port"],
-        username=config.MONGO_CONFIG["user"],
-        password=config.MONGO_CONFIG["password"]
-    )[config.MONGO_CONFIG["db"]]
+        host=MONGO_CONFIG["host"],
+        port=MONGO_CONFIG["port"],
+        username=MONGO_CONFIG["user"],
+        password=MONGO_CONFIG["password"]
+    )[MONGO_CONFIG["db"]]
 
 
 class BusInfo:
@@ -131,7 +131,7 @@ def get_timetable(route_info):
         )
 
     return (
-        TimetableDocument(datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S'), route_info, timetables)
+        TimetableDocument(datetime.now(KST), route_info, timetables)
         .dict()
     )
 
