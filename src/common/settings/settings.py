@@ -12,6 +12,20 @@ BOT_NAME = "KOIN_BATCH"
 SPIDER_MODULES = ["src.crawling"]
 NEWSPIDER_MODULE = "src.crawling"
 
+# 로그 디렉토리 설정
+LOG_DIR = 'logs'
+
+# Enable or disable extensions
+# See https://docs.scrapy.org/en/latest/topics/extensions.html
+EXTENSIONS = {
+    'src.common.extensions.SpiderLoggingExtension': 1,
+}
+
+# Configure item pipelines
+# See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+# ITEM_PIPELINES = {
+#     "src.common.pipelines.MongoPipeline": 300,
+# }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "KOIN_BATCH (+http://www.yourdomain.com)"
@@ -53,18 +67,6 @@ ROBOTSTXT_OBEY = True
 #DOWNLOADER_MIDDLEWARES = {
 #    "KOIN_BATCH.middlewares.KoinBatchDownloaderMiddleware": 543,
 #}
-
-# Enable or disable extensions
-# See https://docs.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    "scrapy.extensions.telnet.TelnetConsole": None,
-#}
-
-# Configure item pipelines
-# See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-    "src.common.pipelines.mongo.MongoPipeline": 300,
-}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

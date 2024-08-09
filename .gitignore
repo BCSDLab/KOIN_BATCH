@@ -16,6 +16,9 @@ myenv
 conf/config.py
 **/*.properties
 
+# logs 폴더
+logs/
+
 # example conf 파일은 포함
 !**/*.example.config
 !conf/config.example.py
