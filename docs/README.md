@@ -90,4 +90,4 @@ scrapy crawl "city bus timetable"
 
 자세한 내용은 [공식 문서](https://docs.scrapy.org/en/latest/topics/architecture.html) 참고
 
-![data_flow.png](docs/img/data_flow.png)
+![data_flow.png](./img/data_flow.png)
