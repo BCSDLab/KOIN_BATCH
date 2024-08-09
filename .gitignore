@@ -1,0 +1,31 @@
+# IDLE
+.vscode
+.idea
+*.iml
+*.xml
+
+# 캐시
+**/__pycache__
+
+# 가상 환경
+myenv
+.venv
+
+# 모든 conf 파일
+**/*.config
+conf/config.py
+**/*.properties
+
+# example conf 파일은 포함
+!**/*.example.config
+!conf/config.example.py
+!**/*.example.properties
+
+# 엑셀 파일
+*.xlsx
+
+# .DS_Store
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
