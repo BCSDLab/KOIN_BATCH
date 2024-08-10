@@ -12,13 +12,12 @@ BOT_NAME = "KOIN_BATCH"
 SPIDER_MODULES = ["src.crawling"]
 NEWSPIDER_MODULE = "src.crawling"
 
-# 로그 디렉토리 설정
-LOG_DIR = 'logs'
+from .log_settings import *
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
 EXTENSIONS = {
-    'src.common.extensions.SpiderLoggingExtension': 1,
+    "src.common.extensions.SpiderLoggingExtension": 1,
 }
 
 # Configure item pipelines
