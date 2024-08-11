@@ -1,17 +1,26 @@
+import logging
 from pathlib import Path
+
 from scrapy import signals
-from scrapy.utils.log import configure_logging, DEFAULT_LOGGING
+from scrapy.crawler import Crawler
 
 
 class SpiderLoggingExtension:
-    def __init__(self, log_dir):
+    def __init__(self, log_dir: str, log_formatter: logging.Formatter, log_level: str) -> None:
         self.log_dir = Path(log_dir)
+        self.log_formatter = log_formatter
+        self.log_level = log_level
 
     @classmethod
-    def from_crawler(cls, crawler):
+    def from_crawler(cls, crawler: Crawler) -> 'SpiderLoggingExtension':
         log_dir = crawler.settings.get('LOG_DIR')
+        log_format = crawler.settings.get('LOG_FORMAT')
+        log_dateformat = crawler.settings.get('LOG_DATEFORMAT')
+        log_level = crawler.settings.get('LOG_LEVEL')
 
-        ext = cls(log_dir)
+        log_formatter = logging.Formatter(fmt=log_format, datefmt=log_dateformat)
+
+        ext = cls(log_dir, log_formatter, log_level)
         crawler.signals.connect(ext.spider_opened, signal=signals.spider_opened)
         return ext
 
@@ -22,14 +31,15 @@ class SpiderLoggingExtension:
 
         log_file = self.get_log_file(spider)
 
-        # Scrapy의 기본 로깅 설정을 복사
-        settings = DEFAULT_LOGGING.copy()
+        # 파일 핸들러 추가
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(self.log_formatter)
 
-        # 로그 파일 경로를 설정
-        settings["LOG_FILE"] = log_file
-
-        # 로깅을 구성
-        configure_logging(settings)
+        # Spider 전용 로거 생성
+        logger = logging.getLogger(spider.name)
+        logger.propagate = False
+        logger.addHandler(file_handler)
+        logger.setLevel(self.log_level)
 
     def get_log_file(self, spider):
         module_path = Path(spider.__module__.replace('.', '/'))
@@ -46,7 +56,6 @@ class SpiderLoggingExtension:
         # spider 이름을 경로에 추가
         spider_path = spider_path.parent / spider.name
 
-        log_file = self.log_dir / f"{spider_path}.log"
+        log_file = self.log_dir / f'{spider_path}.log'
         log_file.parent.mkdir(parents=True, exist_ok=True)
         return log_file
-
