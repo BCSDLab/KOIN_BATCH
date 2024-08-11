@@ -11,14 +11,14 @@ LOG_ENABLED = True
 기본값: ``True``
 """
 
-LOG_ENCODING = "utf-8"
+LOG_ENCODING = 'utf-8'
 """
 로깅에 사용할 인코딩입니다.
 
 기본값: ``'utf-8'``
 """
 
-LOG_FILE = "logs/scrapy.log"
+LOG_FILE = 'logs/scrapy.log'
 """
 로깅 출력에 사용할 파일 이름입니다. ``None`` 이면 표준 오류가 사용됩니다.
 
@@ -32,7 +32,7 @@ LOG_FILE_APPEND = True
 기본값: ``True``
 """
 
-LOG_FORMAT = "%(asctime)s [%(name)s] %(levelname)s: %(message)s"
+LOG_FORMAT = '%(asctime)s [%(name)s] %(levelname)s: %(message)s'
 """
 로그 메시지 서식을 지정하는 문자열입니다.
 
@@ -42,7 +42,7 @@ LOG_FORMAT = "%(asctime)s [%(name)s] %(levelname)s: %(message)s"
 기본값: ``'%(asctime)s [%(name)s] %(levelname)s: %(message)s'``
 """
 
-LOG_DATEFORMAT = "%Y-%m-%d %H:%M:%S"
+LOG_DATEFORMAT = '%Y-%m-%d %H:%M:%S'
 """
 날짜/시간 서식을 지정하기 위한 문자열, ``LOG_FORMAT`` 에서 ``%(asctime)s`` 의 자리 표시자를 확장합니다.
 
@@ -53,7 +53,7 @@ LOG_DATEFORMAT = "%Y-%m-%d %H:%M:%S"
 
 """
 
-LOG_FORMATTER = "scrapy.logformatter.LogFormatter"
+LOG_FORMATTER = 'scrapy.logformatter.LogFormatter'
 """
 다양한 작업에 대한 `로그 메시지 서식을 지정 <https://docs.scrapy.org/en/latest/topics/logging.html#custom-log-formats>`_
 하는 데 사용할 클래스입니다.
@@ -61,7 +61,7 @@ LOG_FORMATTER = "scrapy.logformatter.LogFormatter"
 기본값: `'scrapy.logformatter.LogFormatter' <https://docs.scrapy.org/en/latest/topics/logging.html#scrapy.logformatter.LogFormatter>`_
 """
 
-LOG_LEVEL = "INFO"
+LOG_LEVEL = 'INFO'
 """
 기록할 최소 레벨입니다. 사용 가능한 레벨은 다음과 같습니다: ``CRITICAL``, ``ERROR``, ``WARNING``, ``INFO``, ``DEBUG`` 입니다.
 
@@ -94,7 +94,7 @@ LOGSTATS_INTERVAL = 60.0
 기본값: ``60.0``
 """
 
-LOG_DIR = "logs"
+LOG_DIR = 'logs'
 """
 크롤러(Spider) 로깅 출력에 사용할 폴더 입니다. *커스텀 설정 값입니다.*
 
