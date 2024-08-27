@@ -17,16 +17,19 @@ def connect_db():
     return conn
 
 
-def filter_nas(connection, nas, keywords):
+def filter_nas(connection, nas, keywords=None):
+
+    articles = tuple(nas)
 
     # 키워드가 포함된 게시글 필터링
-    articles = (a for a in nas for keyword in keywords if keyword in a.title)
+    if keywords:
+        articles = (a for a in nas for keyword in keywords if keyword in a.title)
 
     need_notice = []
     sql = f"SELECT COUNT(*) FROM koin.notice_articles WHERE board_id = %s AND article_num = %s"
     with connection.cursor() as cursor:
         for article in articles:
-            cursor.execute(sql % (article.board_id, article.article_num))
+            cursor.execute(sql % (article.board_id, article.num))
             result = cursor.fetchone()
 
             if result[0] == 0:
@@ -49,8 +52,6 @@ def send_message(body):
         print("Slack Message 전송에 실패했습니다.")
         print("에러 내용 : ")
         print(e)
-
-        exit(0)
 
 
 def notice_to_slack(articles):

@@ -12,3 +12,4 @@ pytz
 pillow
 piexif
 pymongo
+boto3
