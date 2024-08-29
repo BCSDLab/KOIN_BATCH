@@ -10,6 +10,9 @@ from table import replace_table
 from login import login
 from crawling.slack_notice import filter_nas, notice_to_slack
 
+from math import ceil
+from hashlib import sha256
+
 
 def connect_db():
     urllib3.disable_warnings()
@@ -65,10 +68,36 @@ class Attachment:
     def __init__(
         self,
         name: str,
-        url: str
+        url: str,
+        _hash: Optional[str] = None
     ):
         self.name = name
         self.url = url
+        self._hash = _hash
+
+    @property
+    def hash(self):
+        if self._hash is None:
+            response = requests.get(self.url, stream=True)
+            response.raise_for_status()
+
+            sha256_hash = sha256()
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    sha256_hash.update(chunk)
+
+            self._hash = sha256_hash.hexdigest().upper()
+
+        return self._hash
+
+    def __hash__(self) -> int:
+        return hash(self.hash)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Attachment):
+            return False
+
+        return self.hash == other.hash
 
 
 class ArticleComment:
@@ -97,6 +126,7 @@ class Article:
         attachment: List[Attachment],
         comment: Optional[List[ArticleComment]] = None
     ):
+        self._id = None
         self.url = url
         self.board_id = board_id
         self.num = num
@@ -107,6 +137,28 @@ class Article:
         self.registered_at = registered_at
         self.attachment = attachment
         self.comment = comment
+
+    @property
+    def id(self) -> Optional[int]:
+        """
+        id를 최초 조회할 때 db 조회해서 가져옴
+        :return: board.id
+        """
+        if self._id is None:
+            self._id = self._get_id()
+        return self._id
+
+    def _get_id(self):
+        """
+        id를 조회할 때 최초 1번 실행
+        :return: db에 있는 koreatech_articles의 id
+        """
+        sql = f"SELECT id FROM koin.koreatech_articles WHERE board_id = '{self.board_id}' AND article_num = '{self.num}'"
+        cur = connection.cursor()
+        cur.execute(sql)
+        rows = cur.fetchall()
+        cur.close()
+        return rows[0][0]
 
     def payload(self):
         return {'board_id': self.board_id, 'article_num': self.num}
@@ -133,6 +185,7 @@ def get_cookies(board: Board):
 
     return {
         'JSESSIONID': login_cookie['JSESSIONID']['value'],
+        'ASP.NET_SessionId': login_cookie['ASP.NET_SessionId']['value'],
         'mauth': login_cookie['mauth']['value'],
         'hn_ck_login': login_cookie['hn_ck_login']['value'],
     }
@@ -262,7 +315,7 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
 
     # ===== 본문 =====
     head = soup.select_one('head')
-    body = soup.select_one('div#wcontent')
+    body = soup.select_one('#content')
     content = soup.new_tag('div')
     content.extend([head, body])
 
@@ -307,22 +360,24 @@ def update_db(articles):
         article.content = article.content.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
         article.title = article.title.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
         try:
-            notice_sql = f"""
-INSERT INTO koin.koreatech_articles(
-    url, board_id, article_num,
-    title, content, author,
-    hit, attachment, registered_at
-)
-VALUES (
-    '{article.url}', {article.board_id}, {article.num},
-    '{article.title}', '{article.content}', '{article.author}',
-    {article.hit}, '{article.attachment}', '{article.registered_at}'
-)
-ON DUPLICATE KEY UPDATE
-title = '{article.title}', content = '{article.content}', author = '{article.author}',
-attachment = '{article.attachment}', article.hit = {article.hit}"""
+            notice_sql = """
+                INSERT INTO koin.koreatech_articles(
+                    url, board_id, article_num, title,
+                    content, author, hit, registered_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    title = %s, content = %s, author = %s, hit = %s
+            """
 
-            cur.execute(notice_sql)
+            cur.execute(
+                notice_sql,
+                (
+                    article.url, article.board_id, article.num, article.title,
+                    article.content, article.author, article.hit, article.registered_at,
+                    article.title, article.content, article.author, article.hit,
+                )
+            )
             print("ARTICLE_QUERY :", article.board_id, article.title, article.author)
 
             connection.commit()
@@ -330,6 +385,56 @@ attachment = '{article.attachment}', article.hit = {article.hit}"""
         except Exception as error:
             connection.rollback()
             print(error)
+
+        try:
+            # 기존 첨부파일 조회
+            cur.execute(
+                """
+                SELECT id, name, url, HEX(hash) FROM koin.article_attachments 
+                WHERE article_id = %s AND is_deleted = 0
+                """,
+                article.id
+            )
+            existing_attachments = {Attachment(row[1], row[2], row[3]) for row in cur.fetchall()}
+
+            new_attachments = set(article.attachment)
+
+            deleted = existing_attachments - new_attachments
+            # 첨부파일 삭제 처리
+            if deleted:
+                deleted_names = [attach.name for attach in deleted]
+                cur.execute(
+                    """
+                    UPDATE koin.article_attachments 
+                    SET is_deleted = 1
+                    WHERE article_id = %s AND HEX(hash) IN %s
+                    """,
+                    (article.id, tuple(deleted_names))
+                )
+
+            # 첨부파일 추가
+            for attachment in new_attachments:
+                attachment_sql = """
+                    INSERT INTO koin.article_attachments(article_id, hash, url, name)
+                    VALUES (%s, UNHEX(%s), %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        url = %s, name = %s
+                """
+
+                cur.execute(
+                    attachment_sql,
+                    (
+                        article.id, attachment.hash, attachment.url, attachment.name,
+                        attachment.url, attachment.name
+                    )
+                )
+                print("ATTACHMENT_QUERY :", attachment.name, attachment.hash)
+
+                connection.commit()
+        except Exception as error:
+            connection.rollback()
+            print(error)
+    cur.close()
 
 
 if __name__ == "__main__":
@@ -344,7 +449,7 @@ if __name__ == "__main__":
     login_cookie = login()
     for board in boards:
         board_articles = (
-            crawling_job(board, page_size=LIST_SIZE // 10)
+            crawling_job(board, page_size=ceil(LIST_SIZE / 10))
             if board.name == "취업공지"
             else
             crawling(board, list_size=LIST_SIZE)

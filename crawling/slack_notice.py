@@ -26,7 +26,7 @@ def filter_nas(connection, nas, keywords=None):
         articles = (a for a in nas for keyword in keywords if keyword in a.title)
 
     need_notice = []
-    sql = f"SELECT COUNT(*) FROM koin.notice_articles WHERE board_id = %s AND article_num = %s"
+    sql = f"SELECT COUNT(*) FROM koin.koreatech_articles WHERE board_id = %s AND article_num = %s"
     with connection.cursor() as cursor:
         for article in articles:
             cursor.execute(sql % (article.board_id, article.num))
@@ -92,7 +92,7 @@ def notice_to_slack(articles):
             "elements": [
                 {
                     "type": "link",
-                    "url": art.permalink,
+                    "url": art.url,
                     "text": art.title
                 }
             ]
