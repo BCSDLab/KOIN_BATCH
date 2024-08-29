@@ -475,7 +475,7 @@ if __name__ == "__main__":
 
     if new_articles:
         payload = {
-            'update_notification': list(map(lambda article: article.payload(), new_articles))
+            'update_notification': list(map(lambda article: article.id, new_articles))
         }
 
         requests.post(
