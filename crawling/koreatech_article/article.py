@@ -124,6 +124,7 @@ class Article:
         hit: int,
         registered_at: str,
         attachment: List[Attachment],
+        is_notice: bool,
         comment: Optional[List[ArticleComment]] = None
     ):
         self._id = None
@@ -136,6 +137,7 @@ class Article:
         self.hit = hit
         self.registered_at = registered_at
         self.attachment = attachment
+        self.is_notice = is_notice
         self.comment = comment
 
     @property
@@ -267,6 +269,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
         hit=hit,
         registered_at=registered_at,
         attachment=attachment,
+        is_notice=board.is_notice,
         comment=None  # comment는 없어도 됨. 명시적으로 작성
     )
 
@@ -349,7 +352,9 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
         author=author,
         hit=0,
         registered_at=registered_at,
-        attachment=attachment
+        attachment=attachment,
+        is_notice=board.is_notice,
+        comment=None  # comment는 없어도 됨. 명시적으로 작성
     )
 
 
@@ -363,9 +368,9 @@ def update_db(articles):
             notice_sql = """
                 INSERT INTO koin.koreatech_articles(
                     url, board_id, article_num, title,
-                    content, author, hit, registered_at
+                    content, author, hit, registered_at, is_notice
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     title = %s, content = %s, author = %s, hit = %s
             """
@@ -374,7 +379,7 @@ def update_db(articles):
                 notice_sql,
                 (
                     article.url, article.board_id, article.num, article.title,
-                    article.content, article.author, article.hit, article.registered_at,
+                    article.content, article.author, article.hit, article.registered_at, article.is_notice,
                     article.title, article.content, article.author, article.hit,
                 )
             )
