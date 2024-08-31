@@ -2,16 +2,33 @@ from typing import Optional, List
 
 from config import MYSQL_CONFIG
 
+from emoji import core
 import requests
 from bs4 import BeautifulSoup, Comment
 import urllib3
 import pymysql
 from table import replace_table
 from login import login
-from crawling.slack_notice import filter_nas, notice_to_slack
+from slack_notice import filter_nas, notice_to_slack
 
 from math import ceil
 from hashlib import sha256
+
+import builtins
+
+
+def print(*args, **kwargs):
+    kwargs['flush'] = True
+    return builtins.print(*args, **kwargs)
+
+"""
+
+[TODO]
+
+table을 해시화 --> redis에 저장. 유효기간 10분으로 잡고
+다르면 --> 표 이미지화를 '비동기로 진행'
+
+"""
 
 
 def connect_db():
@@ -150,6 +167,10 @@ class Article:
             self._id = self._get_id()
         return self._id
 
+    @id.setter
+    def id(self, value):
+        self._id = value
+
     def _get_id(self):
         """
         id를 조회할 때 최초 1번 실행
@@ -160,6 +181,7 @@ class Article:
         cur.execute(sql)
         rows = cur.fetchall()
         cur.close()
+        print(f"call!! {self.title} {rows}")
         return rows[0][0]
 
     def payload(self):
@@ -174,10 +196,11 @@ class Article:
 boards = [
     Board(14, "일반공지", "general_notice", True, False),
     Board(15, "장학공지", "scholarship_notice", True, False),
+    Board(17, "취업공지", "job_notice", True, True),
     Board(16, "학사공지", "academic_notice", True, False),
     Board(151, "현장실습공지", "field_training_notice", True, True),
     Board(21, "학생생활", "student_life", False, True),
-    Board(17, "취업공지", "job_notice", True, True),
+
 ]
 
 
@@ -362,8 +385,17 @@ def update_db(articles):
     cur = connection.cursor()
 
     for article in articles:
-        article.content = article.content.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
+        article.title = core.replace_emoji(article.title, replace='')
         article.title = article.title.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
+
+        article.content = core.replace_emoji(article.content, replace='')
+        article.content = article.content.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
+
+        article.author = core.replace_emoji(article.author, replace='')
+
+        for attachment in article.attachment:
+            attachment.name = core.replace_emoji(attachment.name, replace='')
+
         try:
             notice_sql = """
                 INSERT INTO koin.koreatech_articles(
@@ -386,6 +418,7 @@ def update_db(articles):
             print("ARTICLE_QUERY :", article.board_id, article.title, article.author)
 
             connection.commit()
+            article.id = cur.lastrowid
 
         except Exception as error:
             connection.rollback()
@@ -442,49 +475,71 @@ def update_db(articles):
     cur.close()
 
 
+def get_seg():
+    from sys import argv
+
+    if len(argv) < 2:
+        exit(0)
+
+    x = int(argv[1])
+
+    size = 3
+    start, end = (x - 1) * size, min(x * size, len(boards))
+
+    return [boards[b] for b in range(start, end)]
+
+
 if __name__ == "__main__":
     # execute only if run as a script
-    LIST_SIZE = 60
+    _boards = get_seg()
+    for i in _boards:
+        print(i.name)
 
-    articles = []
-    bus_articles = []
-    new_articles = []
+    from timer import timer
+    with timer():
+        LIST_SIZE = 40
 
-    connection = connect_db()
-    login_cookie = login()
-    for board in boards:
-        board_articles = (
-            crawling_job(board, page_size=ceil(LIST_SIZE / 10))
-            if board.name == "취업공지"
-            else
-            crawling(board, list_size=LIST_SIZE)
-        )
+        articles = []
+        bus_articles = []
+        new_articles = []
 
-        print(board_articles)
+        connection = connect_db()
+        login_cookie = login()
+        for board in _boards:
+            board_articles = (
+                crawling_job(board, page_size=ceil(LIST_SIZE / 10))
+                if board.name == "취업공지"
+                else
+                crawling(board, list_size=LIST_SIZE)
+            )
 
-        articles.extend(board_articles)
+            print(board_articles)
 
-        # 버스 알림
-        if board.is_notice:
-            # DB에 없고, 키워드가 들어있는 게시글 필터링
-            bus_articles.extend(filter_nas(connection, board_articles, keywords={"버스", "bus"}))
+            articles.extend(board_articles)
 
-        new_articles.extend(filter_nas(connection, board_articles))
+            # 버스 알림
+            if board.is_notice:
+                # DB에 없고, 키워드가 들어있는 게시글 필터링
+                bus_articles.extend(filter_nas(connection, board_articles, keywords={"버스", "bus"}))
 
-        update_db(board_articles)
+            new_articles.extend(filter_nas(connection, board_articles))
 
-    connection.close()
+            update_db(board_articles)
 
-    if bus_articles:
-        notice_to_slack(bus_articles)
+        if bus_articles:
+            notice_to_slack(bus_articles)
 
-    if new_articles:
-        payload = {
-            'update_notification': list(map(lambda article: article.id, new_articles))
-        }
+        if new_articles:
+            payload = {
+                'update_notification': []
+            }
+            for article in new_articles:
+                payload['update_notification'].append(article.id)
 
-        requests.post(
-            "https://api.koreatech.in/articles/keyword/notification",
-            json=payload
-        )
+            requests.post(
+                "https://api.koreatech.in/articles/keyword/notification",
+                json=payload
+            )
+
+        connection.close()
 
