@@ -497,7 +497,7 @@ if __name__ == "__main__":
 
     from timer import timer
     with timer():
-        LIST_SIZE = 40
+        LIST_SIZE = 60
 
         articles = []
         bus_articles = []
