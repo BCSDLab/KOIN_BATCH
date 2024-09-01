@@ -112,7 +112,8 @@ def login():
         # job 페이지
         if url == job_url:
             print('job 로그인 성공')
-            cookies |= {cookie['name']: cookie for cookie in driver.get_cookies()}
+            for cookie in driver.get_cookies():
+                cookies[cookie['name']] = cookie
         else:
             print('job 로그인 실패 - 예상치 못한 url 접근: ' + url)
 
