@@ -19,3 +19,6 @@ S3_CONFIG = {
     'upload_domain': ''
 }
 
+SLACK_CONFIG = {
+    'url': ''
+}

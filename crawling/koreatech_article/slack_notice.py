@@ -8,11 +8,11 @@ import pymysql
 
 def connect_db():
     urllib3.disable_warnings()
-    conn = pymysql.connect(host=config.DATABASE_CONFIG['host'],
-                           port=config.DATABASE_CONFIG['port'],
-                           user=config.DATABASE_CONFIG['user'],
-                           password=config.DATABASE_CONFIG['password'],
-                           db=config.DATABASE_CONFIG['db'],
+    conn = pymysql.connect(host=config.MYSQL_CONFIG['host'],
+                           port=config.MYSQL_CONFIG['port'],
+                           user=config.MYSQL_CONFIG['user'],
+                           password=config.MYSQL_CONFIG['password'],
+                           db=config.MYSQL_CONFIG['db'],
                            charset='utf8')
     return conn
 
