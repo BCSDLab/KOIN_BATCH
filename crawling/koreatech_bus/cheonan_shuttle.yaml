@@ -4,6 +4,11 @@ nodes:
   - &cheonan_station "천안역(학화호두과자)"
   - &samryong_bridge "삼룡교(유니클로, 구 한방병원)"
   - &baro_pharmacy "바로약국 앞"
+  - &campus_2 "2캠퍼스(두정캠퍼스)"
+  - &ktx_exit_3 "천안아산 KTX (3번출구 6번 승강장)"
+  - &dujeong-station "두정역"
+  - &cheonan_station_b "천안역(태극당건너BS)"
+  - &terminal_b "터미널(신세계 반대 횡단보도)"
 
 to_school:
   - route_name: "주중(14시 10분)"
@@ -34,6 +39,92 @@ to_school:
       - node_name: *koreatech
         arrival_time: "21:30"
 
+  - route_name: "주말 토요일(08시 30분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *ktx_exit_3
+        arrival_time: "08:30"
+      - node_name: *cheonan_station_b
+        arrival_time: "08:45"
+      - node_name: *terminal
+        arrival_time: "08:55"
+      - node_name: *dujeong-station
+        arrival_time: "09:00"
+      - node_name: *campus_2
+        arrival_time: "09:05"
+
+  - route_name: "주말 토요일(12시 45분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *ktx_exit_3
+        arrival_time: "12:45"
+      - node_name: *cheonan_station_b
+        arrival_time: "13:00"
+      - node_name: *terminal
+        arrival_time: "13:10"
+      - node_name: *dujeong-station
+        arrival_time: "13:15"
+      - node_name: *campus_2
+        arrival_time: "13:20"
+
+  - route_name: "주말 토요일(07시 50분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *dujeong-station
+        arrival_time: "07:50"
+      - node_name: *terminal
+        arrival_time: "08:00"
+      - node_name: *cheonan_station
+        arrival_time: "08:05"
+      - node_name: *koreatech
+        arrival_time: "하차"
+
+  - route_name: "주말 토요일(08시)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *dujeong-station
+        arrival_time: "08:00"
+      - node_name: *terminal
+        arrival_time: "08:05"
+      - node_name: *cheonan_station
+        arrival_time: "08:10"
+      - node_name: *koreatech
+        arrival_time: "도착"
+
+  - route_name: "주말 토요일(08시 05분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *campus_2
+        arrival_time: "08:05"
+      - node_name: *dujeong-station
+        arrival_time: "08:10"
+      - node_name: *terminal
+        arrival_time: "08:15"
+      - node_name: *cheonan_station
+        arrival_time: "08:20"
+      - node_name: *koreatech
+        arrival_time: "도착"
+
+  - route_name: "주말 토요일(10시 10분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *dujeong-station
+        arrival_time: "10:10"
+      - node_name: *terminal
+        arrival_time: "08:15"
+      - node_name: *cheonan_station
+        arrival_time: "08:20"
+      - node_name: *koreatech
+        arrival_time: "도착"
+
+  - route_name: "주말 토요일(08시 15분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *ktx_exit_3
+        arrival_time: "08:15"
+      - node_name: *koreatech
+        arrival_time: "도착"
+
 from_school:
   - route_name: "주중(14시 10분)"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
@@ -62,3 +153,83 @@ from_school:
         arrival_time: "21:00"
       - node_name: *koreatech
         arrival_time: "21:30"
+
+  - route_name: "주말 토요일(19시 20분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "19:20"
+      - node_name: *ktx_exit_3
+        arrival_time: "도착"
+
+  - route_name: "주말 토요일(16시 20분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "16:20"
+      - node_name: *cheonan_station
+        arrival_time: "하차"
+      - node_name: *terminal_b
+        arrival_time: "하차"
+
+  - route_name: "주말 토요일(18시 10분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "18:10"
+      - node_name: *cheonan_station
+        arrival_time: "하차"
+      - node_name: *terminal_b
+        arrival_time: "하차"
+
+  - route_name: "주말 토요일(19시 10분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "19:10"
+      - node_name: *cheonan_station_b
+        arrival_time: "19:40"
+      - node_name: *terminal_b
+        arrival_time: "19:50"
+      - node_name: *dujeong-station
+        arrival_time: "하차"
+
+  - route_name: "주말 토요일(19시 20분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *koreatech
+        arrival_time: "19:20"
+      - node_name: *cheonan_station_b
+        arrival_time: "19:50"
+      - node_name: *terminal_b
+        arrival_time: "20:00"
+      - node_name: *dujeong-station
+        arrival_time: "하차"
+
+  - route_name: "주말 토요일(16시 40분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *campus_2
+        arrival_time: "16:40"
+      - node_name: *dujeong-station
+        arrival_time: "하차"
+      - node_name: *terminal
+        arrival_time: "하차"
+      - node_name: *cheonan_station
+        arrival_time: "하차"
+      - node_name: *ktx_exit_3
+        arrival_time: "하차"
+
+  - route_name: "주말 토요일(19시 35분)"
+    running_days: [ "SAT" ]
+    arrival_info:
+      - node_name: *campus_2
+        arrival_time: "19:35"
+      - node_name: *dujeong-station
+        arrival_time: "하차"
+      - node_name: *terminal
+        arrival_time: "하차"
+      - node_name: *cheonan_station
+        arrival_time: "하차"
+      - node_name: *ktx_exit_3
+        arrival_time: "하차"
