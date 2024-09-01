@@ -26,10 +26,18 @@ def replace_table(content: str, board, article_id: int) -> str:
 
     # 리눅스 환경에서만 활성화 - 셀레니움 GUI off
     options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--start-maximized")
     options.add_argument("--lang=ko_KR.UTF-8")
 
+    options.add_argument("disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
     driver = webdriver.Chrome(options=options)
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
     driver.set_window_size(3840, 2160)
 
     images = capture_table(driver, s3, content, f'articles/{board.s3}/{article_id}')
