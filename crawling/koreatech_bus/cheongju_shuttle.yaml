@@ -47,39 +47,13 @@ nodes:
   - &science_park "과학단지(오창프라자)"
 
 from_school:
-  - route_name: "주중(11시 50분)"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
-    arrival_info:
-      - node_name: *bangseo_daiso
-        arrival_time: "11:50"
-      - node_name: *yongam_hyundai
-        arrival_time: "11:51"
-      - node_name: *gs_daechung_opposite
-        arrival_time: "11:52"
-      - node_name: *seokgyo_six_dup
-        arrival_time: "11:54"
-      - node_name: *sangdang_park_b
-        arrival_time: "11:56"
-      - node_name: *gym_nepa
-        arrival_time: "11:58"
-      - node_name: *sachang_four_bs
-        arrival_time: "12:00"
-      - node_name: *hs_fore_dup
-        arrival_time: "12:02"
-      - node_name: *solbat_park_dup
-        arrival_time: "12:05"
-      - node_name: *chungjoo_a
-        arrival_time: "12:10"
-      - node_name: *oksan_garak3ri_bs
-        arrival_time: "12:12"
-      - node_name: *university
-        arrival_time: "12:50"
-
   - route_name: "주중(13시 30분)"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *university
         arrival_time: "13:30"
+      - node_name: *bunpyung_electro
+        arrival_time: "청주역경유"
       - node_name: *oksan_garak3ri
         arrival_time: "13:55"
       - node_name: *chungjoo_b
@@ -118,6 +92,8 @@ from_school:
     arrival_info:
       - node_name: *university
         arrival_time: "15:40"
+      - node_name: *bunpyung_electro
+        arrival_time: "오창과학단지경유"
       - node_name: *oc_science_park
         arrival_time: "하차"
       - node_name: *sm_hospital_yullyang
@@ -146,6 +122,8 @@ from_school:
     arrival_info:
       - node_name: *university
         arrival_time: "20:00"
+      - node_name: *bunpyung_electro
+        arrival_time: "청주역경유"
       - node_name: *oksan_garak3ri
         arrival_time: "20:25"
       - node_name: *chungjoo_b
@@ -184,6 +162,8 @@ from_school:
     arrival_info:
       - node_name: *university
         arrival_time: "22:10"
+      - node_name: *bunpyung_electro
+        arrival_time: "오창과학단지경유"
       - node_name: *oc_science_park
         arrival_time: "하차"
       - node_name: *sm_hospital_yullyang
@@ -241,6 +221,8 @@ to_school:
     arrival_info:
       - node_name: *university
         arrival_time: "13:30"
+      - node_name: *bunpyung_electro
+        arrival_time: "청주역경유"
       - node_name: *oksan_garak3ri
         arrival_time: "13:55"
       - node_name: *chungjoo_b
@@ -279,6 +261,8 @@ to_school:
     arrival_info:
       - node_name: *university
         arrival_time: "15:40"
+      - node_name: *bunpyung_electro
+        arrival_time: "오창과학단지경유"
       - node_name: *oc_science_park
         arrival_time: "하차"
       - node_name: *sm_hospital_yullyang
@@ -307,6 +291,8 @@ to_school:
     arrival_info:
       - node_name: *university
         arrival_time: "20:00"
+      - node_name: *bunpyung_electro
+        arrival_time: "청주역경유"
       - node_name: *oksan_garak3ri
         arrival_time: "20:25"
       - node_name: *chungjoo_b
@@ -345,6 +331,8 @@ to_school:
     arrival_info:
       - node_name: *university
         arrival_time: "22:10"
+      - node_name: *bunpyung_electro
+        arrival_time: "오창과학단지경유"
       - node_name: *oc_science_park
         arrival_time: "하차"
       - node_name: *sm_hospital_yullyang
