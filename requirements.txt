@@ -12,3 +12,5 @@ pytz
 pillow
 piexif
 pymongo
+boto3
+emoji
