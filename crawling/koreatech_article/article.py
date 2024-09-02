@@ -15,6 +15,7 @@ from math import ceil
 from hashlib import sha256
 
 import builtins
+from dateutil import parser
 
 
 def print(*args, **kwargs):
@@ -395,6 +396,8 @@ def update_db(articles):
 
         for attachment in article.attachment:
             attachment.name = core.replace_emoji(attachment.name, replace='')
+
+        article.registered_at = parser.parse(article.registered_at).strftime("%Y-%m-%d %H:%M:%S")
 
         try:
             notice_sql = """
