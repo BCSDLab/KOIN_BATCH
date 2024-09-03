@@ -296,16 +296,16 @@ def update_db(menus):
                 sql = """
                 INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, image_url, is_changed)
                 VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', %s, NULL)
-                ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s
+                ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', image_url = %s, is_changed = %s
                 """
 
                 changed = menu.is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if menu.is_changed else "NULL"
-                image_url = f'"{menu.image_url}"' if menu.image_url else "NULL"
+                image_url = f"'{menu.image_url}'" if menu.image_url else "NULL"
 
                 values = (
                     menu.date, menu.dining_time.upper(), menu.place, menu.price_card, menu.price_cash, menu.kcal,
                     menu.menu, image_url,
-                    menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed
+                    menu.price_card, menu.price_cash, menu.kcal, menu.menu, image_url, changed
                 )
 
                 print_flush(sql % values)
