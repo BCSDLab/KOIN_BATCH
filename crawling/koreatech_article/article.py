@@ -343,7 +343,7 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
     # ===== 본문 =====
     head = soup.select_one('head')
     body = soup.select_one('#content')
-    content = soup.new_tag('div')
+    content = soup.new_tag('html')
     content.extend([head, body])
 
     # 주석 제거
