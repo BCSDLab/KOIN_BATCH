@@ -249,6 +249,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
     # ===== 제목 =====
     head = soup.select_one('table.kut-board-title-table')
     title = head.select_one('thead > tr > th').get_text(separator=" ", strip=True)
+    title = title.removeprefix('[일반공지]').strip()
 
     # ===== 작성자, 작성일, 조회수 =====
     author, registered_at, hit = map(
@@ -259,7 +260,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
     # ===== 본문 =====
     head = soup.select_one('head')
     body = soup.select_one('div.bc-s-post-ctnt-area')
-    content = soup.new_tag('div')
+    content = soup.new_tag('html')
     content.extend([head, body])
 
     # 주석 제거
