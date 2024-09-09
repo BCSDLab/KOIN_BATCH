@@ -294,9 +294,10 @@ def update_db(menus):
             try:
                 # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
                 sql = """
-                INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, image_url, is_changed)
-                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', %s, NULL)
-                ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', image_url = %s, is_changed = %s
+                INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, is_changed, image_url)
+                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', NULL, %s)
+                ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s,
+                image_url = CASE WHEN %s IS NOT NULL THEN %s ELSE image_url END
                 """
 
                 changed = menu.is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if menu.is_changed else "NULL"
@@ -305,7 +306,8 @@ def update_db(menus):
                 values = (
                     menu.date, menu.dining_time.upper(), menu.place, menu.price_card, menu.price_cash, menu.kcal,
                     menu.menu, image_url,
-                    menu.price_card, menu.price_cash, menu.kcal, menu.menu, image_url, changed
+                    menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed,
+                    image_url, image_url
                 )
 
                 print_flush(sql % values)
