@@ -22,3 +22,10 @@ S3_CONFIG = {
 SLACK_CONFIG = {
     'url': ''
 }
+
+BATCH_CONFIG = {
+    'email': '',  
+    'password': '',  
+    'token_url': '',  # 토큰 발급 API URL
+    'notification_api_url': '',  # 알림 API URL
+}

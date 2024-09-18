@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 from config import MYSQL_CONFIG
+from config import BATCH_CONFIG
 
 from emoji import core
 import requests
@@ -9,6 +10,7 @@ import urllib3
 import pymysql
 from table import replace_table
 from login import login
+from login import get_jwt_token
 from slack_notice import filter_nas, notice_to_slack
 
 from math import ceil
@@ -534,16 +536,19 @@ if __name__ == "__main__":
             notice_to_slack(bus_articles)
 
         if new_articles:
-            payload = {
-                'update_notification': []
-            }
-            for article in new_articles:
-                payload['update_notification'].append(article.id)
+            token = get_jwt_token()
+            api_url = BATCH_CONFIG['notification_api_url']
 
-            requests.post(
-                "https://api.koreatech.in/articles/keyword/notification",
-                json=payload
-            )
+            payload = {
+                'update_notification': list(map(lambda article: article.id, new_articles))
+            }
+    
+            headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+            }
+    
+            requests.post(api_url, json=payload, headers=headers)
 
         connection.close()
 
