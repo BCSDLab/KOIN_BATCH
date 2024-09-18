@@ -540,14 +540,17 @@ if __name__ == "__main__":
             api_url = BATCH_CONFIG['notification_api_url']
 
             payload = {
-                'update_notification': list(map(lambda article: article.id, new_articles))
+                'update_notification': []
             }
-    
+
+            for article in new_articles:
+                payload['update_notification'].append(article.id)
+
             headers = {
-            'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/json'
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
             }
-    
+
             requests.post(api_url, json=payload, headers=headers)
 
         connection.close()
