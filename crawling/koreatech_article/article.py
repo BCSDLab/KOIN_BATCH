@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 from config import MYSQL_CONFIG
+from config import BATCH_CONFIG
 
 from emoji import core
 import requests
@@ -9,6 +10,7 @@ import urllib3
 import pymysql
 from table import replace_table
 from login import login
+from login import get_jwt_token
 from slack_notice import filter_nas, notice_to_slack
 
 from math import ceil
@@ -21,6 +23,13 @@ from dateutil import parser
 def print(*args, **kwargs):
     kwargs['flush'] = True
     return builtins.print(*args, **kwargs)
+
+
+def removeprefix(string, prefix):
+    if string.startswith(prefix):
+        return string[len(prefix):]
+    return string
+
 
 """
 
@@ -249,7 +258,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
     # ===== 제목 =====
     head = soup.select_one('table.kut-board-title-table')
     title = head.select_one('thead > tr > th').get_text(separator=" ", strip=True)
-    title = title.removeprefix('[일반공지]').strip()
+    title = removeprefix(title, '[일반공지]').strip()
 
     # ===== 작성자, 작성일, 조회수 =====
     author, registered_at, hit = map(
@@ -534,16 +543,22 @@ if __name__ == "__main__":
             notice_to_slack(bus_articles)
 
         if new_articles:
+            token = get_jwt_token()
+            api_url = BATCH_CONFIG['notification_api_url']
+
             payload = {
                 'update_notification': []
             }
+
             for article in new_articles:
                 payload['update_notification'].append(article.id)
 
-            requests.post(
-                "https://api.koreatech.in/articles/keyword/notification",
-                json=payload
-            )
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
+            }
+
+            requests.post(api_url, json=payload, headers=headers)
 
         connection.close()
 
