@@ -24,6 +24,13 @@ def print(*args, **kwargs):
     kwargs['flush'] = True
     return builtins.print(*args, **kwargs)
 
+
+def removeprefix(string, prefix):
+    if string.startswith(prefix):
+        return string[len(prefix):]
+    return string
+
+
 """
 
 [TODO]
@@ -251,7 +258,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
     # ===== 제목 =====
     head = soup.select_one('table.kut-board-title-table')
     title = head.select_one('thead > tr > th').get_text(separator=" ", strip=True)
-    title = title.removeprefix('[일반공지]').strip()
+    title = removeprefix(title, '[일반공지]').strip()
 
     # ===== 작성자, 작성일, 조회수 =====
     author, registered_at, hit = map(
