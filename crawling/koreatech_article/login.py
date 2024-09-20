@@ -152,7 +152,7 @@ def get_jwt_token():
         'password': config.BATCH_CONFIG['password']
     }
 
-    return requests.post(login_url, json=credentials).get('token')
+    return requests.post(login_url, json=credentials).json().get('token')
 
 if __name__ == '__main__':
     print(login())
