@@ -186,7 +186,7 @@ class Article:
         id를 조회할 때 최초 1번 실행
         :return: db에 있는 articles의 id
         """
-        sql = f"SELECT a.id FROM koin.articles a JOIN koin.koreatech_articles b ON a.id = b.article_id WHERE a.board_id = '{self.board_id}' AND b.portal_num = '{self.num}'"
+        sql = f"SELECT a.id FROM koin.new_articles a JOIN koin.new_koreatech_articles b ON a.id = b.article_id WHERE a.board_id = '{self.board_id}' AND b.portal_num = '{self.num}'"
         cur = connection.cursor()
         cur.execute(sql)
         rows = cur.fetchall()
@@ -412,8 +412,8 @@ def update_db(articles):
             # 먼저 존재 여부 확인
             cur.execute("""
                         SELECT a.id
-                        FROM koin.articles a
-                        JOIN koin.koreatech_articles ka ON a.id = ka.article_id
+                        FROM koin.new_articles a
+                        JOIN koin.new_koreatech_articles ka ON a.id = ka.article_id
                         WHERE a.board_id = %s AND ka.portal_num = %s
                     """, (article.board_id, article.num))
 
@@ -422,14 +422,14 @@ def update_db(articles):
             if result:
                 # 데이터가 존재하면 업데이트
                 cur.execute("""
-                            UPDATE koin.articles
+                            UPDATE koin.new_articles
                             SET title = %s, content = %s, hit = %s, is_notice = %s
                             WHERE id = %s
                         """, (article.title, article.content,
                               article.hit, article.is_notice, article.id))
 
                 cur.execute("""
-                            UPDATE koin.koreatech_articles
+                            UPDATE koin.new_koreatech_articles
                             SET url = %s, author = %s, registered_at = %s
                             WHERE article_id = %s
                         """, (article.url, article.author,
@@ -437,7 +437,7 @@ def update_db(articles):
             else:
                 # 데이터가 존재하지 않으면 삽입
                 cur.execute("""
-                            INSERT INTO koin.articles (board_id, title, content, hit, is_notice)
+                            INSERT INTO koin.new_articles (board_id, title, content, hit, is_notice)
                             VALUES (%s, %s, %s, %s, %s)
                         """, (article.board_id, article.title, article.content,
                               article.hit, article.is_notice))
@@ -445,7 +445,7 @@ def update_db(articles):
                 article.id = cur.lastrowid
 
                 cur.execute("""
-                            INSERT INTO koin.koreatech_articles (article_id, url, portal_num, author, registered_at)
+                            INSERT INTO koin.new_koreatech_articles (article_id, url, portal_num, author, registered_at)
                             VALUES (%s, %s, %s, %s, %s)
                         """, (article.id, article.url, article.num,
                               article.author, article.registered_at))

@@ -26,7 +26,7 @@ def filter_nas(connection, nas, keywords=None):
         articles = (a for a in nas for keyword in keywords if keyword in a.title)
 
     need_notice = []
-    sql = f"SELECT COUNT(*) FROM koin.koreatech_articles ka JOIN koin.articles a on ka.article_id = a.id WHERE a.board_id = %s AND ka.portal_num = %s"
+    sql = f"SELECT COUNT(*) FROM koin.new_koreatech_articles ka JOIN koin.new_articles a on ka.article_id = a.id WHERE a.board_id = %s AND ka.portal_num = %s"
     with connection.cursor() as cursor:
         for article in articles:
             cursor.execute(sql % (article.board_id, article.num))
