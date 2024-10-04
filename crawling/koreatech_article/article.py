@@ -186,12 +186,11 @@ class Article:
         id를 조회할 때 최초 1번 실행
         :return: db에 있는 koreatech_articles의 id
         """
-        sql = f"SELECT id FROM koin.koreatech_articles WHERE board_id = '{self.board_id}' AND article_num = '{self.num}'"
+        sql = f"SELECT a.id FROM koin.articles a JOIN koin.koreatech_articles b ON a.id = b.article_id WHERE a.board_id = '{self.board_id}' AND b.article_num = '{self.num}'"
         cur = connection.cursor()
         cur.execute(sql)
         rows = cur.fetchall()
         cur.close()
-        print(f"call!! {self.title} {rows}")
         return rows[0][0]
 
     def payload(self):
@@ -395,7 +394,7 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
 def update_db(articles):
     cur = connection.cursor()
 
-    for article in articles:
+    for article in articles[::-1]:
         article.title = core.replace_emoji(article.title, replace='')
         article.title = article.title.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
 
@@ -410,28 +409,53 @@ def update_db(articles):
         article.registered_at = parser.parse(article.registered_at).strftime("%Y-%m-%d %H:%M:%S")
 
         try:
-            notice_sql = """
-                INSERT INTO koin.koreatech_articles(
-                    url, board_id, article_num, title,
-                    content, author, hit, registered_at, is_notice
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    title = %s, content = %s, author = %s, hit = %s
-            """
+            # articles 테이블에 데이터 삽입
+            article_sql = """
+                    INSERT INTO koin.articles(
+                        board_id, title, content, hit, is_notice
+                    )
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        title = VALUES(title),
+                        content = VALUES(content),
+                        hit = VALUES(hit),
+                        is_notice = VALUES(is_notice)
+                """
 
             cur.execute(
-                notice_sql,
+                article_sql,
                 (
-                    article.url, article.board_id, article.num, article.title,
-                    article.content, article.author, article.hit, article.registered_at, article.is_notice,
-                    article.title, article.content, article.author, article.hit,
+                    article.board_id, article.title, article.content,
+                    article.hit, article.is_notice
                 )
             )
+
+            # 삽입된 article의 id 가져오기
+            article.id = cur.lastrowid
+
+            # koreatech_articles 테이블에 데이터 삽입
+            koreatech_article_sql = """
+                    INSERT INTO koin.koreatech_articles(
+                        article_id, url, portal_num, author, registered_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        url = VALUES(url),
+                        author = VALUES(author),
+                        registered_at = VALUES(registered_at)
+                """
+
+            cur.execute(
+                koreatech_article_sql,
+                (
+                    article.id, article.url, article.num,
+                    article.author, article.registered_at
+                )
+            )
+
             print("ARTICLE_QUERY :", article.board_id, article.title, article.author)
 
             connection.commit()
-            article.id = cur.lastrowid
 
         except Exception as error:
             connection.rollback()
@@ -490,6 +514,7 @@ def update_db(articles):
 
 def get_seg():
     from sys import argv
+    return [boards[3], boards[4]]
 
     if len(argv) < 2:
         exit(0)
