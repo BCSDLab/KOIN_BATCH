@@ -46,6 +46,9 @@ def replace_table(content: str, board, article_id: int) -> str:
     tables = content.select('table')
 
     for table, image in zip(tables, images):
+        if not image:
+            table.replace_with('')
+            continue
         img_tag = content.new_tag('img', src=image)
         img_tag['style'] = "max-width: 100%;"
 
@@ -71,6 +74,10 @@ def capture_table(driver, s3, content, s3_directory: str) -> Iterator[str]:
     for i, table in enumerate(tables):
         clip = {k: v for k, v in list(table.location.items()) + list(table.size.items())}
         clip['scale'] = 1
+
+        if clip['height'] <= 0 or clip['width'] <= 0:
+            yield ''
+            continue
 
         args = {
             "clip": clip,
