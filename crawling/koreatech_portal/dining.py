@@ -361,7 +361,7 @@ def parse_response(response):
     image_url = None
     menu_dumps = json.dumps(menu['menu'], ensure_ascii=False)
     if '천원의아침' in menu_dumps or '천원의 아침' in menu_dumps:
-        image_url = "https://team-kap-koin-storage.s3.ap-northeast-2.amazonaws.com/dining/%EC%B2%9C%EC%9B%90%EC%9D%98%EC%95%84%EC%B9%A8.png"
+        image_url = "https://static.koreatech.in/dining/%EC%B2%9C%EC%9B%90%EC%9D%98%EC%95%84%EC%B9%A8.png"
 
     return MenuEntity(menu['date'], menu['dining_time'], menu['place'], menu['price_card'], menu['price_cash'],
                       menu['kcal'], json.dumps(menu['menu'], ensure_ascii=False), image_url)
