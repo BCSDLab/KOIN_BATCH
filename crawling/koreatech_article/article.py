@@ -1,3 +1,4 @@
+from functools import total_ordering
 from typing import Optional, List
 
 from config import MYSQL_CONFIG
@@ -394,7 +395,7 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
 def update_db(articles):
     cur = connection.cursor()
 
-    for article in articles[::-1]:
+    for article in articles:
         article.title = core.replace_emoji(article.title, replace='')
         article.title = article.title.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
 
@@ -546,6 +547,8 @@ if __name__ == "__main__":
                 else
                 crawling(board, list_size=LIST_SIZE)
             )
+
+            board_articles.sort(key=lambda x: x.num)
 
             print(board_articles)
 
