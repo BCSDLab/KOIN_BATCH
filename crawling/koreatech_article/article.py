@@ -1,4 +1,3 @@
-from functools import total_ordering
 from typing import Optional, List
 
 from config import MYSQL_CONFIG
