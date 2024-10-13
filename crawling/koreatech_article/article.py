@@ -532,57 +532,66 @@ if __name__ == "__main__":
 
     from timer import timer
     with timer():
-        LIST_SIZE = 60
+        try:
+            LIST_SIZE = 60
 
-        articles = []
-        bus_articles = []
-        new_articles = []
+            articles = []
+            bus_articles = []
+            new_articles = []
 
-        connection = connect_db()
-        login_cookie = login()
-        for board in _boards:
-            board_articles = (
-                crawling_job(board, page_size=ceil(LIST_SIZE / 10))
-                if board.name == "취업공지"
-                else
-                crawling(board, list_size=LIST_SIZE)
-            )
+            connection = connect_db()
+            login_cookie = login()
+            for board in _boards:
+                board_articles = (
+                    crawling_job(board, page_size=ceil(LIST_SIZE / 10))
+                    if board.name == "취업공지"
+                    else
+                    crawling(board, list_size=LIST_SIZE)
+                )
 
-            board_articles.sort(key=lambda x: x.num)
+                board_articles.sort(key=lambda x: x.num)
 
-            print(board_articles)
+                print(board_articles)
 
-            articles.extend(board_articles)
+                articles.extend(board_articles)
 
-            # 버스 알림
-            if board.is_notice:
-                # DB에 없고, 키워드가 들어있는 게시글 필터링
-                bus_articles.extend(filter_nas(connection, board_articles, keywords={"버스", "bus"}))
+                # 버스 알림
+                if board.is_notice:
+                    # DB에 없고, 키워드가 들어있는 게시글 필터링
+                    bus_articles.extend(filter_nas(connection, board_articles, keywords={"버스", "bus"}))
 
-            new_articles.extend(filter_nas(connection, board_articles))
+                new_articles.extend(filter_nas(connection, board_articles))
 
-            update_db(board_articles)
+                update_db(board_articles)
+        except Exception as error:
+            raise error
+        finally:
+            try:
+                if bus_articles:
+                    notice_to_slack(bus_articles)
+            except Exception as error:
+                raise error
+            finally:
+                try:
+                    if new_articles:
+                        token = get_jwt_token()
+                        api_url = BATCH_CONFIG['notification_api_url']
 
-        if bus_articles:
-            notice_to_slack(bus_articles)
+                        payload = {
+                            'update_notification': []
+                        }
 
-        if new_articles:
-            token = get_jwt_token()
-            api_url = BATCH_CONFIG['notification_api_url']
+                        for article in new_articles:
+                            payload['update_notification'].append(article.id)
 
-            payload = {
-                'update_notification': []
-            }
+                        headers = {
+                            'Authorization': f'Bearer {token}',
+                            'Content-Type': 'application/json'
+                        }
 
-            for article in new_articles:
-                payload['update_notification'].append(article.id)
-
-            headers = {
-                'Authorization': f'Bearer {token}',
-                'Content-Type': 'application/json'
-            }
-
-            requests.post(api_url, json=payload, headers=headers)
-
-        connection.close()
+                        requests.post(api_url, json=payload, headers=headers)
+                except Exception as error:
+                    raise error
+                finally:
+                    connection.close()
 
