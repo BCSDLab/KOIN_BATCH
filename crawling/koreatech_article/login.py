@@ -110,6 +110,9 @@ def login():
         time.sleep(5)
         url = driver.current_url
 
+        time.sleep(3)
+        check_for_alert(driver)
+
         # job 페이지
         if url == job_url:
             print('job 로그인 성공')
