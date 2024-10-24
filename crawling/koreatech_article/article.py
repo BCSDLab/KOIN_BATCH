@@ -281,7 +281,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
                .replace('href="/', f'href="{host}/'))
 
     # 표 처리
-    content = replace_table(content, board, num)
+    # content = replace_table(content, board, num)
 
     # ===== 첨부 파일 =====
     attachment = list(map(
@@ -365,7 +365,7 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
                .replace('href="/', f'href="{host}/'))
 
     # 표 처리
-    content = replace_table(content, board, num)
+    # content = replace_table(content, board, num)
 
     # ===== 첨부 파일 =====
     attachment = list(map(

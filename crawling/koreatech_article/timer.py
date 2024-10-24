@@ -6,9 +6,13 @@ from contextlib import contextmanager
 @contextmanager
 def _timer_core():
     start = time()
-    yield
-    end = time()
-    print(f"--- {(end - start) * 10 ** 3:.3f} ms ---")
+    try:
+        yield
+    except Exception as e:
+        raise e
+    finally:
+        end = time()
+        print(f"--- {(end - start) * 10 ** 3:.3f} ms ---")
 
 
 def _timer_decorator(func):
