@@ -8,6 +8,8 @@ import requests
 from bs4 import BeautifulSoup, Comment
 import urllib3
 import pymysql
+
+from delete_article import delete_article
 from table import replace_table
 from login import login
 from login import get_jwt_token
@@ -562,6 +564,7 @@ if __name__ == "__main__":
                 new_articles.extend(filter_nas(connection, board_articles))
 
                 update_db(board_articles)
+                delete_article(connection, board.id, board_articles, get_cookies(board))
         except Exception as error:
             raise error
         finally:
