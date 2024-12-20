@@ -45,3 +45,13 @@ nodes:
   - &chungjoo_a "청주역 A(서촌동 BS)"
   - &oksan_garak3ri_bs "옥산 (가락3리 BS)"
   - &science_park "과학단지(오창프라자)"
+
+to_school:
+  - route_name: "미운행"
+    running_days:
+    arrival_info:
+
+from_school:
+  - route_name: "미운행"
+    running_days:
+    arrival_info:
