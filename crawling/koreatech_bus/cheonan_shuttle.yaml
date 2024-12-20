@@ -86,11 +86,11 @@ from_school:
     running_days: [ "SAT" ]
     arrival_info:
       - node_name: *koreatech
-        arrival_time: "19:10"
+        arrival_time: "16:15"
       - node_name: *cheonan_station_b
-        arrival_time: "19:40"
+        arrival_time: "16:45"
       - node_name: *terminal_b
-        arrival_time: "19:50"
+        arrival_time: "16:55"
       - node_name: *dujeong-station
         arrival_time: "하차"
 
