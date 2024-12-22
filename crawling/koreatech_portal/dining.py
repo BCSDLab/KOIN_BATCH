@@ -444,6 +444,7 @@ def between_breakfast_lunch():
         print_flush("메뉴 변경됨")
 
     for menu in filtered:
+        menu.is_changed = None
         print_flush(menu)
 
     update_db(filtered)
