@@ -147,8 +147,12 @@ def crawling():
         if not professor:
             professor = ''
         is_english = work_sheet_mapper.get(ColumnNames.IS_ENGLISH, row)
+        if not is_english:
+            is_english = '0'
         design_score = work_sheet_mapper.get(ColumnNames.DESIGN_SCORE, row)
         is_elearning = work_sheet_mapper.get(ColumnNames.IS_ELEARNING, row)
+        if not is_elearning:
+            is_elearning = '0'
         class_time = convert_classtime(work_sheet_mapper.get(ColumnNames.CLASS_TIME, row))
 
         lecture = Lecture(semester_date=semester_date, code=code, name=name, grades=grades, class_number=class_number,
