@@ -8,7 +8,7 @@ import time
 from datetime import date
 from enum import Enum
 
-OFFSET_BETWEEN_SCHEMA_INSTANCE = 2
+OFFSET_BETWEEN_SCHEMA_INSTANCE = 1
 
 SCHEMA_ROW_DELIMITER = 'No.'
 
