@@ -8,7 +8,7 @@ import time
 from datetime import date
 from enum import Enum
 
-OFFSET_BETWEEN_SCHEMA_INSTANCE = 2
+OFFSET_BETWEEN_SCHEMA_INSTANCE = 1
 
 SCHEMA_ROW_DELIMITER = 'No.'
 
@@ -22,14 +22,14 @@ class ColumnNames(Enum):
     SEMESTER = ["학기"]
     CODE = ["과목코드"]
     NAME = ["교과목명"]
-    GRADES = ["학\n점"]
+    GRADES = ["학\n점", "학점"]
     CLASS_NUMBER = ["분반"]
-    REGULAR_NUMBER = ["수강\n정원", "수정\n정원"]
+    REGULAR_NUMBER = ["수강\n정원", "수정\n정원", "정원"]
     DEPARTMENT = ["개설학부(과)"]
-    TARGET = ["수강신청\n가능학년"]
+    TARGET = ["수강신청\n가능학년", "수강대상 (학부/전공/학년)"]
     PROFESSOR = ["담당교수"]
     IS_ENGLISH = ["영어강의"]
-    DESIGN_SCORE = ["설\n계"]
+    DESIGN_SCORE = ["설\n계", "설계"]
     IS_ELEARNING = ["E-Learning"]
     CLASS_TIME = ["강의시간"]
 
@@ -147,8 +147,12 @@ def crawling():
         if not professor:
             professor = ''
         is_english = work_sheet_mapper.get(ColumnNames.IS_ENGLISH, row)
+        if not is_english:
+            is_english = '0'
         design_score = work_sheet_mapper.get(ColumnNames.DESIGN_SCORE, row)
         is_elearning = work_sheet_mapper.get(ColumnNames.IS_ELEARNING, row)
+        if not is_elearning:
+            is_elearning = '0'
         class_time = convert_classtime(work_sheet_mapper.get(ColumnNames.CLASS_TIME, row))
 
         lecture = Lecture(semester_date=semester_date, code=code, name=name, grades=grades, class_number=class_number,
