@@ -11,39 +11,9 @@ nodes:
   - &baro "바로약국 앞"
 
 to_school:
-  - route_name: "토요일 일학습병행대학(08시)"
-    running_days: [ "SAT" ]
+  - route_name: "미운행"
+    running_days:
     arrival_info:
-      - node_name: *dujeong-station
-        arrival_time: "08:00"
-      - node_name: *terminal
-        arrival_time: "08:05"
-      - node_name: *cheonan_station
-        arrival_time: "08:10"
-      - node_name: *koreatech
-        arrival_time: "도착"
-
-  - route_name: "토요일 일학습병행대학(08시 05분)"
-    running_days: [ "SAT" ]
-    arrival_info:
-      - node_name: *campus_2
-        arrival_time: "08:05"
-      - node_name: *dujeong-station
-        arrival_time: "08:10"
-      - node_name: *terminal
-        arrival_time: "08:15"
-      - node_name: *cheonan_station
-        arrival_time: "08:20"
-      - node_name: *koreatech
-        arrival_time: "도착"
-
-  - route_name: "토요일 일학습병행대학 천안아산역(08시 15분)"
-    running_days: [ "SAT" ]
-    arrival_info:
-      - node_name: *ktx_exit_3
-        arrival_time: "08:15"
-      - node_name: *koreatech
-        arrival_time: "도착"
 
 from_school:
   - route_name: "주중(14시 10분)"
@@ -73,35 +43,3 @@ from_school:
         arrival_time: "21:00"
       - node_name: *koreatech
         arrival_time: "21:30"
-
-  - route_name: "토요일 일학습병행대학 천안아산역(16시 15분)"
-    running_days: [ "SAT" ]
-    arrival_info:
-      - node_name: *koreatech
-        arrival_time: "16:15"
-      - node_name: *ktx_exit_3
-        arrival_time: "도착"
-
-  - route_name: "토요일 일학습병행대학(16시 15분)"
-    running_days: [ "SAT" ]
-    arrival_info:
-      - node_name: *koreatech
-        arrival_time: "16:15"
-      - node_name: *cheonan_station_b
-        arrival_time: "16:45"
-      - node_name: *terminal_b
-        arrival_time: "16:55"
-      - node_name: *dujeong-station
-        arrival_time: "하차"
-
-  - route_name: "토요일 일학습병행대학(18시 15분)"
-    running_days: [ "SAT" ]
-    arrival_info:
-      - node_name: *koreatech
-        arrival_time: "18:15"
-      - node_name: *cheonan_station_b
-        arrival_time: "18:45"
-      - node_name: *terminal_b
-        arrival_time: "18:55"
-      - node_name: *dujeong-station
-        arrival_time: "하차"

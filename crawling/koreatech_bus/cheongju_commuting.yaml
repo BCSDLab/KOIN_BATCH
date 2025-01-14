@@ -35,33 +35,7 @@ nodes:
   - &oksangarak_threeri "옥산가락3리BS"
 
 to_school:
-  - route_name: "동남지구"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
-    arrival_info:
-      - node_name: *dongnam
-        arrival_time: "07:20"
-      - node_name: *prau
-        arrival_time: "07:22"
-      - node_name: *cheongju_school
-        arrival_time: "07:24"
-      - node_name: *geumchun
-        arrival_time: "07:25"
-      - node_name: *dragon_bezing
-        arrival_time: "07:28"
-      - node_name: *sangdang
-        arrival_time: "07:37"
-      - node_name: *gym
-        arrival_time: "07:40"
-      - node_name: *sachang
-        arrival_time: "07:42"
-      - node_name: *hs_foret
-        arrival_time: "07:46"
-      - node_name: *solbat
-        arrival_time: "07:50"
-      - node_name: *koreatech
-        arrival_time: "08:50"
-
-  - route_name: "용암동"
+  - route_name: "동남/용암동"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *bangsu
@@ -72,23 +46,29 @@ to_school:
         arrival_time: "07:31"
       - node_name: *seokyodong
         arrival_time: "07:33"
-      - node_name: *sangdang_park
+      - node_name: *sangdang
         arrival_time: "07:36"
-      - node_name: *culture_industry
+      - node_name: *gym
         arrival_time: "07:40"
-      - node_name: *maria_hospital
-        arrival_time: "07:45"
+      - node_name: *sachang
+        arrival_time: "7:42"
+      - node_name: *hs_foret
+        arrival_time: "07:46"
+      - node_name: *solbat
+        arrival_time: "07:50"
       - node_name: *scinece_state
-        arrival_time: "08:00"
+        arrival_time: "08:10"
       - node_name: *koreatech
         arrival_time: "08:50"
 
 from_school:
-  - route_name: "동남지구"
+  - route_name: "동남/용암동"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "18:10"
+      - node_name: *scinece_state
+        arrival_time: "18:50"
       - node_name: *solbat
         arrival_time: "19:10"
       - node_name: *hs_foret
@@ -98,30 +78,6 @@ from_school:
       - node_name: *gym
         arrival_time: "19:20"
       - node_name: *sangdang
-        arrival_time: "19:23"
-      - node_name: *dragon_bezing
-        arrival_time: "19:32"
-      - node_name: *geumchun
-        arrival_time: "19:35"
-      - node_name: *cheongju_school
-        arrival_time: "19:36"
-      - node_name: *prau
-        arrival_time: "19:38"
-      - node_name: *dongnam
-        arrival_time: "19:40"
-
-  - route_name: "용암동"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
-    arrival_info:
-      - node_name: *koreatech
-        arrival_time: "18:10"
-      - node_name: *scinece_state
-        arrival_time: "19:00"
-      - node_name: *maria_hospital
-        arrival_time: "19:15"
-      - node_name: *culture_industry
-        arrival_time: "19:20"
-      - node_name: *sangdang_park
         arrival_time: "19:24"
       - node_name: *seokyodong
         arrival_time: "19:27"
