@@ -62,7 +62,7 @@ to_school:
         arrival_time: "08:50"
 
 from_school:
-  - route_name: "용암동"
+  - route_name: "동남/용암동"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *koreatech
