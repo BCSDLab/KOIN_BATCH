@@ -138,7 +138,7 @@ def process_table_data(merged_table, target_header):
 def create_engine_connection():
     """MySQL 데이터베이스 엔진을 생성."""
     try:
-        engine = create_engine('mysql+pymysql://root:ekhee0311!@localhost/koin')
+        engine = create_engine('mysql+pymysql://root:pw@localhost/koin')
         logging.info("데이터베이스 연결 성공.")
         return engine
     except Exception as e:
