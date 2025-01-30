@@ -219,7 +219,7 @@ def extract_and_insert_data(pdf_path, year, engine):
         transaction.commit()
 
 if __name__ == "__main__":
-    engine = create_engine("mysql+pymysql://root:ekhee0311!@localhost/koin")
+    engine = create_engine("mysql+pymysql://root:pw@localhost/koin")
     logging.info("📡 데이터베이스 연결 성공.")
     for year in YEAR:
         pdf_path = f"./pdfs/{year}대학요람.pdf"
