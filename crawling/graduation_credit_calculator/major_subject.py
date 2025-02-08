@@ -1,15 +1,14 @@
 import re
-from os import major
-
 import pdfplumber
 import pandas as pd
 from sqlalchemy import create_engine, text
 import logging
+import config
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# 연도별 SHAPE 설정
+# 연도별 SHAPE 설정 (지난 연도는 주석 처리 해야함)
 YEARLY_SHAPES = {
     2019: "▶",
     2020: "❑",
@@ -19,7 +18,7 @@ YEARLY_SHAPES = {
     2024: "❑"
 }
 
-# 연도별 키워드 설정
+# 연도별 키워드 설정 (지난 연도는 주석 처리 해야함)
 YEARLY_KEYWORDS = {
     2019: [
         "기계공학부", "메카트로닉스공학부 생산시스템전공", "메카트로닉스공학부 제어시스템전공", "메카트로닉스공학부 디지털시스템전공",
@@ -75,10 +74,8 @@ def is_similar_header(cleaned_header, target_header):
 
 
 def clean_header(header):
-    """헤더의 빈 문자열과 공백, 줄바꿈을 제거하고 문자열로 변환."""
     return [col.replace("\n", "").strip() for col in header if col and col.strip()]
 
-# 텍스트 정규화
 def normalize_text(text):
     if not text:
         return ""
@@ -87,11 +84,7 @@ def normalize_text(text):
     normalized_text = re.sub(r"\s+", "", normalized_text)
     return normalized_text.strip()
 
-
-
-# 1. PDF 데이터 추출 및 병합
 def extract_and_merge_tables(pdf_path, keyword):
-    """PDF에서 특정 키워드를 포함하는 페이지의 연결된 표를 추출 및 병합."""
     merged_table = []
     is_table_continued = False
     found_table_for_keyword = False
@@ -104,7 +97,7 @@ def extract_and_merge_tables(pdf_path, keyword):
                     continue
 
                 cleaned_text = normalize_text(text)
-                shape = YEARLY_SHAPES.get(year, "")  # 연도에 맞는 SHAPE 가져오기 (기본값 "")
+                shape = YEARLY_SHAPES.get(year, "")
                 cleaned_keyword = f"{shape}{normalize_text(keyword)}"
 
 
@@ -123,15 +116,13 @@ def extract_and_merge_tables(pdf_path, keyword):
                             if is_similar_header(current_header, TARGET_HEADER):
                                 if not found_table_for_keyword:
                                     found_table_for_keyword = True
-                                    is_table_continued = True  # 이어지는 표도 검색할 수 있도록 설정
+                                    is_table_continued = True
 
-                                # ❗ 데이터 필터링: TARGET_HEADER 개수에 맞추기
-                                for row in table[1:]:  # 첫 번째 행(헤더) 제외
+                                for row in table[1:]:
                                     filtered_row = row[:len(TARGET_HEADER)] + [None] * (len(TARGET_HEADER) - len(row))
                                     merged_table.append(filtered_row)
 
                             else:
-                                # ❌ 새로운 표가 나타나면 중단하고 다음 키워드로 이동
                                 if found_table_for_keyword:
                                     logging.info(f"새로운 표가 감지됨 (페이지 {i + 1}). 다음 키워드로 이동.")
                                     return merged_table
@@ -146,21 +137,14 @@ def extract_and_merge_tables(pdf_path, keyword):
         logging.info(f"총 {len(merged_table)}개의 데이터가 병합되었습니다.")
         return merged_table
 
-
-
-# 2. 데이터 정리
 def process_table_data(merged_table):
-    """병합된 테이블 데이터를 DataFrame으로 변환."""
     try:
         if not merged_table:
             raise ValueError("유효하지 않은 테이블 데이터입니다.")
 
         df = pd.DataFrame(merged_table, columns=TARGET_HEADER)
-
-        # 빈 데이터 제거
         df.dropna(subset=["교과목코드", "교과목명"], inplace=True)
 
-        # '학-강-실-설'에서 학점을 추출
         df['credit'] = df['학-강-실-설'].apply(lambda x: int(x.split('-')[0]) if x and '-' in x else 0)
 
         logging.info(f"DataFrame 생성 완료. 총 {len(df)}개의 레코드가 처리되었습니다.")
@@ -169,12 +153,13 @@ def process_table_data(merged_table):
         logging.error(f"데이터 처리 중 오류 발생: {e}")
         raise
 
-
-# 3. 데이터베이스 연결
 def create_engine_connection():
-    """MySQL 데이터베이스 엔진을 생성."""
     try:
-        engine = create_engine('mysql+pymysql://root:pw@localhost/koin')
+        db_config = config.DATABASE_CONFIG
+
+        engine = create_engine(
+            f"mysql+pymysql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['db']}"
+        )
         logging.info("데이터베이스 연결 성공.")
         return engine
     except Exception as e:
@@ -185,30 +170,37 @@ def get_department_and_major(keyword, conn):
     normalized_keyword = re.sub(r"[・･·]", "・", keyword)
     normalized_keyword = normalized_keyword.replace("・", "").replace("-", " ")
 
-    major_name = None  # 기본값 설정
+    major_name = None
 
-    # "디자인공학전공"과 "건축공학전공" 예외 처리
     if "디자인공학전공" in normalized_keyword:
         department_name = "디자인공학부"
+        major_name = f"{department_name} 디자인공학전공"
     elif "건축공학전공" in normalized_keyword:
         department_name = "건축공학부"
+        major_name = f"{department_name} 건축공학전공"
     elif "데이터경영전공" in normalized_keyword or "융합경영전공" in normalized_keyword:
         department_name = "산업경영학부"
-        major_name = f"{department_name} {normalized_keyword}"  # "산업경영학부 데이터경영전공" 형태로 저장
-    elif normalized_keyword.endswith(("학부", "학과")):
-        # 학부 또는 학과로 끝나면 department에서만 조회
+        major_name = f"{department_name} {normalized_keyword}"
+    elif normalized_keyword == "컴퓨터공학부":
         department_name = normalized_keyword
-        major_name = None  # major 없음
+        major_name = f"{department_name} 컴퓨터공학전공"
+    elif normalized_keyword == "기계공학부":
+        department_name = normalized_keyword
+        major_name = f"{department_name} 기계공학전공"
+    elif normalized_keyword == "고용서비스정책학과":
+        department_name = normalized_keyword
+        major_name = f"{department_name} 고용서비스정책전공"
+    elif normalized_keyword.endswith(("학부", "학과")):
+        department_name = normalized_keyword
+        major_name = None
     else:
-        # "전공"이 포함된 경우 -> major 테이블에서 조회 또는 생성
         parts = normalized_keyword.split(" ")
-        if "전공" in parts[-1]:  # 마지막 단어가 "전공" 포함 여부 확인
+        if "전공" in parts[-1]:
             major_name = normalized_keyword
-            department_name = " ".join(parts[:-1])  # "전공" 이전의 학부/학과 추출
+            department_name = " ".join(parts[:-1])
         else:
-            department_name = normalized_keyword  # major가 없으면 학부/학과로 저장
+            department_name = normalized_keyword
 
-    # department 조회 또는 생성
     result = conn.execute(
         text("SELECT id FROM department WHERE name = :name"), {"name": department_name}
     ).fetchone()
@@ -218,11 +210,9 @@ def get_department_and_major(keyword, conn):
         conn.execute(text("INSERT INTO department (name) VALUES (:name)"), {"name": department_name})
         department_id = conn.execute(text("SELECT LAST_INSERT_ID()")).fetchone()[0]
 
-    # major가 없으면 department_id만 반환
     if not major_name:
         return department_id, None
 
-    # major 조회 또는 생성
     result = conn.execute(
         text("SELECT id FROM major WHERE name = :name"), {"name": major_name}
     ).fetchone()
@@ -240,9 +230,9 @@ def get_department_and_major(keyword, conn):
 
 def get_or_create_course_type_id(course_type_name, conn):
     if "필수" in course_type_name:
-        course_type_name = "전공 필수"
+        course_type_name = "전공필수"
     elif "선택" in course_type_name:
-        course_type_name = "전공 선택"
+        course_type_name = "전공선택"
 
     result = conn.execute(
         text("SELECT id FROM course_type WHERE name = :name"), {"name": course_type_name}
@@ -258,11 +248,9 @@ def get_or_create_course_type_id(course_type_name, conn):
 
 
 def insert_data_to_db(df, engine, year, keyword):
-    """DataFrame 데이터를 데이터베이스에 삽입"""
     try:
         with (engine.begin() as conn):
             for _, row in df.iterrows():
-                # 교과목 코드가 없으면 건너뛴다.
                 if not row["교과목코드"]:
                     continue
 
@@ -270,7 +258,6 @@ def insert_data_to_db(df, engine, year, keyword):
 
                 course_type_id = get_or_create_course_type_id(row["이수구분"], conn)
 
-                # ✅ catalog 테이블에 데이터 삽입
                 conn.execute(
                     text(
                         """
@@ -293,8 +280,6 @@ def insert_data_to_db(df, engine, year, keyword):
         logging.error(f"데이터베이스 삽입 중 오류 발생: {e}")
         raise
 
-
-# 5. 실행 로직
 if __name__ == "__main__":
     engine = create_engine_connection()
 
