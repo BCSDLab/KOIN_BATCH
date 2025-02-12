@@ -177,11 +177,12 @@ def insert_data_to_db(df, engine, year):
 
                 conn.execute(
                     text("""
-                        INSERT INTO catalog (year, code, lecture_name, department_id, credit, course_type_id) 
-                        VALUES (:year, :code, :lecture_name, :department_id, :credit, :course_type_id)
+                        INSERT INTO catalog (year, code, lecture_name, department_id, credit, course_type_id, general_education_area_id) 
+                        VALUES (:year, :code, :lecture_name, :department_id, :credit, :course_type_id, :area_id)
                     """),
                     {"year": year, "code": row['교과목코드'], "lecture_name": row['교과목명'],
-                     "department_id": department_id, "credit": row['credit'], "course_type_id": course_type_id}
+                     "department_id": department_id, "credit": row['credit'], "course_type_id": course_type_id,
+                     "area_id": area_id}
                 )
 
                 if area_id and course_type_id and not exists_in_general_education_area_map(year, course_type_id, area_id, conn):
