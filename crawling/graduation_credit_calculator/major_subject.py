@@ -3,12 +3,11 @@ import pdfplumber
 import pandas as pd
 from sqlalchemy import create_engine, text
 import logging
-import config
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# 연도별 SHAPE 설정 (지난 연도는 주석 처리 해야함)
+# 연도별 SHAPE 설정 (아래 키워드의 왼쪽의 모양), 이전 연도 데이터는 주석 처리하고, 실제로 사용할 연도만 활성화
 YEARLY_SHAPES = {
     2019: "▶",
     2020: "❑",
@@ -18,7 +17,7 @@ YEARLY_SHAPES = {
     2024: "❑"
 }
 
-# 연도별 키워드 설정 (지난 연도는 주석 처리 해야함)
+# 연도별 키워드 설정 (찾아야하는 표 바로 위의 키워드), 이전 연도 데이터는 주석 처리하고, 실제로 사용할 연도만 활성화
 YEARLY_KEYWORDS = {
     2019: [
         "융합학과", "기계공학부", "메카트로닉스공학부 생산시스템전공", "메카트로닉스공학부 제어시스템전공", "메카트로닉스공학부 디지털시스템전공",
@@ -155,11 +154,7 @@ def process_table_data(merged_table):
 
 def create_engine_connection():
     try:
-        db_config = config.DATABASE_CONFIG
-
-        engine = create_engine(
-            f"mysql+pymysql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['db']}"
-        )
+        engine = create_engine('mysql+pymysql://root:ekhee0311!@localhost/koin')
         logging.info("데이터베이스 연결 성공.")
         return engine
     except Exception as e:
@@ -167,36 +162,35 @@ def create_engine_connection():
         raise
 
 def get_department_and_major(keyword, conn):
+    """ 학부 및 전공 정보를 파싱하여 department, major 테이블에 저장 또는 조회 """
     normalized_keyword = re.sub(r"[・･·]", "・", keyword)
     normalized_keyword = normalized_keyword.replace("・", "").replace("-", " ")
 
     major_name = None
 
+    # 예외적인 학부의 경우 학부와 전공을 직접 명시
     if "디자인공학전공" in normalized_keyword:
         department_name = "디자인공학부"
-        major_name = f"{department_name} 디자인공학전공"
+        major_name = f"디자인공학전공"
     elif "건축공학전공" in normalized_keyword:
         department_name = "건축공학부"
-        major_name = f"{department_name} 건축공학전공"
+        major_name = f"건축공학전공"
     elif "데이터경영전공" in normalized_keyword or "융합경영전공" in normalized_keyword:
         department_name = "산업경영학부"
-        major_name = f"{department_name} {normalized_keyword}"
+        major_name = f"{normalized_keyword}"
     elif normalized_keyword == "컴퓨터공학부":
         department_name = normalized_keyword
-        major_name = f"{department_name} 컴퓨터공학전공"
+        major_name = f"컴퓨터공학전공"
     elif normalized_keyword == "기계공학부":
         department_name = normalized_keyword
-        major_name = f"{department_name} 기계공학전공"
+        major_name = f"기계공학전공"
     elif normalized_keyword == "고용서비스정책학과":
         department_name = normalized_keyword
-        major_name = f"{department_name} 고용서비스정책전공"
-    elif normalized_keyword.endswith(("학부", "학과")):
-        department_name = normalized_keyword
-        major_name = None
+        major_name = f"고용서비스정책전공"
     else:
         parts = normalized_keyword.split(" ")
         if "전공" in parts[-1]:
-            major_name = normalized_keyword
+            major_name = parts[-1]
             department_name = " ".join(parts[:-1])
         else:
             department_name = normalized_keyword
@@ -257,6 +251,34 @@ def insert_data_to_db(df, engine, year, keyword):
                 department_id, major_id = get_department_and_major(keyword, conn)
 
                 course_type_id = get_or_create_course_type_id(row["이수구분"], conn)
+
+                # 중복 확인
+                existing = conn.execute(
+                    text(
+                        """
+                        SELECT id FROM catalog 
+                        WHERE year = :year
+                        AND department_id = :department_id
+                        AND major_id = major_id
+                        AND code = :code 
+                        AND lecture_name = :lecture_name
+                        AND credit = :credit
+                        AND course_type_id = :course_type_id
+                        """
+                    ),
+                    {
+                        "year": year,
+                        "department_id": department_id,
+                        "major_id": major_id,
+                        "code": row['교과목코드'],
+                        "lecture_name": row['교과목명'],
+                        "credit": row['credit'],
+                        "course_type_id": course_type_id
+                    }
+                ).fetchone()
+
+                if existing:
+                    continue
 
                 conn.execute(
                     text(
