@@ -3,6 +3,7 @@ import pdfplumber
 import pandas as pd
 from sqlalchemy import create_engine, text
 import logging
+import config
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -154,7 +155,11 @@ def process_table_data(merged_table):
 
 def create_engine_connection():
     try:
-        engine = create_engine('mysql+pymysql://root:ekhee0311!@localhost/koin')
+        db_config = config.DATABASE_CONFIG
+
+        engine = create_engine(
+            f"mysql+pymysql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['db']}"
+        )
         logging.info("데이터베이스 연결 성공.")
         return engine
     except Exception as e:
