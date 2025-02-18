@@ -185,13 +185,25 @@ def get_department_and_major(keyword, conn):
         major_name = f"{normalized_keyword}"
     elif normalized_keyword == "컴퓨터공학부":
         department_name = normalized_keyword
-        major_name = f"컴퓨터공학전공"
+        major_name = None
     elif normalized_keyword == "기계공학부":
         department_name = normalized_keyword
-        major_name = f"기계공학전공"
+        major_name = None
     elif normalized_keyword == "고용서비스정책학과":
         department_name = normalized_keyword
-        major_name = f"고용서비스정책전공"
+        major_name = None
+    elif "에너지신소재공학전공" in normalized_keyword:
+        department_name = "에너지신소재공학부"
+        major_name = f"에너지신소재공학전공"
+    elif "응용화학공학전공" in normalized_keyword:
+        department_name = "응용화학공학부"
+        major_name = f"응용화학공학전공"
+    elif "화학생명공학전공" in normalized_keyword:
+        department_name = "화학생명공학부"
+        major_name = f"화학생명공학전공"
+    elif "융합학과" in normalized_keyword:
+        department_name = "학과공통"
+        major_name = None
     else:
         parts = normalized_keyword.split(" ")
         if "전공" in parts[-1]:
@@ -209,12 +221,18 @@ def get_department_and_major(keyword, conn):
         conn.execute(text("INSERT INTO department (name) VALUES (:name)"), {"name": department_name})
         department_id = conn.execute(text("SELECT LAST_INSERT_ID()")).fetchone()[0]
 
-    if not major_name:
+    if department_name == "학과공통":
         return department_id, None
 
-    result = conn.execute(
-        text("SELECT id FROM major WHERE name = :name"), {"name": major_name}
-    ).fetchone()
+    if not major_name:
+        result = conn.execute(
+            text("SELECT id FROM major WHERE department_id = :department_id"), {"department_id": department_id}
+        ).fetchone()
+    else:
+        result = conn.execute(
+            text("SELECT id FROM major WHERE name = :name"), {"name": major_name}
+        ).fetchone()
+
     if result:
         return department_id, result[0]
 
