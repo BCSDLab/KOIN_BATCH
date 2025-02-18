@@ -266,7 +266,7 @@ def get_or_create_course_type_id(course_type_name, conn):
 
 def insert_data_to_db(df, engine, year, keyword):
     try:
-        with (engine.begin() as conn):
+        with engine.begin() as conn:
             for _, row in df.iterrows():
                 if not row["교과목코드"]:
                     continue
