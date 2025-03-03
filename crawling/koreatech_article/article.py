@@ -11,7 +11,7 @@ import pymysql
 
 from delete_article import delete_article
 from table import replace_table
-from login import login
+from login_v2 import login
 from login import get_jwt_token
 from slack_notice import filter_nas, notice_to_slack
 
@@ -220,10 +220,10 @@ def get_cookies(board: Board):
         return None
 
     return {
-        'JSESSIONID': login_cookie['JSESSIONID']['value'],
-        'ASP.NET_SessionId': login_cookie['ASP.NET_SessionId']['value'],
-        'mauth': login_cookie['mauth']['value'],
-        'hn_ck_login': login_cookie['hn_ck_login']['value'],
+        'JSESSIONID': login_cookie['JSESSIONID'],
+        'ASP.NET_SessionId': login_cookie['ASP.NET_SessionId'],
+        'mauth': login_cookie['mauth'],
+        'hn_ck_login': login_cookie['hn_ck_login'],
     }
 
 

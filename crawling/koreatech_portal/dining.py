@@ -8,7 +8,7 @@ import config
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import redis as redis_library
-from login import portal_login
+from login_v2 import portal_login
 
 """
 동작 과정
