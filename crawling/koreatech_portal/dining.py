@@ -294,18 +294,20 @@ def update_db(menus):
             try:
                 # INT는 %s, VARCHAR은 '%s'로 표기 (INT에 NULL 넣기 위함)
                 sql = """
-                INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, image_url, is_changed)
-                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', %s, NULL)
-                ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s
+                INSERT INTO koin.dining_menus(date, type, place, price_card, price_cash, kcal, menu, is_changed, image_url)
+                VALUES ('%s', '%s', '%s', %s, %s, %s, '%s', NULL, %s)
+                ON DUPLICATE KEY UPDATE price_card = %s, price_cash = %s, kcal = %s, menu = '%s', is_changed = %s,
+                image_url = CASE WHEN %s IS NOT NULL THEN %s ELSE image_url END
                 """
 
                 changed = menu.is_changed.strftime('"%Y-%m-%d %H:%M:%S"') if menu.is_changed else "NULL"
-                image_url = f'"{menu.image_url}"' if menu.image_url else "NULL"
+                image_url = f"'{menu.image_url}'" if menu.image_url else "NULL"
 
                 values = (
                     menu.date, menu.dining_time.upper(), menu.place, menu.price_card, menu.price_cash, menu.kcal,
                     menu.menu, image_url,
-                    menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed
+                    menu.price_card, menu.price_cash, menu.kcal, menu.menu, changed,
+                    image_url, image_url
                 )
 
                 print_flush(sql % values)
@@ -357,8 +359,9 @@ def parse_response(response):
     menu = data[0]
 
     image_url = None
-    if '천원의아침' in json.dumps(menu['menu'], ensure_ascii=False):
-        image_url = "https://team-kap-koin-storage.s3.ap-northeast-2.amazonaws.com/dining/%EC%B2%9C%EC%9B%90%EC%9D%98%EC%95%84%EC%B9%A8.png"
+    menu_dumps = json.dumps(menu['menu'], ensure_ascii=False)
+    if '천원의아침' in menu_dumps or '천원의 아침' in menu_dumps:
+        image_url = "https://static.koreatech.in/dining/%EC%B2%9C%EC%9B%90%EC%9D%98%EC%95%84%EC%B9%A8.png"
 
     return MenuEntity(menu['date'], menu['dining_time'], menu['place'], menu['price_card'], menu['price_cash'],
                       menu['kcal'], json.dumps(menu['menu'], ensure_ascii=False), image_url)
@@ -441,6 +444,7 @@ def between_breakfast_lunch():
         print_flush("메뉴 변경됨")
 
     for menu in filtered:
+        menu.is_changed = None
         print_flush(menu)
 
     update_db(filtered)

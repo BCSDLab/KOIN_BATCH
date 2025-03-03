@@ -1,25 +1,37 @@
 from typing import Optional, List
 
 from config import MYSQL_CONFIG
+from config import BATCH_CONFIG
 
 from emoji import core
 import requests
 from bs4 import BeautifulSoup, Comment
 import urllib3
 import pymysql
+
+from delete_article import delete_article
 from table import replace_table
 from login import login
+from login import get_jwt_token
 from slack_notice import filter_nas, notice_to_slack
 
 from math import ceil
 from hashlib import sha256
 
 import builtins
+from dateutil import parser
 
 
 def print(*args, **kwargs):
     kwargs['flush'] = True
     return builtins.print(*args, **kwargs)
+
+
+def removeprefix(string, prefix):
+    if string.startswith(prefix):
+        return string[len(prefix):]
+    return string
+
 
 """
 
@@ -174,21 +186,20 @@ class Article:
     def _get_id(self):
         """
         id를 조회할 때 최초 1번 실행
-        :return: db에 있는 koreatech_articles의 id
+        :return: db에 있는 articles의 id
         """
-        sql = f"SELECT id FROM koin.koreatech_articles WHERE board_id = '{self.board_id}' AND article_num = '{self.num}'"
+        sql = f"SELECT a.id FROM koin.new_articles a JOIN koin.new_koreatech_articles b ON a.id = b.article_id WHERE a.board_id = '{self.board_id}' AND b.portal_num = '{self.num}'"
         cur = connection.cursor()
         cur.execute(sql)
         rows = cur.fetchall()
         cur.close()
-        print(f"call!! {self.title} {rows}")
         return rows[0][0]
 
     def payload(self):
-        return {'board_id': self.board_id, 'article_num': self.num}
+        return {'board_id': self.board_id, 'portal_num': self.num}
 
     def __str__(self):
-        return str({'board_id': self.board_id, 'article_num': self.num})
+        return str({'board_id': self.board_id, 'portal_num': self.num})
 
     def __repr__(self): return self.__str__()
 
@@ -248,6 +259,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
     # ===== 제목 =====
     head = soup.select_one('table.kut-board-title-table')
     title = head.select_one('thead > tr > th').get_text(separator=" ", strip=True)
+    title = removeprefix(title, '[일반공지]').strip()
 
     # ===== 작성자, 작성일, 조회수 =====
     author, registered_at, hit = map(
@@ -258,7 +270,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
     # ===== 본문 =====
     head = soup.select_one('head')
     body = soup.select_one('div.bc-s-post-ctnt-area')
-    content = soup.new_tag('div')
+    content = soup.new_tag('html')
     content.extend([head, body])
 
     # 주석 제거
@@ -271,7 +283,7 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
                .replace('href="/', f'href="{host}/'))
 
     # 표 처리
-    content = replace_table(content, board, num)
+    # content = replace_table(content, board, num)
 
     # ===== 첨부 파일 =====
     attachment = list(map(
@@ -342,7 +354,7 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
     # ===== 본문 =====
     head = soup.select_one('head')
     body = soup.select_one('#content')
-    content = soup.new_tag('div')
+    content = soup.new_tag('html')
     content.extend([head, body])
 
     # 주석 제거
@@ -355,7 +367,7 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
                .replace('href="/', f'href="{host}/'))
 
     # 표 처리
-    content = replace_table(content, board, num)
+    # content = replace_table(content, board, num)
 
     # ===== 첨부 파일 =====
     attachment = list(map(
@@ -396,29 +408,53 @@ def update_db(articles):
         for attachment in article.attachment:
             attachment.name = core.replace_emoji(attachment.name, replace='')
 
-        try:
-            notice_sql = """
-                INSERT INTO koin.koreatech_articles(
-                    url, board_id, article_num, title,
-                    content, author, hit, registered_at, is_notice
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    title = %s, content = %s, author = %s, hit = %s
-            """
+        article.registered_at = parser.parse(article.registered_at).strftime("%Y-%m-%d %H:%M:%S")
 
-            cur.execute(
-                notice_sql,
-                (
-                    article.url, article.board_id, article.num, article.title,
-                    article.content, article.author, article.hit, article.registered_at, article.is_notice,
-                    article.title, article.content, article.author, article.hit,
-                )
-            )
-            print("ARTICLE_QUERY :", article.board_id, article.title, article.author)
+        try:
+            # 먼저 존재 여부 확인
+            cur.execute("""
+                        SELECT a.id
+                        FROM koin.new_articles a
+                        JOIN koin.new_koreatech_articles ka ON a.id = ka.article_id
+                        WHERE a.board_id = %s AND ka.portal_num = %s
+                    """, (article.board_id, article.num))
+
+            result = cur.fetchone()
+
+            if result:
+                # 데이터가 존재하면 업데이트
+                cur.execute("""
+                            UPDATE koin.new_articles
+                            SET title = %s, content = %s, hit = %s, is_notice = %s
+                            WHERE id = %s
+                        """, (article.title, article.content,
+                              article.hit, article.is_notice, article.id))
+
+                cur.execute("""
+                            UPDATE koin.new_koreatech_articles
+                            SET url = %s, author = %s, registered_at = %s
+                            WHERE article_id = %s
+                        """, (article.url, article.author,
+                              article.registered_at, article.id))
+            else:
+                # 데이터가 존재하지 않으면 삽입
+                cur.execute("""
+                            INSERT INTO koin.new_articles (board_id, title, content, hit, is_notice)
+                            VALUES (%s, %s, %s, %s, %s)
+                        """, (article.board_id, article.title, article.content,
+                              article.hit, article.is_notice))
+
+                article.id = cur.lastrowid
+
+                cur.execute("""
+                            INSERT INTO koin.new_koreatech_articles (article_id, url, portal_num, author, registered_at)
+                            VALUES (%s, %s, %s, %s, %s)
+                        """, (article.id, article.url, article.num,
+                              article.author, article.registered_at))
 
             connection.commit()
-            article.id = cur.lastrowid
+
+            print("ARTICLE_QUERY :", article.board_id, article.title, article.author)
 
         except Exception as error:
             connection.rollback()
@@ -497,49 +533,67 @@ if __name__ == "__main__":
 
     from timer import timer
     with timer():
-        LIST_SIZE = 60
+        try:
+            LIST_SIZE = 60
 
-        articles = []
-        bus_articles = []
-        new_articles = []
+            articles = []
+            bus_articles = []
+            new_articles = []
 
-        connection = connect_db()
-        login_cookie = login()
-        for board in _boards:
-            board_articles = (
-                crawling_job(board, page_size=ceil(LIST_SIZE / 10))
-                if board.name == "취업공지"
-                else
-                crawling(board, list_size=LIST_SIZE)
-            )
+            connection = connect_db()
+            login_cookie = login()
+            for board in _boards:
+                board_articles = (
+                    crawling_job(board, page_size=ceil(LIST_SIZE / 10))
+                    if board.name == "취업공지"
+                    else
+                    crawling(board, list_size=LIST_SIZE)
+                )
 
-            print(board_articles)
+                board_articles.sort(key=lambda x: x.num)
 
-            articles.extend(board_articles)
+                print(board_articles)
 
-            # 버스 알림
-            if board.is_notice:
-                # DB에 없고, 키워드가 들어있는 게시글 필터링
-                bus_articles.extend(filter_nas(connection, board_articles, keywords={"버스", "bus"}))
+                articles.extend(board_articles)
 
-            new_articles.extend(filter_nas(connection, board_articles))
+                # 버스 알림
+                if board.is_notice:
+                    # DB에 없고, 키워드가 들어있는 게시글 필터링
+                    bus_articles.extend(filter_nas(connection, board_articles, keywords={"버스", "bus"}))
 
-            update_db(board_articles)
+                new_articles.extend(filter_nas(connection, board_articles))
 
-        if bus_articles:
-            notice_to_slack(bus_articles)
+                update_db(board_articles)
+                delete_article(connection, board.id, board_articles, get_cookies(board))
+        except Exception as error:
+            raise error
+        finally:
+            try:
+                if bus_articles:
+                    notice_to_slack(bus_articles)
+            except Exception as error:
+                raise error
+            finally:
+                try:
+                    if new_articles:
+                        token = get_jwt_token()
+                        api_url = BATCH_CONFIG['notification_api_url']
 
-        if new_articles:
-            payload = {
-                'update_notification': []
-            }
-            for article in new_articles:
-                payload['update_notification'].append(article.id)
+                        payload = {
+                            'update_notification': []
+                        }
 
-            requests.post(
-                "https://api.koreatech.in/articles/keyword/notification",
-                json=payload
-            )
+                        for article in new_articles:
+                            payload['update_notification'].append(article.id)
 
-        connection.close()
+                        headers = {
+                            'Authorization': f'Bearer {token}',
+                            'Content-Type': 'application/json'
+                        }
+
+                        requests.post(api_url, json=payload, headers=headers)
+                except Exception as error:
+                    raise error
+                finally:
+                    connection.close()
 

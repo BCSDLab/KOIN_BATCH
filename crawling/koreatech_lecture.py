@@ -8,7 +8,7 @@ import time
 from datetime import date
 from enum import Enum
 
-OFFSET_BETWEEN_SCHEMA_INSTANCE = 2
+OFFSET_BETWEEN_SCHEMA_INSTANCE = 1
 
 SCHEMA_ROW_DELIMITER = 'No.'
 
@@ -19,17 +19,19 @@ class ColumnNames(Enum):
     # 매핑이 되는 칼럼 명을 여러가지로 설정할 수 있도록 하였다.
     # `학\n점` 등으로 적혀져 있는 것을 주의할 것
     # 23.2 기준, 학교에서 "수강정원" 대신 "수정정원"으로 올려놓아서, 이에 대응하기 위해 배열로 여러 후보군을 설정하였다.
+    # 25.1 기준, No. 행의 값이 없는 경우 생략하도록 추가
+    ID = ["No."]
     SEMESTER = ["학기"]
     CODE = ["과목코드"]
     NAME = ["교과목명"]
-    GRADES = ["학\n점"]
+    GRADES = ["학\n점", "학점"]
     CLASS_NUMBER = ["분반"]
-    REGULAR_NUMBER = ["수강\n정원", "수정\n정원"]
+    REGULAR_NUMBER = ["수강\n정원", "수정\n정원", "정원"]
     DEPARTMENT = ["개설학부(과)"]
-    TARGET = ["수강신청\n가능학년"]
+    TARGET = ["수강신청\n가능학년", "수강대상 (학부/전공/학년)"]
     PROFESSOR = ["담당교수"]
     IS_ENGLISH = ["영어강의"]
-    DESIGN_SCORE = ["설\n계"]
+    DESIGN_SCORE = ["설\n계", "설계"]
     IS_ELEARNING = ["E-Learning"]
     CLASS_TIME = ["강의시간"]
 
@@ -128,6 +130,11 @@ def crawling():
     semester_date = '%s%s' % (year, semester.split('학기')[0])
 
     for row in range(work_sheet.instance_start_row, work_sheet.max_row + 1):
+        # No.에 해당하는 값이 없는 경우 건너 뛰기
+        id = work_sheet_mapper.get(ColumnNames.ID, row)
+        if not id:
+            continue
+            
         code = work_sheet_mapper.get(ColumnNames.CODE, row)
         name = work_sheet_mapper.get(ColumnNames.NAME, row)
         grades = work_sheet_mapper.get(ColumnNames.GRADES, row)
@@ -147,8 +154,12 @@ def crawling():
         if not professor:
             professor = ''
         is_english = work_sheet_mapper.get(ColumnNames.IS_ENGLISH, row)
+        if not is_english:
+            is_english = '0'
         design_score = work_sheet_mapper.get(ColumnNames.DESIGN_SCORE, row)
         is_elearning = work_sheet_mapper.get(ColumnNames.IS_ELEARNING, row)
+        if not is_elearning:
+            is_elearning = '0'
         class_time = convert_classtime(work_sheet_mapper.get(ColumnNames.CLASS_TIME, row))
 
         lecture = Lecture(semester_date=semester_date, code=code, name=name, grades=grades, class_number=class_number,

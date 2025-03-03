@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import config
+import requests
 
 # 알림창 닫기
 def check_for_alert(driver, timeout=5):
@@ -109,6 +110,9 @@ def login():
         time.sleep(5)
         url = driver.current_url
 
+        time.sleep(3)
+        check_for_alert(driver)
+
         # job 페이지
         if url == job_url:
             print('job 로그인 성공')
@@ -142,6 +146,16 @@ def login():
 비밀번호 변경: //*[@id="pwdUpdateFrm"]/div/div/div[3]/div/ul/li[1]/a
 다음에 변경: //*[@id="pwdUpdateFrm"]/div/div/div[3]/div/ul/li[2]/a
 """
+
+# 코인 사이트 JWT 토큰 발급 함수
+def get_jwt_token():
+    login_url = config.BATCH_CONFIG['token_url'] 
+    credentials = {
+        'email': config.BATCH_CONFIG['email'],
+        'password': config.BATCH_CONFIG['password']
+    }
+
+    return requests.post(login_url, json=credentials).json().get('token')
 
 if __name__ == '__main__':
     print(login())
