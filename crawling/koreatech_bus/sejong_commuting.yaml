@@ -31,11 +31,11 @@ to_school:
       - node_name: *dodam_library
         arrival_time: "07:43"
       - node_name: *bumjigi_village
-        arrival_time: "07:52"
+        arrival_time: "07:48"
       - node_name: *jochiwon_xi_apartment
-        arrival_time: "08:05"
+        arrival_time: "08:00"
       - node_name: *sinbong
-        arrival_time: "08:10"
+        arrival_time: "08:03"
       - node_name: *koreatech
         arrival_time: "08:50"
 
@@ -46,11 +46,11 @@ from_school:
       - node_name: *koreatech
         arrival_time: "18:10"
       - node_name: *sinbong
-        arrival_time: "18:50"
+        arrival_time: "18:57"
       - node_name: *jochiwon_xi_apartment
-        arrival_time: "18:55"
+        arrival_time: "19:00"
       - node_name: *bumjigi_village
-        arrival_time: "19:08"
+        arrival_time: "19:12"
       - node_name: *dodam_library
         arrival_time: "19:17"
       - node_name: *sejong_gov_complex
