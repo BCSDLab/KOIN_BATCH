@@ -12,9 +12,9 @@ to_school:
       - node_name: *seoul_gyodae_station
         arrival_time: "07:20"
       - node_name: *dongcheon_station
-        arrival_time: "07:42"
+        arrival_time: "07:47"
       - node_name: *jukjeon_simple_station
-        arrival_time: "07:45"
+        arrival_time: "07:50"
       - node_name: *koreatech
         arrival_time: "08:50"
 
