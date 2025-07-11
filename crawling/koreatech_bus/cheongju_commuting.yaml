@@ -10,7 +10,7 @@ nodes:
   - &gallery_hotel "갤러리호텔(봉명우체국BS)"
   - &hs_foret "HS포레(봉명우체국BS)"
   - &solbat "솔밭공원"
-  - &cheongju_station "청주역 A(서촌동 BS)"
+  - &cheongju_station "청주역 A(옥산방면 청주역BS)"
   - &bangsu "방서동(다이소)"
   - &koreatech "학교"
   - &yongarmdong_hyundai "용암동 현대APT"
@@ -58,6 +58,8 @@ to_school:
         arrival_time: "07:46"
       - node_name: *solbat
         arrival_time: "07:50"
+      - node_name: *cheongju_station
+        arrival_time: "07:55"
       - node_name: *koreatech
         arrival_time: "08:50"
 
@@ -83,43 +85,14 @@ to_school:
       - node_name: *koreatech
         arrival_time: "08:50"
 
-  - route_name: "산남분평동"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
-    arrival_info:
-      - node_name: *electronic_land
-        arrival_time: "07:15"
-      - node_name: *namsung_elementry
-        arrival_time: "07:17"
-      - node_name: *sannam_sugok
-        arrival_time: "07:20"
-      - node_name: *chungbuk_nonghyup
-        arrival_time: "07:22"
-      - node_name: *chungbuk_university_hospital
-        arrival_time: "07:26"
-      - node_name: *KBS_reverse
-        arrival_time: "07:27"
-      - node_name: *gaesin_puruzio
-        arrival_time: "07:31"
-      - node_name: *samil_apt
-        arrival_time: "07:32"
-      - node_name: *busterminal_reverse
-        arrival_time: "07:37"
-      - node_name: *heungduck_highschool
-        arrival_time: "07:42"
-      - node_name: *cheongju_station
-        arrival_time: "07:46"
-      - node_name: *oksangarak_threeri
-        arrival_time: "07:49"
-      - node_name: *koreatech
-        arrival_time: "08:50"
-
-
 from_school:
   - route_name: "동남지구"
     running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
     arrival_info:
       - node_name: *koreatech
         arrival_time: "18:10"
+      - node_name: *cheongju_station
+        arrival_time: "19:05"
       - node_name: *solbat
         arrival_time: "19:10"
       - node_name: *hs_foret
@@ -162,35 +135,3 @@ from_school:
         arrival_time: "19:30"
       - node_name: *bangsu
         arrival_time: "19:32"
-
-  - route_name: "산남분평동"
-    running_days: [ "MON", "TUE", "WED", "THU", "FRI" ]
-    arrival_info:
-      - node_name: *koreatech
-        arrival_time: "18:10"
-      - node_name: *oksangarak_threeri
-        arrival_time: "19:11"
-      - node_name: *cheongju_station
-        arrival_time: "19:14"
-      - node_name: *heungduck_highschool
-        arrival_time: "19:18"
-      - node_name: *busterminal_reverse
-        arrival_time: "19:23"
-      - node_name: *samil_apt
-        arrival_time: "19:28"
-      - node_name: *gaesin_puruzio
-        arrival_time: "19:29"
-      - node_name: *KBS_reverse
-        arrival_time: "19:33"
-      - node_name: *chungbuk_university_hospital
-        arrival_time: "19:34"
-      - node_name: *chungbuk_nonghyup
-        arrival_time: "19:38"
-      - node_name: *sannam_sugok
-        arrival_time: "19:40"
-      - node_name: *sannam_sugok
-        arrival_time: "19:42"
-      - node_name: *namsung_elementry
-        arrival_time: "19:45"
-      - node_name: *electronic_land
-        arrival_time: "19:47"

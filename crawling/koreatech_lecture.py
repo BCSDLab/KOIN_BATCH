@@ -28,7 +28,7 @@ class ColumnNames(Enum):
     CLASS_NUMBER = ["분반"]
     REGULAR_NUMBER = ["수강\n정원", "수정\n정원", "정원"]
     DEPARTMENT = ["개설학부(과)"]
-    TARGET = ["수강신청\n가능학년", "수강대상 (학부/전공/학년)"]
+    TARGET = ["수강신청\n가능학년", "수강대상 (학부/전공/학년)", "대상학부(과)"]
     PROFESSOR = ["담당교수"]
     IS_ENGLISH = ["영어강의"]
     DESIGN_SCORE = ["설\n계", "설계"]
