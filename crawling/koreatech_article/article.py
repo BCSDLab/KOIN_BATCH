@@ -1,7 +1,7 @@
 from typing import Optional, List
 
-from config import MYSQL_CONFIG
-from config import BATCH_CONFIG
+from crawling.config import MYSQL_CONFIG
+from crawling.config import BATCH_CONFIG
 
 from emoji import core
 import requests
@@ -10,7 +10,7 @@ import urllib3
 import pymysql
 
 from delete_article import delete_article
-from table import replace_table
+from table import replace_table, upload_txt
 from login_v2 import login
 from login import get_jwt_token
 from slack_notice import filter_nas, notice_to_slack
@@ -284,6 +284,10 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
 
     # 표 처리
     # content = replace_table(content, board, num)
+
+    # content s3 업로드 및 url 삽입
+    file_name = f'articles/content/board_{board.id}/article_{num}.txt'
+    content = upload_txt(file_name=file_name, text_content=content)
 
     # ===== 첨부 파일 =====
     attachment = list(map(
