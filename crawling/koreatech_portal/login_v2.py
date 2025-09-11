@@ -1,7 +1,7 @@
 import requests
 import config
 
-LOGIN_COOKIE_NAME = '__KSMSID__'
+LOGIN_COOKIE_NAME = 'JSESSIONID'
 
 
 def portal_login():
@@ -46,8 +46,8 @@ def portal_login():
         headers=headers
     )
 
-    return {cookie.name: cookie.value for cookie in session.cookies}
+    return session.cookies
 
 
 if __name__ == '__main__':
-    print(portal_login()['__KSMSID__'])
+    print(portal_login().get("JSESSIONID", domain="kut90.koreatech.ac.kr"))
