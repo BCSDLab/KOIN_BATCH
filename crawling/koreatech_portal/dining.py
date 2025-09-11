@@ -77,7 +77,7 @@ def print_flush(target):
 # 아우누리 포탈에 식단 정보 요청
 def send_request(login_cookie, eat_date, eat_type, restaurant, campus):
     headers = {"Content-Type": "text/xml; charset=utf-8"}
-    cookies = {"__KSMSID__": f"{login_cookie};Domain=koreatech.ac.kr;"}
+    cookies = {"JSESSIONID": f"{login_cookie};Domain=kut90.koreatech.ac.kr;"}
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
     <Root xmlns="http://www.nexacroplatform.com/platform/dataset">
         <Parameters>
@@ -151,7 +151,7 @@ def connect_mysql():
 def get_cookie():
     # redis 캐시 조회
     global redis_client
-    login_cookie = redis_client.get('__KSMSID__')
+    login_cookie = redis_client.get('JSESSIONID')
     if login_cookie:
         login_cookie = login_cookie.decode("utf-8")
         try:
@@ -161,8 +161,8 @@ def get_cookie():
             pass
 
     # 아우누리 로그인하여 쿠키 취득
-    login_cookie = portal_login()['__KSMSID__']
-    redis_client.set('__KSMSID__', login_cookie)
+    login_cookie = portal_login().get('JSESSIONID', domain='kut90.koreatech.ac.kr')
+    redis_client.set('JSESSIONID', login_cookie)
     return login_cookie
 
 
