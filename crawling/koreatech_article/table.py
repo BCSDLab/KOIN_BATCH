@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from base64 import b64decode
 import boto3
 
-from crawling.config import S3_CONFIG
+from config import S3_CONFIG
 
 
 def replace_table(content: str, board, article_id: int) -> str:

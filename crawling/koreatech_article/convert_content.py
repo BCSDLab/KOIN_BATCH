@@ -2,7 +2,7 @@ import pymysql
 import urllib3
 import uuid
 
-from crawling.config import MYSQL_CONFIG
+from config import MYSQL_CONFIG
 from table import upload_txt
 
 
