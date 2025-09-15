@@ -1,5 +1,6 @@
 import pymysql
 import urllib3
+import uuid
 
 from crawling.config import MYSQL_CONFIG
 from table import upload_txt
@@ -19,7 +20,7 @@ def connect_db():
 def convert_content_to_url(connection):
     cur = connection.cursor()
     batch_size = 500
-    offset = 0
+    last_id = 0
     total_articles = 0
 
     while True:
@@ -27,9 +28,12 @@ def convert_content_to_url(connection):
             cur.execute("""
                 SELECT `id`, `board_id`, `content`
                 FROM `new_articles`
-                WHERE `content` IS NOT NULL AND `board_id` != 14
-                LIMIT %s OFFSET %s
-            """, (batch_size, offset))
+                WHERE `content` IS NOT NULL
+                    AND `board_id` != 14
+                    AND `id` > %s
+                ORDER BY `id` ASC
+                LIMIT %s
+            """, (last_id, batch_size))
 
             articles = cur.fetchall()
             if not articles:
@@ -37,7 +41,8 @@ def convert_content_to_url(connection):
 
             for article in articles:
                 article_id, board_id, content = article
-                file_name = f'articles/content/board_{board_id}/article_{article_id}.txt'
+                random_uuid = str(uuid.uuid4().hex)
+                file_name = f'articles/content/board_{board_id}/{random_uuid}.txt'
                 content_url = upload_txt(file_name=file_name, text_content=content)
 
                 update_cur = connection.cursor()
@@ -51,8 +56,9 @@ def convert_content_to_url(connection):
 
                 total_articles += 1
 
+            last_id = articles[-1]['id']
+
             connection.commit()
-            offset += batch_size
 
         except Exception as error:
             connection.rollback()
