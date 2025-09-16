@@ -19,7 +19,7 @@ def connect_db():
 
 def convert_content_to_url(connection):
     cur = connection.cursor()
-    batch_size = 5
+    batch_size = 500
     last_id = 0
     total_articles = 0
 
