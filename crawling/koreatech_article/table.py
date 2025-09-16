@@ -106,6 +106,7 @@ def upload_image(s3, file_name: str, image: bytes) -> str:
 
     return f'{S3_CONFIG["upload_domain"]}/{file_name}'
 
+
 def upload_txt(file_name: str, text_content: str) -> str:
     s3 = boto3.client(
         service_name='s3',
