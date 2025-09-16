@@ -23,8 +23,8 @@ def convert_content_to_url(connection):
     last_id = 0
     total_articles = 0
 
-    while True:
-        try:
+    try:
+        while True:
             cur.execute("""
                 SELECT `id`, `board_id`, `content`
                 FROM `new_articles`
@@ -60,12 +60,12 @@ def convert_content_to_url(connection):
 
             connection.commit()
 
-        except Exception as error:
-            connection.rollback()
-            print(error)
-        finally:
-            cur.close()
-            print(f"total articles: {total_articles}")
+    except Exception as error:
+        connection.rollback()
+        print(error)
+    finally:
+        cur.close()
+        print(f"total articles: {total_articles}")
 
 
 if __name__ == "__main__":
