@@ -1,7 +1,7 @@
 from typing import Optional, List
 
-from crawling.config import MYSQL_CONFIG
-from crawling.config import BATCH_CONFIG
+from config import MYSQL_CONFIG
+from config import BATCH_CONFIG
 
 from emoji import core
 import requests
