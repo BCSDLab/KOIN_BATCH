@@ -19,7 +19,7 @@ def connect_db():
 
 def convert_content_to_url(connection):
     cur = connection.cursor()
-    batch_size = 500
+    batch_size = 5
     last_id = 0
     total_articles = 0
 
@@ -56,8 +56,7 @@ def convert_content_to_url(connection):
 
                 total_articles += 1
 
-            last_id = articles[-1]['id']
-
+            last_id = articles[-1][0]
             connection.commit()
 
     except Exception as error:
