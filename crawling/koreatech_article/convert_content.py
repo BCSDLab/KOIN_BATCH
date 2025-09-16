@@ -56,8 +56,7 @@ def convert_content_to_url(connection):
 
                 total_articles += 1
 
-            last_id = articles[-1]['id']
-
+            last_id = articles[-1][0]
             connection.commit()
 
     except Exception as error:
