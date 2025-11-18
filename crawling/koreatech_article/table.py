@@ -105,3 +105,27 @@ def upload_image(s3, file_name: str, image: bytes) -> str:
         print(e)
 
     return f'{S3_CONFIG["upload_domain"]}/{file_name}'
+
+
+def upload_txt(file_name: str, text_content: str) -> str:
+    s3 = boto3.client(
+        service_name='s3',
+        aws_access_key_id=S3_CONFIG['aws_access_key_id'],
+        aws_secret_access_key=S3_CONFIG['aws_secret_access_key'],
+    )
+    encoded_text = text_content.encode('utf-8')
+
+    try:
+        s3.upload_fileobj(
+            Fileobj=BytesIO(encoded_text),
+            Bucket=S3_CONFIG['bucket'],
+            Key=file_name,
+            ExtraArgs={
+                'ContentType': 'text/plain; charset=utf-8',
+                'ACL': 'public-read'
+            }
+        )
+    except Exception as e:
+        print(e)
+
+    return f'{S3_CONFIG["upload_domain"]}/{file_name}'
