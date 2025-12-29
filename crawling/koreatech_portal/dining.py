@@ -32,6 +32,16 @@ redis_client = None
 mysql_connection = None
 KST = pytz.timezone('Asia/Seoul')
 
+LOGIN_COOKIES = [
+    {
+        'name': 'JSESSIONID',
+        'domain': 'kut90.koreatech.ac.kr',
+    },
+    {
+        'name': '__KSMSID__',
+        'domain': '.koreatech.ac.kr',
+    }
+]
 
 # 식단 메뉴 정보를 담는 클래스
 class MenuEntity:
@@ -75,9 +85,9 @@ def print_flush(target):
 
 
 # 아우누리 포탈에 식단 정보 요청
-def send_request(login_cookie, eat_date, eat_type, restaurant, campus):
+def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
     headers = {"Content-Type": "text/xml; charset=utf-8"}
-    cookies = {"JSESSIONID": f"{login_cookie};Domain=kut90.koreatech.ac.kr;"}
+    cookies = {cookie['name']: f"{login_cookies[cookie['name']]};Domain={cookie['domain']}" for cookie in LOGIN_COOKIES}
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
     <Root xmlns="http://www.nexacroplatform.com/platform/dataset">
         <Parameters>
@@ -151,18 +161,21 @@ def connect_mysql():
 def get_cookie():
     # redis 캐시 조회
     global redis_client
-    login_cookie = redis_client.get('JSESSIONID')
-    if login_cookie:
-        login_cookie = login_cookie.decode("utf-8")
-        try:
-            send_request(login_cookie, datetime.today().strftime("%Y-%m-%d"), "lunch", "한식", "Campus1")
-            return login_cookie
-        except ConnectionError:
-            pass
+    login_cookie = {cookie['name']: redis_client.get(cookie['name']) for cookie in LOGIN_COOKIES}
+    for name in login_cookie:
+        if not login_cookie[name]: continue
+        login_cookie[name] = login_cookie[name].decode("utf-8")
+    try:
+        send_request(login_cookie, datetime.today().strftime("%Y-%m-%d"), "lunch", "한식", "Campus1")
+        return login_cookie
+    except ConnectionError:
+        pass
 
     # 아우누리 로그인하여 쿠키 취득
-    login_cookie = portal_login().get('JSESSIONID', domain='kut90.koreatech.ac.kr')
-    redis_client.set('JSESSIONID', login_cookie)
+    cookies = portal_login()
+    login_cookie = {cookie['name']: cookies.get(cookie['name'], domain=cookie['domain']) for cookie in LOGIN_COOKIES}
+    for cookie in LOGIN_COOKIES:
+        redis_client.set(cookie['name'], login_cookie[cookie['name']])
     return login_cookie
 
 
