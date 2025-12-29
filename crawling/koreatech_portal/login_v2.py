@@ -51,3 +51,4 @@ def portal_login():
 
 if __name__ == '__main__':
     print(portal_login().get("JSESSIONID", domain="kut90.koreatech.ac.kr"))
+    print(portal_login().get("__KSMSID__", domain=".koreatech.ac.kr"))
