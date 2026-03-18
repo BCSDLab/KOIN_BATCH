@@ -1,31 +1,11 @@
-MYSQL_CONFIG = {
-    'host': '',
-    'db': '',
-    'user': '',
-    'password': '',
-    'port': 3306
-}
+import importlib.util
+import os
 
-PORTAL_CONFIG = {
-    'id': '',
-    'password': '',
-    'ip': ''
-}
+_parent_config = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'config.py')
+_spec = importlib.util.spec_from_file_location('_central_config', _parent_config)
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
 
-S3_CONFIG = {
-    'aws_access_key_id': '',
-    'aws_secret_access_key': '',
-    'bucket': '',
-    'upload_domain': ''
-}
-
-SLACK_CONFIG = {
-    'url': ''
-}
-
-BATCH_CONFIG = {
-    'email': '',  
-    'password': '',  
-    'token_url': '',  # 토큰 발급 API URL
-    'notification_api_url': '',  # 알림 API URL
-}
+for _name in dir(_mod):
+    if not _name.startswith('_'):
+        globals()[_name] = getattr(_mod, _name)
