@@ -27,7 +27,7 @@ jobs:
 
       - name: Create tar archive
         run: |
-          tar -cvzf /tmp/batch.tar.gz --exclude='.git' --exclude='.github' --exclude='.gitignore' .
+          tar -cvzf batch.tar.gz --exclude='.git' --exclude='.github' --exclude='.gitignore' . || true
 
       - name: Transfer archive via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -36,8 +36,7 @@ jobs:
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_SSH_PORT }}
-          source: /tmp/batch.tar.gz
-          strip_components: 1
+          source: batch.tar.gz
           target: ${{ secrets.PROD_DEPLOY_PATH }}
 
       - name: Run deploy script via SSH
