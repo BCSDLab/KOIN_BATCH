@@ -28,7 +28,7 @@ jobs:
 
       - name: Create tar archive
         run: |
-          tar -cvzf batch.tar.gz --exclude='.git' --exclude='.github' .
+          tar -cvzf batch.tar.gz --exclude='.git' --exclude='.github' --exclude='.gitignore' --exclude='*.tar.gz' .
 
       - name: Transfer archive via SCP
         uses: appleboy/scp-action@v0.1.7
