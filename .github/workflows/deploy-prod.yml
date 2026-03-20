@@ -17,7 +17,7 @@ jobs:
 
       - name: Notify Slack deploy started
         run: |
-          curl -s -X POST "${{ secrets.PROD_SLACK_DEPLOY_WEBHOOK_URL }}" \
+          curl -s -X POST "${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }}" \
             -H 'Content-Type: application/json' \
             -d '{
               "text": ":rocket: *[Production] 배포 시작*\n• *Repo:* ${{ github.repository }}\n• *Branch:* ${{ github.ref_name }}\n• *Author:* ${{ github.actor }}\n• *Commit:* `${{ github.sha }}`\n• *Actions:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|워크플로우 확인>"
