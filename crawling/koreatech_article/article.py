@@ -3,7 +3,6 @@ from typing import Optional, List
 from config import MYSQL_CONFIG
 from config import BATCH_CONFIG
 
-from emoji import core
 import requests
 from bs4 import BeautifulSoup, Comment
 import urllib3
@@ -403,16 +402,11 @@ def update_db(articles):
     cur = connection.cursor()
 
     for article in articles:
-        article.title = core.replace_emoji(article.title, replace='')
         article.title = article.title.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
 
-        article.content = core.replace_emoji(article.content, replace='')
         article.content = article.content.replace("'", """''""")  # sql문에서 작은따옴표 이스케이프 처리
 
         article.author = core.replace_emoji(article.author, replace='')
-
-        for attachment in article.attachment:
-            attachment.name = core.replace_emoji(attachment.name, replace='')
 
         article.registered_at = parser.parse(article.registered_at).strftime("%Y-%m-%d %H:%M:%S")
 
