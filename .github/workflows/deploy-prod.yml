@@ -22,7 +22,7 @@ jobs:
           curl -X POST ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }} \
             -H 'Content-Type: application/json' \
             -d "{
-              \"text\": \":rocket: *[Develop] 배포 시작*\n• Repo: ${{ github.repository }}\n• Branch: develop\n• Author: @${{ github.actor }}\n• Commit: ${COMMIT_MSG}\n• <${ACTIONS_URL}|Actions 보기>\"
+              \"text\": \":rocket: *[Production] 배포 시작*\n• Repo: ${{ github.repository }}\n• Branch: develop\n• Author: @${{ github.actor }}\n• Commit: ${COMMIT_MSG}\n• <${ACTIONS_URL}|Actions 보기>\"
             }"
 
       - name: Create tar archive
