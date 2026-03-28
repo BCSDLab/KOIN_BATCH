@@ -1,0 +1,70 @@
+name: KOIN_BATCH CD (stage)
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Record start time
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Notify Slack - Deploy Start
+        env:
+          ACTIONS_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%s HEAD)
+          curl -X POST ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"text\": \":rocket: *[Develop] 배포 시작*\n• Repo: ${{ github.repository }}\n• Branch: develop\n• Author: @${{ github.actor }}\n• Commit: ${COMMIT_MSG}\n• <${ACTIONS_URL}|Actions 보기>\"
+            }"
+
+      - name: Create tar archive
+        run: |
+          tar -cvzf batch.tar.gz --exclude='.git' --exclude='.github' --exclude='.gitignore' . || true
+
+      - name: Transfer archive via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGE_SSH_HOST }}
+          username: ${{ secrets.STAGE_SSH_USER }}
+          key: ${{ secrets.STAGE_SSH_KEY }}
+          port: ${{ secrets.STAGE_SSH_PORT }}
+          source: batch.tar.gz
+          target: ${{ secrets.STAGE_DEPLOY_PATH }}
+
+      - name: Run deploy script via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGE_SSH_HOST }}
+          username: ${{ secrets.STAGE_SSH_USER }}
+          key: ${{ secrets.STAGE_SSH_KEY }}
+          port: ${{ secrets.STAGE_SSH_PORT }}
+          script: bash ${{ secrets.STAGE_DEPLOY_SCRIPT_PATH }}
+
+      - name: Notify Slack - Deploy Result
+        if: always()
+        env:
+          ACTIONS_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%s HEAD)
+          DURATION_SEC=$(( $(date +%s) - START_TIME ))
+          DURATION="${DURATION_SEC}초 (약 $(( DURATION_SEC / 60 ))분)"
+          if [ "${{ job.status }}" = "success" ]; then
+            ICON=":white_check_mark:"
+            STATUS="배포 성공"
+          else
+            ICON=":x:"
+            STATUS="배포 실패"
+          fi
+          curl -X POST ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"text\": \"${ICON} *[Develop] ${STATUS}*\n• Repo: ${{ github.repository }}\n• Branch: develop\n• Author: @${{ github.actor }}\n• Commit: ${COMMIT_MSG}\n• Duration: ${DURATION}\n• <${ACTIONS_URL}|Actions 보기>\"
+            }"
