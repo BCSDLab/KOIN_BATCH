@@ -66,5 +66,5 @@ jobs:
           curl -X POST ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }} \
             -H 'Content-Type: application/json' \
             -d "{
-              \"text\": \"${ICON} *[Develop] ${STATUS}*\n• Repo: ${{ github.repository }}\n• Branch: develop\n• Author: @${{ github.actor }}\n• Commit: ${COMMIT_MSG}\n• Duration: ${DURATION}\n• <${ACTIONS_URL}|Actions 보기>\"
+              \"text\": \"${ICON} *[Production] ${STATUS}*\n• Repo: ${{ github.repository }}\n• Branch: develop\n• Author: @${{ github.actor }}\n• Commit: ${COMMIT_MSG}\n• Duration: ${DURATION}\n• <${ACTIONS_URL}|Actions 보기>\"
             }"
