@@ -87,7 +87,7 @@ def print_flush(target):
 # 아우누리 포탈에 식단 정보 요청
 def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
     headers = {"Content-Type": "text/xml; charset=utf-8"}
-    cookies = {cookie['name']: f"{login_cookies[cookie['name']]};Domain={cookie['domain']}" for cookie in LOGIN_COOKIES}
+    cookies = {cookie['name']: login_cookies.get(cookie['name']) for cookie in LOGIN_COOKIES}
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
     <Root xmlns="http://www.nexacroplatform.com/platform/dataset">
         <Parameters>
@@ -125,7 +125,13 @@ def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
     if error_code and error_code.text == '0':
         return response
     # 잘못된 쿠키 사용 예외 던지기
-    raise ConnectionError("식단 요청 실패")
+    snippet = re.sub(r'\s+', ' ', response.text).strip()[:300]
+    raise ConnectionError(
+        "식단 요청 실패 "
+        f"status={response.status_code}, date={eat_date}, type={eat_type}, "
+        f"restaurant={restaurant}, campus={campus}, error_code={error_code.text if error_code else None}, "
+        f"body={snippet}"
+    )
 
 
 # 레디스 연결
@@ -159,25 +165,37 @@ def connect_mysql():
 
 
 # 로그인 쿠키 취득
-def get_cookie():
+def get_cookie(force_refresh=False):
     # redis 캐시 조회
     global redis_client
-    login_cookie = {cookie['name']: redis_client.get(cookie['name']) for cookie in LOGIN_COOKIES}
-    for name in login_cookie:
-        if not login_cookie[name]: continue
-        login_cookie[name] = login_cookie[name].decode("utf-8")
-    try:
-        send_request(login_cookie, datetime.today().strftime("%Y-%m-%d"), "lunch", "한식", "Campus1")
-        return login_cookie
-    except ConnectionError:
-        pass
+    if not force_refresh:
+        login_cookie = {cookie['name']: redis_client.get(cookie['name']) for cookie in LOGIN_COOKIES}
+        for name in login_cookie:
+            if not login_cookie[name]: continue
+            login_cookie[name] = login_cookie[name].decode("utf-8")
+        try:
+            send_request(login_cookie, datetime.today().strftime("%Y-%m-%d"), "lunch", "한식", "Campus1")
+            return login_cookie
+        except ConnectionError as error:
+            print_flush(f"저장된 포털 쿠키 사용 실패: {error}")
 
     # 아우누리 로그인하여 쿠키 취득
     cookies = portal_login()
     login_cookie = {cookie['name']: cookies.get(cookie['name'], domain=cookie['domain']) for cookie in LOGIN_COOKIES}
+    if any(login_cookie[cookie['name']] is None for cookie in LOGIN_COOKIES):
+        raise ConnectionError(f"포털 로그인 쿠키 취득 실패: {login_cookie}")
     for cookie in LOGIN_COOKIES:
         redis_client.set(cookie['name'], login_cookie[cookie['name']])
     return login_cookie
+
+
+def request_menu(cookie, date, eat_type, restaurant, campus):
+    try:
+        return send_request(cookie, date, eat_type, restaurant, campus)
+    except ConnectionError as error:
+        print_flush(f"식단 요청 실패, 포털 쿠키 재발급 후 재시도: {error}")
+        refreshed_cookie = get_cookie(force_refresh=True)
+        return send_request(refreshed_cookie, date, eat_type, restaurant, campus)
 
 
 # 식단 정보 파싱
@@ -397,10 +415,10 @@ def get_menus(target_date: datetime, target_time: str = None):
         if target_time and eat_type != target_time:
             continue
         for restaurant in restaurants:
-            menu_data = parse_response(send_request(cookie, date, eat_type, restaurant, "Campus1"))
+            menu_data = parse_response(request_menu(cookie, date, eat_type, restaurant, "Campus1"))
             if menu_data:
                 menus.append(menu_data)
-        menu_data = parse_response(send_request(cookie, date, eat_type, "코너1", "Campus2"))
+        menu_data = parse_response(request_menu(cookie, date, eat_type, "코너1", "Campus2"))
         if menu_data:
             menus.append(menu_data)
 
