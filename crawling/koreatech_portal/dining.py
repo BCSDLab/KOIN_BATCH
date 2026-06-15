@@ -31,6 +31,7 @@ from login_v2 import portal_login
 redis_client = None
 mysql_connection = None
 KST = pytz.timezone('Asia/Seoul')
+PORTAL_PROGRAM_URL = "https://kut90.koreatech.ac.kr/ssoLogin_ext.jsp?&PGM_ID=CO::CO0998W&locale=ko"
 
 LOGIN_COOKIES = [
     {
@@ -100,8 +101,15 @@ def print_cookie_log(message, cookies):
 
 # 아우누리 포탈에 식단 정보 요청
 def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
-    headers = {"Content-Type": "text/xml; charset=utf-8"}
-    cookies = {cookie['name']: f"{login_cookies[cookie['name']]};Domain={cookie['domain']}" for cookie in LOGIN_COOKIES}
+    headers = {
+        "Content-Type": "text/xml; charset=utf-8",
+        "Referer": PORTAL_PROGRAM_URL,
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+        "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+        "X-Forwarded-For": config.PORTAL_CONFIG["ip"],
+        "X-Real-IP": config.PORTAL_CONFIG["ip"],
+    }
+    cookies = {cookie['name']: login_cookies[cookie['name']] for cookie in LOGIN_COOKIES}
     print_cookie_log(
         f"식단 요청 쿠키 전달 확인 date={eat_date}, type={eat_type}, restaurant={restaurant}, campus={campus}",
         cookies
@@ -131,7 +139,8 @@ def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
         </Dataset>
     </Root>""".encode("utf-8")
 
-    response = requests.post(
+    response = requests.request(
+        "GET",
         "https://kut90.koreatech.ac.kr/nexacroController.do",
         headers=headers,
         cookies=cookies,
@@ -140,7 +149,8 @@ def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
     print_flush(f"식단 요청 응답 status={response.status_code}, content_type={response.headers.get('Content-Type')}")
 
     soup = BeautifulSoup(response.text, 'lxml-xml')
-    if soup.find("Parameter", {"id": "ErrorCode"}).text == '0':
+    error_code = soup.find("Parameter", {"id": "ErrorCode"})
+    if error_code and error_code.text == '0':
         return response
     # 잘못된 쿠키 사용 예외 던지기
     raise ConnectionError("식단 요청 실패")
@@ -177,6 +187,25 @@ def connect_mysql():
 
 
 # 로그인 쿠키 취득
+def extract_login_cookie(cookies):
+    login_cookie = {}
+    for cookie in LOGIN_COOKIES:
+        if hasattr(cookies, "get"):
+            try:
+                value = cookies.get(cookie['name'], domain=cookie['domain'])
+            except TypeError:
+                value = cookies.get(cookie['name'])
+        else:
+            value = None
+        login_cookie[cookie['name']] = value
+    return login_cookie
+
+
+def validate_login_cookie(login_cookie):
+    send_request(login_cookie, datetime.today().strftime("%Y-%m-%d"), "lunch", "한식", "Campus1")
+    return login_cookie
+
+
 def get_cookie():
     # redis 캐시 조회
     global redis_client
@@ -186,15 +215,18 @@ def get_cookie():
         login_cookie[name] = login_cookie[name].decode("utf-8")
     print_cookie_log("Redis 포털 쿠키 조회 결과", login_cookie)
     try:
-        send_request(login_cookie, datetime.today().strftime("%Y-%m-%d"), "lunch", "한식", "Campus1")
+        validate_login_cookie(login_cookie)
         return login_cookie
     except ConnectionError:
         pass
 
-    # 아우누리 로그인하여 쿠키 취득
     cookies = portal_login()
-    login_cookie = {cookie['name']: cookies.get(cookie['name'], domain=cookie['domain']) for cookie in LOGIN_COOKIES}
+    login_cookie = extract_login_cookie(cookies)
     print_cookie_log("포털 로그인 신규 쿠키 취득 결과", login_cookie)
+    if not all(login_cookie.values()):
+        raise ConnectionError("포털 로그인 쿠키 취득 실패")
+
+    validate_login_cookie(login_cookie)
     for cookie in LOGIN_COOKIES:
         redis_client.set(cookie['name'], login_cookie[cookie['name']])
     return login_cookie
