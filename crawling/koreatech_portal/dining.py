@@ -121,7 +121,8 @@ def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
     )
 
     soup = BeautifulSoup(response.text, 'lxml-xml')
-    if soup.find("Parameter", {"id": "ErrorCode"}).text == '0':
+    error_code = soup.find("Parameter", {"id": "ErrorCode"})
+    if error_code and error_code.text == '0':
         return response
     # 잘못된 쿠키 사용 예외 던지기
     raise ConnectionError("식단 요청 실패")
