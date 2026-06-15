@@ -9,13 +9,7 @@ def portal_login():
 
     headers = {
         "X-Forwarded-For": config.PORTAL_CONFIG["ip"],
-        "X-Real-IP": config.PORTAL_CONFIG["ip"],
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/88.0.4324.150 Safari/537.36"
-        ),
+        "X-Real-IP": config.PORTAL_CONFIG["ip"]
     }
 
     payload = {
