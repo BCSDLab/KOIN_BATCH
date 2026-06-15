@@ -86,7 +86,19 @@ def print_flush(target):
 
 # 아우누리 포탈에 식단 정보 요청
 def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
-    headers = {"Content-Type": "text/xml; charset=utf-8"}
+    headers = {
+        "Content-Type": "text/xml; charset=utf-8",
+        "Accept": "application/xml, text/xml, */*; q=0.01",
+        "Origin": "https://kut90.koreatech.ac.kr",
+        "Referer": "https://kut90.koreatech.ac.kr/",
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/88.0.4324.150 Safari/537.36"
+        ),
+        "X-Forwarded-For": config.PORTAL_CONFIG["ip"],
+        "X-Real-IP": config.PORTAL_CONFIG["ip"],
+    }
     cookies = {cookie['name']: login_cookies.get(cookie['name']) for cookie in LOGIN_COOKIES}
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
     <Root xmlns="http://www.nexacroplatform.com/platform/dataset">
