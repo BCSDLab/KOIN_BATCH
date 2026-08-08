@@ -62,13 +62,25 @@ def send_message(body, webhook_url=None):
         print(e)
 
 
-def notice_to_slack(articles):
+def notice_to_slack(articles, notice_type):
+    notice_emoji = {
+        "bus": ":Bus:",
+        "coop": ":meat_on_bone:",
+        "lecture": ":books:"
+    }
+
+    notice_name = {
+        "bus": "버스",
+        "coop": "생협",
+        "lecture": "강의"
+    }
+
     blocks = [
         {
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": "버스 공지 :Bus:",
+                "text": f"{notice_name[notice_type]} 공지 {notice_emoji[notice_type]}",
                 "emoji": True
             }
         },
