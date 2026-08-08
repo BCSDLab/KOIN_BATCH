@@ -1,4 +1,5 @@
 import argparse
+import json
 import config
 import requests
 from datetime import date
@@ -134,8 +135,8 @@ def notice_lecture_update(article_id):
                             "emoji": True
                         },
                         "style": "primary",
-                        "action_id": "lecture_update_yes",
-                        "value": str(article_id)
+                        "action_id": "lecture:detected",
+                        "value": json.dumps({"article_id": article_id})
                     },
                     {
                         "type": "button",
@@ -144,8 +145,8 @@ def notice_lecture_update(article_id):
                             "text": "아니요",
                             "emoji": True
                         },
-                        "action_id": "lecture_update_no",
-                        "value": str(article_id)
+                        "action_id": "lecture:detected_ignore",
+                        "value": json.dumps({"article_id": article_id})
                     }
                 ]
             }
