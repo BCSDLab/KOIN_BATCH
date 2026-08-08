@@ -537,6 +537,8 @@ if __name__ == "__main__":
 
             articles = []
             bus_articles = []
+            coop_articles = []
+            lecture_articles = []
             new_articles = []
 
             connection = connect_db()
@@ -555,10 +557,12 @@ if __name__ == "__main__":
 
                 articles.extend(board_articles)
 
-                # 버스 알림
+                # 버스/생협/강의 알림
                 if board.is_notice:
                     # DB에 없고, 키워드가 들어있는 게시글 필터링
                     bus_articles.extend(filter_nas(connection, board_articles, keywords={"버스", "bus"}))
+                    coop_articles.extend(filter_nas(connection, board_articles, keywords={"생협"}))
+                    lecture_articles.extend(filter_nas(connection, board_articles, keywords={"수강신청"}, exclude_keywords={"철회", "학사경고자"}))
 
                 new_articles.extend(filter_nas(connection, board_articles))
 
@@ -569,7 +573,20 @@ if __name__ == "__main__":
         finally:
             try:
                 if bus_articles:
-                    notice_to_slack(bus_articles)
+                    notice_to_slack(bus_articles, "bus")
+
+            except Exception as error:
+                raise error
+            try:
+                if coop_articles:
+                    notice_to_slack(coop_articles, "coop")
+
+            except Exception as error:
+                raise error
+            try:
+                if lecture_articles:
+                    notice_to_slack(lecture_articles, "lecture")
+
             except Exception as error:
                 raise error
             finally:
