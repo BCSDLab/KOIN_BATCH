@@ -160,6 +160,9 @@ def notice_article_update(article_id, notice_name, action_prefix):
     response.raise_for_status()
     return response
 
+def notice_bus_update(article_id):
+    return notice_article_update(article_id, notice_name="버스", action_prefix="bus")
+
 
 def notice_lecture_update(article_id):
     return notice_article_update(article_id, notice_name="강의", action_prefix="lecture")
@@ -181,12 +184,13 @@ def main():
     parser.add_argument("id", type=positive_int, help="KOIN 게시글 ID")
     parser.add_argument(
         "category",
-        choices=("lecture", "coop"),
+        choices=("bus", "lecture", "coop"),
         help="공지 종류"
     )
     args = parser.parse_args()
 
     notice_functions = {
+        "bus": notice_bus_update,
         "lecture": notice_lecture_update,
         "coop": notice_coop_update,
     }
