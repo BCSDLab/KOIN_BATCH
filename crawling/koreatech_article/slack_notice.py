@@ -105,11 +105,11 @@ def notice_to_slack(articles):
     send_message({"blocks": blocks})
 
 
-def notice_lecture_update(article_id):
+def notice_article_update(article_id, notice_name, action_prefix):
     article_url = f"https://koreatech.in/articles/{article_id}"
     body = {
         "text": (
-            f"강의 공지가 올라왔어요. 게시글 링크: {article_url}\n"
+            f"{notice_name} 공지가 올라왔어요. 게시글 링크: {article_url}\n"
             "업데이트 작업을 진행할까요?"
         ),
         "blocks": [
@@ -118,7 +118,7 @@ def notice_lecture_update(article_id):
                 "text": {
                     "type": "mrkdwn",
                     "text": (
-                        "강의 공지가 올라왔어요. "
+                        f"{notice_name} 공지가 올라왔어요. "
                         f"<{article_url}|게시글 링크>\n"
                         "업데이트 작업을 진행할까요?"
                     )
@@ -135,7 +135,7 @@ def notice_lecture_update(article_id):
                             "emoji": True
                         },
                         "style": "primary",
-                        "action_id": "lecture:detected",
+                        "action_id": f"{action_prefix}:detected",
                         "value": json.dumps({"article_id": article_id})
                     },
                     {
@@ -145,7 +145,7 @@ def notice_lecture_update(article_id):
                             "text": "아니요",
                             "emoji": True
                         },
-                        "action_id": "lecture:detected_ignore",
+                        "action_id": f"{action_prefix}:detected_ignore",
                         "value": json.dumps({"article_id": article_id})
                     }
                 ]
@@ -161,6 +161,14 @@ def notice_lecture_update(article_id):
     return response
 
 
+def notice_lecture_update(article_id):
+    return notice_article_update(article_id, notice_name="강의", action_prefix="lecture")
+
+
+def notice_coop_update(article_id):
+    return notice_article_update(article_id, notice_name="생협", action_prefix="coop")
+
+
 def positive_int(value):
     article_id = int(value)
     if article_id <= 0:
@@ -169,11 +177,20 @@ def positive_int(value):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="강의 공지 업데이트 여부를 Slack에 알립니다.")
+    parser = argparse.ArgumentParser(description="공지 업데이트 여부를 Slack에 알립니다.")
     parser.add_argument("id", type=positive_int, help="KOIN 게시글 ID")
+    parser.add_argument(
+        "category",
+        choices=("lecture", "coop"),
+        help="공지 종류"
+    )
     args = parser.parse_args()
 
-    notice_lecture_update(args.id)
+    notice_functions = {
+        "lecture": notice_lecture_update,
+        "coop": notice_coop_update,
+    }
+    notice_functions[args.category](args.id)
 
 
 if __name__ == "__main__":
