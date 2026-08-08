@@ -1,3 +1,4 @@
+import argparse
 import config
 import requests
 from datetime import date
@@ -38,9 +39,9 @@ def filter_nas(connection, nas, keywords=None):
     return need_notice
 
 
-def send_message(body):
+def send_message(body, webhook_url=None):
     try:
-        url = config.SLACK_CONFIG["url"]
+        url = webhook_url or config.SLACK_CONFIG["url"]
         header = {'Content-type': 'application/json'}
 
         print(body)
@@ -101,3 +102,78 @@ def notice_to_slack(articles):
         blocks[1]["elements"][0]["elements"].append(section)
 
     send_message({"blocks": blocks})
+
+
+def notice_lecture_update(article_id):
+    article_url = f"https://koreatech.in/articles/{article_id}"
+    body = {
+        "text": (
+            f"강의 공지가 올라왔어요. 게시글 링크: {article_url}\n"
+            "업데이트 작업을 진행할까요?"
+        ),
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": (
+                        "강의 공지가 올라왔어요. "
+                        f"<{article_url}|게시글 링크>\n"
+                        "업데이트 작업을 진행할까요?"
+                    )
+                }
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "예",
+                            "emoji": True
+                        },
+                        "style": "primary",
+                        "action_id": "lecture_update_yes",
+                        "value": str(article_id)
+                    },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "아니요",
+                            "emoji": True
+                        },
+                        "action_id": "lecture_update_no",
+                        "value": str(article_id)
+                    }
+                ]
+            }
+        ]
+    }
+
+    response = send_message(body, webhook_url=config.SLACK_CONFIG["test_url"])
+    if response is None:
+        raise RuntimeError("Slack 메시지를 전송하지 못했습니다.")
+
+    response.raise_for_status()
+    return response
+
+
+def positive_int(value):
+    article_id = int(value)
+    if article_id <= 0:
+        raise argparse.ArgumentTypeError("id는 1 이상의 정수여야 합니다.")
+    return article_id
+
+
+def main():
+    parser = argparse.ArgumentParser(description="강의 공지 업데이트 여부를 Slack에 알립니다.")
+    parser.add_argument("id", type=positive_int, help="KOIN 게시글 ID")
+    args = parser.parse_args()
+
+    notice_lecture_update(args.id)
+
+
+if __name__ == "__main__":
+    main()

@@ -20,7 +20,8 @@ S3_CONFIG = {
 }
 
 SLACK_CONFIG = {
-    'url': ''
+    'url': '',
+    'test_url': ''
 }
 
 BATCH_CONFIG = {
