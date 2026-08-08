@@ -19,13 +19,19 @@ def connect_db():
     return conn
 
 
-def filter_nas(connection, nas, keywords=None):
+def filter_nas(connection, nas, keywords=None, exclude_keywords=None):
 
     articles = tuple(nas)
 
-    # 키워드가 포함된 게시글 필터링
+    # 키워드가 포함되었으며, 제외 키워드가 포함되지 않은 게시글 필터링
     if keywords:
-        articles = (a for a in nas for keyword in keywords if keyword in a.title)
+        if exclude_keywords:
+            articles = (
+                a for a in nas
+                if any(keyword in a.title for keyword in keywords) and not any(word in a.title for word in exclude_keywords)
+            )
+        else:
+            articles = (a for a in nas for keyword in keywords if keyword in a.title)
 
     need_notice = []
     sql = f"SELECT COUNT(*) FROM koin.new_koreatech_articles ka JOIN koin.new_articles a on ka.article_id = a.id WHERE a.board_id = %s AND ka.portal_num = %s"
