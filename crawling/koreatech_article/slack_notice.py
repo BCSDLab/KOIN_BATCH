@@ -19,13 +19,19 @@ def connect_db():
     return conn
 
 
-def filter_nas(connection, nas, keywords=None):
+def filter_nas(connection, nas, keywords=None, exclude_keywords=None):
 
     articles = tuple(nas)
 
-    # 키워드가 포함된 게시글 필터링
+    # 키워드가 포함되었으며, 제외 키워드가 포함되지 않은 게시글 필터링
     if keywords:
-        articles = (a for a in nas for keyword in keywords if keyword in a.title)
+        if exclude_keywords:
+            articles = (
+                a for a in nas
+                if any(keyword in a.title for keyword in keywords) and not any(word in a.title for word in exclude_keywords)
+            )
+        else:
+            articles = (a for a in nas for keyword in keywords if keyword in a.title)
 
     need_notice = []
     sql = f"SELECT COUNT(*) FROM koin.new_koreatech_articles ka JOIN koin.new_articles a on ka.article_id = a.id WHERE a.board_id = %s AND ka.portal_num = %s"
@@ -56,13 +62,25 @@ def send_message(body, webhook_url=None):
         print(e)
 
 
-def notice_to_slack(articles):
+def notice_to_slack(articles, notice_type):
+    notice_emoji = {
+        "bus": ":Bus:",
+        "coop": ":meat_on_bone:",
+        "lecture": ":books:"
+    }
+
+    notice_name = {
+        "bus": "버스",
+        "coop": "생협",
+        "lecture": "강의"
+    }
+
     blocks = [
         {
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": "버스 공지 :Bus:",
+                "text": f"{notice_name[notice_type]} 공지 {notice_emoji[notice_type]}",
                 "emoji": True
             }
         },
@@ -160,6 +178,9 @@ def notice_article_update(article_id, notice_name, action_prefix):
     response.raise_for_status()
     return response
 
+def notice_bus_update(article_id):
+    return notice_article_update(article_id, notice_name="버스", action_prefix="bus")
+
 
 def notice_lecture_update(article_id):
     return notice_article_update(article_id, notice_name="강의", action_prefix="lecture")
@@ -181,12 +202,13 @@ def main():
     parser.add_argument("id", type=positive_int, help="KOIN 게시글 ID")
     parser.add_argument(
         "category",
-        choices=("lecture", "coop"),
+        choices=("bus", "lecture", "coop"),
         help="공지 종류"
     )
     args = parser.parse_args()
 
     notice_functions = {
+        "bus": notice_bus_update,
         "lecture": notice_lecture_update,
         "coop": notice_coop_update,
     }
