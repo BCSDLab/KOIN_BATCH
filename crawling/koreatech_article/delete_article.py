@@ -8,7 +8,7 @@ def make_sql(board_id, articles):
         FROM new_articles na
             JOIN new_koreatech_articles nka ON na.id = nka.article_id
         WHERE na.board_id = {board_id}
-        AND na.is_delete = 0
+        AND na.is_deleted = 0
         '''
 
     exists = ', '.join(str(article.id) for article in articles)
