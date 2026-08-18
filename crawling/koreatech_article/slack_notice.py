@@ -1,11 +1,34 @@
-import argparse
 import json
+import re
 import config
 import requests
-from datetime import date
 
 import urllib3
 import pymysql
+
+
+COOP_BUSINESS_HOURS_TITLE_PATTERN = re.compile(
+    r"^(?=.*(?:생협|생활협동조합))"
+    r"(?=.*사업장\s*운영시간\s*안내)"
+    r"(?=.*(?:\d{2,4}(?:학년도)?\s*[-.]?\s*[12]학기|(?:하계|동계)\s*방학)).*$"
+)
+
+BUS_TIMETABLE_TITLE_PATTERN = re.compile(
+    r"^(?=.*(?:통학|셔틀).*?버스)"
+    r"(?=.*운행(?:계획)?\s*(?:안내|알림))"
+    r"(?=.*(?:20\d{2}학년도\s*[12]학기|"
+    r"(?:20\d{2}(?:학년도|년)?\s*)?(?:하계|동계)\s*"
+    r"(?:계절학기\s*[,·]?\s*)?방학(?:\s*기간)?)).*$"
+)
+
+LECTURE_REGISTRATION_TITLE_PATTERN = re.compile(
+    r"^(?:"
+    r"\[수강신청\]\s*20\d{2}학년도\s*[12]학기\s*"
+    r"(?:(?:정규|예비)\s*)?수강신청\s*안내"
+    r"|\[계절학기\]\s*20\d{2}학년도\s*(?:하계|동계)\s*"
+    r"계절학기\s*(?:\d+차\s*)?수강신청\s*안내"
+    r").*$"
+)
 
 
 def connect_db():
@@ -19,12 +42,14 @@ def connect_db():
     return conn
 
 
-def filter_nas(connection, nas, keywords=None, exclude_keywords=None):
+def filter_nas(connection, nas, keywords=None, exclude_keywords=None, title_pattern=None):
 
     articles = tuple(nas)
 
     # 키워드가 포함되었으며, 제외 키워드가 포함되지 않은 게시글 필터링
-    if keywords:
+    if title_pattern:
+        articles = (a for a in articles if title_pattern.search(a.title))
+    elif keywords:
         if exclude_keywords:
             articles = (
                 a for a in nas
@@ -46,15 +71,14 @@ def filter_nas(connection, nas, keywords=None, exclude_keywords=None):
     return need_notice
 
 
-def send_message(body, webhook_url=None):
+def send_message(body):
     try:
-        url = webhook_url or config.SLACK_CONFIG["url"]
         header = {'Content-type': 'application/json'}
 
         print(body)
 
         # 메세지 전송
-        return requests.post(url, headers=header, json=body)
+        return requests.post(config.SLACK_CONFIG["url"], headers=header, json=body)
 
     except Exception as e:
         print("Slack Message 전송에 실패했습니다.")
@@ -63,64 +87,14 @@ def send_message(body, webhook_url=None):
 
 
 def notice_to_slack(articles, notice_type):
-    notice_emoji = {
-        "bus": ":Bus:",
-        "coop": ":meat_on_bone:",
-        "lecture": ":books:"
+    notice_functions = {
+        "bus": notice_bus_update,
+        "coop": notice_coop_update,
+        "lecture": notice_lecture_update,
     }
 
-    notice_name = {
-        "bus": "버스",
-        "coop": "생협",
-        "lecture": "강의"
-    }
-
-    blocks = [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": f"{notice_name[notice_type]} 공지 {notice_emoji[notice_type]}",
-                "emoji": True
-            }
-        },
-        {
-            "type": "rich_text",
-            "elements": [
-                {
-                    "type": "rich_text_list",
-                    "style": "bullet",
-                    "elements": []
-                }
-            ]
-        },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "plain_text",
-                    "text": f"업데이트: {date.today()}",
-                    "emoji": True
-                }
-            ]
-        }
-    ]
-
-    for art in articles:
-        section = {
-            "type": "rich_text_section",
-            "elements": [
-                {
-                    "type": "link",
-                    "url": art.url,
-                    "text": art.title
-                }
-            ]
-        }
-
-        blocks[1]["elements"][0]["elements"].append(section)
-
-    send_message({"blocks": blocks})
+    for article in articles:
+        notice_functions[notice_type](article.id)
 
 
 def notice_article_update(article_id, notice_name, action_prefix):
@@ -171,7 +145,7 @@ def notice_article_update(article_id, notice_name, action_prefix):
         ]
     }
 
-    response = send_message(body, webhook_url=config.SLACK_CONFIG["test_url"])
+    response = send_message(body)
     if response is None:
         raise RuntimeError("Slack 메시지를 전송하지 못했습니다.")
 
@@ -188,32 +162,3 @@ def notice_lecture_update(article_id):
 
 def notice_coop_update(article_id):
     return notice_article_update(article_id, notice_name="생협", action_prefix="coop")
-
-
-def positive_int(value):
-    article_id = int(value)
-    if article_id <= 0:
-        raise argparse.ArgumentTypeError("id는 1 이상의 정수여야 합니다.")
-    return article_id
-
-
-def main():
-    parser = argparse.ArgumentParser(description="공지 업데이트 여부를 Slack에 알립니다.")
-    parser.add_argument("id", type=positive_int, help="KOIN 게시글 ID")
-    parser.add_argument(
-        "category",
-        choices=("bus", "lecture", "coop"),
-        help="공지 종류"
-    )
-    args = parser.parse_args()
-
-    notice_functions = {
-        "bus": notice_bus_update,
-        "lecture": notice_lecture_update,
-        "coop": notice_coop_update,
-    }
-    notice_functions[args.category](args.id)
-
-
-if __name__ == "__main__":
-    main()
