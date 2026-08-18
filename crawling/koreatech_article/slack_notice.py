@@ -22,6 +22,15 @@ BUS_TIMETABLE_TITLE_PATTERN = re.compile(
     r"(?:계절학기\s*[,·]?\s*)?방학(?:\s*기간)?)).*$"
 )
 
+LECTURE_REGISTRATION_TITLE_PATTERN = re.compile(
+    r"^(?:"
+    r"\[수강신청\]\s*20\d{2}학년도\s*[12]학기\s*"
+    r"(?:(?:정규|예비)\s*)?수강신청\s*안내"
+    r"|\[계절학기\]\s*20\d{2}학년도\s*(?:하계|동계)\s*"
+    r"계절학기\s*(?:\d+차\s*)?수강신청\s*안내"
+    r").*$"
+)
+
 
 def connect_db():
     urllib3.disable_warnings()

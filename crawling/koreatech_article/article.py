@@ -17,6 +17,7 @@ from login import get_jwt_token
 from slack_notice import (
     BUS_TIMETABLE_TITLE_PATTERN,
     COOP_BUSINESS_HOURS_TITLE_PATTERN,
+    LECTURE_REGISTRATION_TITLE_PATTERN,
     filter_nas,
     notice_to_slack,
 )
@@ -575,7 +576,11 @@ if __name__ == "__main__":
                         board_articles,
                         title_pattern=COOP_BUSINESS_HOURS_TITLE_PATTERN,
                     ))
-                    lecture_articles.extend(filter_nas(connection, board_articles, keywords={"수강신청"}, exclude_keywords={"철회", "학사경고자"}))
+                    lecture_articles.extend(filter_nas(
+                        connection,
+                        board_articles,
+                        title_pattern=LECTURE_REGISTRATION_TITLE_PATTERN,
+                    ))
 
                 new_articles.extend(filter_nas(connection, board_articles))
 
