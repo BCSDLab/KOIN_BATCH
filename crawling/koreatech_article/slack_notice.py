@@ -1,4 +1,3 @@
-import argparse
 import json
 import re
 import config
@@ -163,32 +162,3 @@ def notice_lecture_update(article_id):
 
 def notice_coop_update(article_id):
     return notice_article_update(article_id, notice_name="생협", action_prefix="coop")
-
-
-def positive_int(value):
-    article_id = int(value)
-    if article_id <= 0:
-        raise argparse.ArgumentTypeError("id는 1 이상의 정수여야 합니다.")
-    return article_id
-
-
-def main():
-    parser = argparse.ArgumentParser(description="공지 업데이트 여부를 Slack에 알립니다.")
-    parser.add_argument("id", type=positive_int, help="KOIN 게시글 ID")
-    parser.add_argument(
-        "category",
-        choices=("bus", "lecture", "coop"),
-        help="공지 종류"
-    )
-    args = parser.parse_args()
-
-    notice_functions = {
-        "bus": notice_bus_update,
-        "lecture": notice_lecture_update,
-        "coop": notice_coop_update,
-    }
-    notice_functions[args.category](args.id)
-
-
-if __name__ == "__main__":
-    main()
