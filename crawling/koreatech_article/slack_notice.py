@@ -1,11 +1,27 @@
 import argparse
 import json
+import re
 import config
 import requests
 from datetime import date
 
 import urllib3
 import pymysql
+
+
+COOP_BUSINESS_HOURS_TITLE_PATTERN = re.compile(
+    r"^(?=.*(?:생협|생활협동조합))"
+    r"(?=.*사업장\s*운영시간\s*안내)"
+    r"(?=.*(?:\d{2,4}(?:학년도)?\s*[-.]?\s*[12]학기|(?:하계|동계)\s*방학)).*$"
+)
+
+BUS_TIMETABLE_TITLE_PATTERN = re.compile(
+    r"^(?=.*(?:통학|셔틀).*?버스)"
+    r"(?=.*운행(?:계획)?\s*(?:안내|알림))"
+    r"(?=.*(?:20\d{2}학년도\s*[12]학기|"
+    r"(?:20\d{2}(?:학년도|년)?\s*)?(?:하계|동계)\s*"
+    r"(?:계절학기\s*[,·]?\s*)?방학(?:\s*기간)?)).*$"
+)
 
 
 def connect_db():
@@ -19,12 +35,14 @@ def connect_db():
     return conn
 
 
-def filter_nas(connection, nas, keywords=None, exclude_keywords=None):
+def filter_nas(connection, nas, keywords=None, exclude_keywords=None, title_pattern=None):
 
     articles = tuple(nas)
 
     # 키워드가 포함되었으며, 제외 키워드가 포함되지 않은 게시글 필터링
-    if keywords:
+    if title_pattern:
+        articles = (a for a in articles if title_pattern.search(a.title))
+    elif keywords:
         if exclude_keywords:
             articles = (
                 a for a in nas
