@@ -3,7 +3,6 @@ import json
 import re
 import config
 import requests
-from datetime import date
 
 import urllib3
 import pymysql
@@ -64,15 +63,14 @@ def filter_nas(connection, nas, keywords=None, exclude_keywords=None, title_patt
     return need_notice
 
 
-def send_message(body, webhook_url=None):
+def send_message(body):
     try:
-        url = webhook_url or config.SLACK_CONFIG["url"]
         header = {'Content-type': 'application/json'}
 
         print(body)
 
         # 메세지 전송
-        return requests.post(url, headers=header, json=body)
+        return requests.post(config.SLACK_CONFIG["url"], headers=header, json=body)
 
     except Exception as e:
         print("Slack Message 전송에 실패했습니다.")
@@ -81,64 +79,14 @@ def send_message(body, webhook_url=None):
 
 
 def notice_to_slack(articles, notice_type):
-    notice_emoji = {
-        "bus": ":Bus:",
-        "coop": ":meat_on_bone:",
-        "lecture": ":books:"
+    notice_functions = {
+        "bus": notice_bus_update,
+        "coop": notice_coop_update,
+        "lecture": notice_lecture_update,
     }
 
-    notice_name = {
-        "bus": "버스",
-        "coop": "생협",
-        "lecture": "강의"
-    }
-
-    blocks = [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": f"{notice_name[notice_type]} 공지 {notice_emoji[notice_type]}",
-                "emoji": True
-            }
-        },
-        {
-            "type": "rich_text",
-            "elements": [
-                {
-                    "type": "rich_text_list",
-                    "style": "bullet",
-                    "elements": []
-                }
-            ]
-        },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "plain_text",
-                    "text": f"업데이트: {date.today()}",
-                    "emoji": True
-                }
-            ]
-        }
-    ]
-
-    for art in articles:
-        section = {
-            "type": "rich_text_section",
-            "elements": [
-                {
-                    "type": "link",
-                    "url": art.url,
-                    "text": art.title
-                }
-            ]
-        }
-
-        blocks[1]["elements"][0]["elements"].append(section)
-
-    send_message({"blocks": blocks})
+    for article in articles:
+        notice_functions[notice_type](article.id)
 
 
 def notice_article_update(article_id, notice_name, action_prefix):
@@ -189,7 +137,7 @@ def notice_article_update(article_id, notice_name, action_prefix):
         ]
     }
 
-    response = send_message(body, webhook_url=config.SLACK_CONFIG["test_url"])
+    response = send_message(body)
     if response is None:
         raise RuntimeError("Slack 메시지를 전송하지 못했습니다.")
 
