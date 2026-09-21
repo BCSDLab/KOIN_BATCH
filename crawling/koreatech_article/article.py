@@ -14,7 +14,13 @@ from delete_article import delete_article
 from table import replace_table, upload_txt
 from login_v2 import login
 from login import get_jwt_token
-from slack_notice import filter_nas, notice_to_slack
+from slack_notice import (
+    BUS_TIMETABLE_TITLE_PATTERN,
+    COOP_BUSINESS_HOURS_TITLE_PATTERN,
+    LECTURE_REGISTRATION_TITLE_PATTERN,
+    filter_nas,
+    notice_to_slack,
+)
 
 from math import ceil
 from hashlib import sha256
@@ -537,6 +543,8 @@ if __name__ == "__main__":
 
             articles = []
             bus_articles = []
+            coop_articles = []
+            lecture_articles = []
             new_articles = []
 
             connection = connect_db()
@@ -555,10 +563,24 @@ if __name__ == "__main__":
 
                 articles.extend(board_articles)
 
-                # 버스 알림
+                # 버스/생협/강의 알림
                 if board.is_notice:
-                    # DB에 없고, 키워드가 들어있는 게시글 필터링
-                    bus_articles.extend(filter_nas(connection, board_articles, keywords={"버스", "bus"}))
+                    # DB에 없고, 알림 조건에 맞는 게시글 필터링
+                    bus_articles.extend(filter_nas(
+                        connection,
+                        board_articles,
+                        title_pattern=BUS_TIMETABLE_TITLE_PATTERN,
+                    ))
+                    coop_articles.extend(filter_nas(
+                        connection,
+                        board_articles,
+                        title_pattern=COOP_BUSINESS_HOURS_TITLE_PATTERN,
+                    ))
+                    lecture_articles.extend(filter_nas(
+                        connection,
+                        board_articles,
+                        title_pattern=LECTURE_REGISTRATION_TITLE_PATTERN,
+                    ))
 
                 new_articles.extend(filter_nas(connection, board_articles))
 
@@ -569,7 +591,20 @@ if __name__ == "__main__":
         finally:
             try:
                 if bus_articles:
-                    notice_to_slack(bus_articles)
+                    notice_to_slack(bus_articles, "bus")
+
+            except Exception as error:
+                raise error
+            try:
+                if coop_articles:
+                    notice_to_slack(coop_articles, "coop")
+
+            except Exception as error:
+                raise error
+            try:
+                if lecture_articles:
+                    notice_to_slack(lecture_articles, "lecture")
+
             except Exception as error:
                 raise error
             finally:
@@ -595,4 +630,3 @@ if __name__ == "__main__":
                     raise error
                 finally:
                     connection.close()
-
