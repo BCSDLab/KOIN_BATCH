@@ -550,42 +550,49 @@ if __name__ == "__main__":
             connection = connect_db()
             login_cookie = login()
             for board in _boards:
-                board_articles = (
-                    crawling_job(board, page_size=ceil(LIST_SIZE / 10))
-                    if board.name == "취업공지"
-                    else
-                    crawling(board, list_size=LIST_SIZE)
-                )
+                try:
+                    board_articles = (
+                        crawling_job(board, page_size=ceil(LIST_SIZE / 10))
+                        if board.name == "취업공지"
+                        else
+                        crawling(board, list_size=LIST_SIZE)
+                    )
 
-                board_articles.sort(key=lambda x: x.num)
+                    board_articles.sort(key=lambda x: x.num)
 
-                print(board_articles)
+                    print(board_articles)
 
-                articles.extend(board_articles)
+                    articles.extend(board_articles)
 
-                # 버스/생협/강의 알림
-                if board.is_notice:
-                    # DB에 없고, 알림 조건에 맞는 게시글 필터링
-                    bus_articles.extend(filter_nas(
-                        connection,
-                        board_articles,
-                        title_pattern=BUS_TIMETABLE_TITLE_PATTERN,
-                    ))
-                    coop_articles.extend(filter_nas(
-                        connection,
-                        board_articles,
-                        title_pattern=COOP_BUSINESS_HOURS_TITLE_PATTERN,
-                    ))
-                    lecture_articles.extend(filter_nas(
-                        connection,
-                        board_articles,
-                        title_pattern=LECTURE_REGISTRATION_TITLE_PATTERN,
-                    ))
+                    # 버스/생협/강의 알림
+                    if board.is_notice:
+                        # DB에 없고, 알림 조건에 맞는 게시글 필터링
+                        bus_articles.extend(filter_nas(
+                            connection,
+                            board_articles,
+                            title_pattern=BUS_TIMETABLE_TITLE_PATTERN,
+                        ))
+                        coop_articles.extend(filter_nas(
+                            connection,
+                            board_articles,
+                            title_pattern=COOP_BUSINESS_HOURS_TITLE_PATTERN,
+                        ))
+                        lecture_articles.extend(filter_nas(
+                            connection,
+                            board_articles,
+                            title_pattern=LECTURE_REGISTRATION_TITLE_PATTERN,
+                        ))
 
-                new_articles.extend(filter_nas(connection, board_articles))
+                    new_articles.extend(filter_nas(connection, board_articles))
 
-                update_db(board_articles)
-                delete_article(connection, board.id, board_articles, get_cookies(board))
+                    update_db(board_articles)
+                    delete_article(connection, board.id, board_articles, get_cookies(board))
+                except Exception as error:
+                    # 한 게시판에서 발생한 오류가 이후 게시판 크롤링까지 막지 않도록 격리한다.
+                    # (예: #191 - is_delete 오타로 앞 게시판이 죽으면 뒤 게시판이 통째로 스킵되던 문제)
+                    print(f"[{board.name}] 크롤링 중 오류 발생, 다음 게시판으로 진행합니다: {error}")
+                    connection.rollback()
+                    continue
         except Exception as error:
             raise error
         finally:
