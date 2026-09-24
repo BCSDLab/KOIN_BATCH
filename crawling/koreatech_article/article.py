@@ -26,6 +26,7 @@ from math import ceil
 from hashlib import sha256
 
 import builtins
+import traceback
 from dateutil import parser
 
 
@@ -591,6 +592,7 @@ if __name__ == "__main__":
                     # 한 게시판에서 발생한 오류가 이후 게시판 크롤링까지 막지 않도록 격리한다.
                     # (예: #191 - is_delete 오타로 앞 게시판이 죽으면 뒤 게시판이 통째로 스킵되던 문제)
                     print(f"[{board.name}] 크롤링 중 오류 발생, 다음 게시판으로 진행합니다: {error}")
+                    traceback.print_exc()
                     connection.rollback()
                     continue
         except Exception as error:
