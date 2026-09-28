@@ -24,6 +24,7 @@ from slack_notice import (
 
 from math import ceil
 from hashlib import sha256
+from datetime import date
 
 import builtins
 from dateutil import parser
@@ -221,6 +222,11 @@ boards = [
 
 ]
 
+# 취업공지를 오랫동안 가져오지 못했으므로 다시 수집될 때 예전 글까지
+# 한꺼번에 저장되고 알림이 나가지 않도록 이 날짜에 올라온 글부터 수집한다.
+# 실행일마다 바뀌는 날짜가 아니라 고정된 시작일이다.
+JOB_NOTICE_START_DATE = date(2026, 9, 28)
+
 
 def get_cookies(board: Board):
     if not board.need_login:
@@ -331,15 +337,20 @@ def crawling_job(board: Board, page_size: int):
         path = f"/Community/Notice/NoticeList.aspx?rp={page}"
 
         html = requests.get(host + path, cookies=get_cookies(board), verify=False)
+        html.raise_for_status()
         soup = BeautifulSoup(html.text, "html.parser")
 
         articles_html = soup.select('table#tbody_list1 > tbody > tr')
+        if not articles_html:
+            raise ValueError(f'취업공지 목록을 읽지 못했습니다: {host + path}')
 
         for article_html in articles_html:
             onclick = article_html.select_one('a[onclick]').get('onclick')
             url = host + onclick.split("'")[1]
 
             article = crawling_job_article(board, host, url)
+            if article is None:
+                continue
             articles.append(article)
 
             print(f'find... {board.name} {article.num}')
@@ -347,8 +358,9 @@ def crawling_job(board: Board, page_size: int):
     return articles
 
 
-def crawling_job_article(board: Board, host: str, url: str) -> Article:
+def crawling_job_article(board: Board, host: str, url: str) -> Optional[Article]:
     html = requests.get(url, cookies=get_cookies(board), verify=False)
+    html.raise_for_status()
     soup = BeautifulSoup(html.text, "html.parser")
 
     # ===== 글 번호 =====
@@ -362,6 +374,8 @@ def crawling_job_article(board: Board, host: str, url: str) -> Article:
 
     # ===== 작성일 =====
     registered_at = soup.select_one('span#wdate').get_text(strip=True)
+    if parser.parse(registered_at).date() < JOB_NOTICE_START_DATE:
+        return None
 
     # ===== 본문 =====
     head = soup.select_one('head')
@@ -585,7 +599,10 @@ if __name__ == "__main__":
                 new_articles.extend(filter_nas(connection, board_articles))
 
                 update_db(board_articles)
-                delete_article(connection, board.id, board_articles, get_cookies(board))
+                delete_article(
+                    connection, board.id, board_articles, get_cookies(board),
+                    min_registered_at=JOB_NOTICE_START_DATE if board.name == "취업공지" else None
+                )
         except Exception as error:
             raise error
         finally:
