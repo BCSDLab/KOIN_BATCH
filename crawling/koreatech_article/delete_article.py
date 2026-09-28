@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 
 def make_sql(board_id, articles):
@@ -10,6 +11,10 @@ def make_sql(board_id, articles):
         WHERE na.board_id = {board_id}
         AND na.is_deleted = 0
         '''
+
+    if board_id == 8:
+        # 이전 취업지원 사이트의 게시글은 채용공지 전환 후 삭제 판정하지 않는다.
+        sql += "AND nka.url LIKE 'https://portal.koreatech.ac.kr/ctt/bb/bulletin?b=150%'\n"
 
     exists = ', '.join(str(article.id) for article in articles)
     if exists:
@@ -22,11 +27,12 @@ def make_sql(board_id, articles):
 
 def is_deleted(board_id, response):
     try:
-        # 취업 공지가 아닌 경우
-        if board_id != 8:
-            return '/eXPortal/ctt/css/error.css' in response.text
+        # 학교 포털 게시글
+        if board_id != 8 or urlparse(response.url).hostname == 'portal.koreatech.ac.kr':
+            html = BeautifulSoup(response.text, 'html.parser')
+            return html.select_one('link[href="/eXPortal/ctt/css/error.css"]') is not None
 
-        # 취업 공지
+        # 기존 취업지원 사이트 게시글
         if response.url == 'https://job.koreatech.ac.kr/ErrorPages/warning.html':
             return True
 

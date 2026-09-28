@@ -22,8 +22,8 @@ from slack_notice import (
     notice_to_slack,
 )
 
-from math import ceil
 from hashlib import sha256
+from datetime import date
 
 import builtins
 from dateutil import parser
@@ -214,12 +214,19 @@ class Article:
 boards = [
     Board(14, "일반공지", "general_notice", True, False),
     Board(15, "장학공지", "scholarship_notice", True, False),
-    Board(17, "취업공지", "job_notice", True, True),
+    # KOIN의 기존 취업공지 게시판에 학교 홈페이지의 채용공지(b=150)를 수집한다.
+    Board(150, "취업공지", "job_notice", True, False),
     Board(16, "학사공지", "academic_notice", True, False),
     Board(151, "현장실습공지", "field_training_notice", True, True),
     Board(21, "학생생활", "student_life", False, True),
 
 ]
+
+# 채용공지를 오랫동안 불러오지 못해서 예전 글까지 한꺼번에 가져오면
+# 저장과 알림이 몰릴 수 있다. 이를 막기 위해 2026-09-28(한국시간)에 올라온 글부터 수집한다.
+# 시작일은 실행할 때마다 바꾸지 않는다. 배치가 늦게 돌더라도 최신 60건 안에 있다면
+# 이 날짜 이후의 글을 다음 실행에서 다시 확인할 수 있다.
+RECRUITMENT_START_DATE = date(2026, 9, 28)
 
 
 def get_cookies(board: Board):
@@ -246,6 +253,13 @@ def crawling(board: Board, list_size: int) -> List[Article]:
     articles_html = soup.select('table#boardTypeList > tbody > tr')
 
     for article_html in articles_html:
+        if board.bulletin == 150:
+            registered_at = article_html.select_one('td.bc-s-cre_dt')
+            if registered_at is None:
+                raise ValueError('채용공지 목록에서 등록일을 찾을 수 없습니다')
+            if date.fromisoformat(registered_at.get_text(strip=True)) < RECRUITMENT_START_DATE:
+                continue
+
         url = host + article_html.get('data-url')
 
         article = crawling_article(board, host, url)
@@ -262,6 +276,9 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
 
     # ===== 글 번호 =====
     num = int(url.rsplit("=", 1)[1])
+    if board.bulletin == 150:
+        # 기존 취업공지의 글 번호와 겹치지 않도록 채용공지에 별도 번호 영역을 쓴다.
+        num += 150_000_000
 
     # ===== 제목 =====
     head = soup.select_one('table.kut-board-title-table')
@@ -314,90 +331,6 @@ def crawling_article(board: Board, host: str, url: str) -> Article:
         content=content,
         author=author,
         hit=hit,
-        registered_at=registered_at,
-        attachment=attachment,
-        is_notice=board.is_notice,
-        comment=None  # comment는 없어도 됨. 명시적으로 작성
-    )
-
-
-# 취업 공지
-def crawling_job(board: Board, page_size: int):
-    articles = []
-
-    host = "https://job.koreatech.ac.kr"
-
-    for page in range(1, page_size+1):
-        path = f"/Community/Notice/NoticeList.aspx?rp={page}"
-
-        html = requests.get(host + path, cookies=get_cookies(board), verify=False)
-        soup = BeautifulSoup(html.text, "html.parser")
-
-        articles_html = soup.select('table#tbody_list1 > tbody > tr')
-
-        for article_html in articles_html:
-            onclick = article_html.select_one('a[onclick]').get('onclick')
-            url = host + onclick.split("'")[1]
-
-            article = crawling_job_article(board, host, url)
-            articles.append(article)
-
-            print(f'find... {board.name} {article.num}')
-
-    return articles
-
-
-def crawling_job_article(board: Board, host: str, url: str) -> Article:
-    html = requests.get(url, cookies=get_cookies(board), verify=False)
-    soup = BeautifulSoup(html.text, "html.parser")
-
-    # ===== 글 번호 =====
-    num = int(url.rsplit("=", 1)[1])
-
-    # ===== 제목 =====
-    title = soup.select_one('span#title').get_text(strip=True)
-
-    # ===== 작성자 =====
-    author = soup.select_one('span#wuser').get_text(strip=True)
-
-    # ===== 작성일 =====
-    registered_at = soup.select_one('span#wdate').get_text(strip=True)
-
-    # ===== 본문 =====
-    head = soup.select_one('head')
-    body = soup.select_one('#content')
-    content = soup.new_tag('html')
-    content.extend([head, body])
-
-    # 주석 제거
-    for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-        comment.extract()
-
-    # 이미지 url 처리
-    content = (str(content)
-               .replace('src="/', f'src="{host}/')
-               .replace('href="/', f'href="{host}/'))
-
-    # 표 처리
-    # content = replace_table(content, board, num)
-
-    # ===== 첨부 파일 =====
-    attachment = list(map(
-        lambda tag: Attachment(
-            name=tag.get_text(strip=True),
-            url=host + tag.get('href')
-        ),
-        soup.select('span#Downloader_fileList > a')
-    ))
-
-    return Article(
-        url=url,
-        board_id=board.id,
-        num=num,
-        title=title,
-        content=content,
-        author=author,
-        hit=0,
         registered_at=registered_at,
         attachment=attachment,
         is_notice=board.is_notice,
@@ -550,12 +483,7 @@ if __name__ == "__main__":
             connection = connect_db()
             login_cookie = login()
             for board in _boards:
-                board_articles = (
-                    crawling_job(board, page_size=ceil(LIST_SIZE / 10))
-                    if board.name == "취업공지"
-                    else
-                    crawling(board, list_size=LIST_SIZE)
-                )
+                board_articles = crawling(board, list_size=LIST_SIZE)
 
                 board_articles.sort(key=lambda x: x.num)
 
