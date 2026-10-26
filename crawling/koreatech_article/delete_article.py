@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def make_sql(board_id, articles):
+def make_sql(board_id, articles, min_registered_at=None):
     sql = f'''
         SELECT na.id, nka.url
         FROM new_articles na
@@ -10,6 +10,10 @@ def make_sql(board_id, articles):
         WHERE na.board_id = {board_id}
         AND na.is_deleted = 0
         '''
+
+    if min_registered_at is not None:
+        # 수집 시작일보다 오래된 취업공지까지 삭제 확인하지 않는다.
+        sql += f"AND nka.registered_at >= '{min_registered_at.isoformat()}'\n"
 
     exists = ', '.join(str(article.id) for article in articles)
     if exists:
@@ -39,7 +43,7 @@ def is_deleted(board_id, response):
         return False
 
 
-def delete_article(connection, board_id, articles, cookies):
+def delete_article(connection, board_id, articles, cookies, min_registered_at=None):
     """
     is_deleted = 1인 게시글에 대해서는 판별하지 않음
     즉, 이미 지워졌다고 판별된 게시글에 대해서는 판별하지 않음
@@ -51,7 +55,7 @@ def delete_article(connection, board_id, articles, cookies):
     :param articles: 방금 막 크롤링한 따끈따끈한 게시글들
     :param cookies: 로그인 쿠키
     """
-    sql = make_sql(board_id, articles)
+    sql = make_sql(board_id, articles, min_registered_at)
 
     with connection.cursor() as cursor:
         cursor.execute(sql)
