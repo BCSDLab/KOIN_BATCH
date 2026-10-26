@@ -12,7 +12,7 @@ import uuid
 
 from delete_article import delete_article
 from table import replace_table, upload_txt
-from login_v2 import login
+from login_v2 import login, REQUIRED_COOKIES
 from login import get_jwt_token
 from slack_notice import (
     BUS_TIMETABLE_TITLE_PATTERN,
@@ -226,12 +226,11 @@ def get_cookies(board: Board):
     if not board.need_login:
         return None
 
-    return {
-        'JSESSIONID': login_cookie['JSESSIONID'],
-        'ASP.NET_SessionId': login_cookie['ASP.NET_SessionId'],
-        'mauth': login_cookie['mauth'],
-        'hn_ck_login': login_cookie['hn_ck_login'],
-    }
+    missing = [name for name in REQUIRED_COOKIES if not login_cookie.get(name)]
+    if missing:
+        raise ConnectionError(f"게시판 로그인 쿠키 누락 {missing}: {board.name}")
+
+    return {name: login_cookie[name] for name in REQUIRED_COOKIES}
 
 
 def crawling(board: Board, list_size: int) -> List[Article]:
@@ -336,7 +335,13 @@ def crawling_job(board: Board, page_size: int):
         articles_html = soup.select('table#tbody_list1 > tbody > tr')
 
         for article_html in articles_html:
-            onclick = article_html.select_one('a[onclick]').get('onclick')
+            anchor = article_html.select_one('a[onclick]')
+            if anchor is None:
+                continue
+            onclick = anchor.get('onclick')
+            # 외부 링크 고정글은 게시글 상세 조회 대상에서 제외한다.
+            if not onclick.startswith('openw('):
+                continue
             url = host + onclick.split("'")[1]
 
             article = crawling_job_article(board, host, url)
