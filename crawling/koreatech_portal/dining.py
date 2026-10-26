@@ -41,6 +41,10 @@ LOGIN_COOKIES = [
     {
         'name': '__KSMSID__',
         'domain': '.koreatech.ac.kr',
+    },
+    {
+        'name': 'KHANUSER',
+        'domain': 'kut90.koreatech.ac.kr',
     }
 ]
 
@@ -85,20 +89,6 @@ def print_flush(target):
     print(target, flush=True)
 
 
-def mask_cookie(value):
-    if value is None:
-        return "None"
-    value = str(value)
-    if len(value) <= 8:
-        return "*" * len(value)
-    return f"{value[:4]}...{value[-4:]}(len={len(value)})"
-
-
-def print_cookie_log(message, cookies):
-    masked = {name: mask_cookie(value) for name, value in cookies.items()}
-    print_flush(f"{message}: {masked}")
-
-
 # 아우누리 포탈에 식단 정보 요청
 def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
     headers = {
@@ -109,11 +99,7 @@ def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
         "X-Forwarded-For": config.PORTAL_CONFIG["ip"],
         "X-Real-IP": config.PORTAL_CONFIG["ip"],
     }
-    cookies = {cookie['name']: login_cookies[cookie['name']] for cookie in LOGIN_COOKIES}
-    print_cookie_log(
-        f"식단 요청 쿠키 전달 확인 date={eat_date}, type={eat_type}, restaurant={restaurant}, campus={campus}",
-        cookies
-    )
+    cookies = {cookie['name']: login_cookies.get(cookie['name']) for cookie in LOGIN_COOKIES}
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
     <Root xmlns="http://www.nexacroplatform.com/platform/dataset">
         <Parameters>
@@ -144,9 +130,9 @@ def send_request(login_cookies, eat_date, eat_type, restaurant, campus):
         "https://kut90.koreatech.ac.kr/nexacroController.do",
         headers=headers,
         cookies=cookies,
-        data=body
+        data=body,
+        timeout=30
     )
-    print_flush(f"식단 요청 응답 status={response.status_code}, content_type={response.headers.get('Content-Type')}")
 
     soup = BeautifulSoup(response.text, 'lxml-xml')
     error_code = soup.find("Parameter", {"id": "ErrorCode"})
@@ -213,16 +199,15 @@ def get_cookie():
     for name in login_cookie:
         if not login_cookie[name]: continue
         login_cookie[name] = login_cookie[name].decode("utf-8")
-    print_cookie_log("Redis 포털 쿠키 조회 결과", login_cookie)
-    try:
-        validate_login_cookie(login_cookie)
-        return login_cookie
-    except ConnectionError:
-        pass
+    if all(login_cookie.values()):
+        try:
+            validate_login_cookie(login_cookie)
+            return login_cookie
+        except ConnectionError:
+            print_flush("Redis 캐시 쿠키가 만료되어 재로그인합니다")
 
     cookies = portal_login()
     login_cookie = extract_login_cookie(cookies)
-    print_cookie_log("포털 로그인 신규 쿠키 취득 결과", login_cookie)
     if not all(login_cookie.values()):
         raise ConnectionError("포털 로그인 쿠키 취득 실패")
 
