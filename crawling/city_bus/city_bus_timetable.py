@@ -91,7 +91,10 @@ def get_available_bus():
 def get_route_ids(bus_number):
     result_list = (
         requests
-        .get(f"https://its.cheonan.go.kr/bis/getBusTimeTable.do?thisPage=1&searchKeyword={bus_number}")
+        .post(
+            "https://its.cheonan.go.kr/bis/getBusTimeTable.do",
+            data={"thisPage": 1, "searchKeyword": bus_number},
+        )
         .json()
     )
 
